@@ -18,22 +18,13 @@ The script generates a [supervisord][] configuration file in
 ## HowTo (Debian, Ubuntu)
 
 ```shell
-CLUSTER_HOME=/opt/cluster
-
 sudo apt update
 sudo apt install python3 git supervisor
 
-cd /tmp
-git clone https://github.com/liquidinvestigations/cluster
-sudo mv cluster "$CLUSTER_HOME"
-
-cd "$CLUSTER_HOME"
 ./cluster.py install
 ./cluster.py configure
 
-cd /etc/supervisor/conf.d
-sudo ln -s "$CLUSTER_HOME"/etc/supervisor-cluster.conf cluster.conf
-
+sudo ln -s $(pwd)/etc/supervisor-cluster.conf /etc/supervisor/conf.d/cluster.conf
 sudo supervisorctl update
 ```
 
