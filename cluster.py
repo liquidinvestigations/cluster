@@ -9,10 +9,32 @@ import argparse
 from pathlib import Path
 import tempfile
 import subprocess
+import configparser
 
 LOG_LEVEL = logging.DEBUG
 log = logging.getLogger(__name__)
 log.setLevel(LOG_LEVEL)
+
+config = configparser.ConfigParser()
+config.read('cluster.ini')
+
+
+def run(cmd, **kwargs):
+    log.debug("+ %s", cmd)
+    return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
+
+
+def _interface():
+    if 'network' in config:
+        network = config['network']
+        if 'interface' in network:
+            return network['interface']
+
+    return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
+
+
+class OPTIONS:
+    interface = _interface()
 
 
 class VERSION:
@@ -100,11 +122,6 @@ client {{
 '''
 
 
-def run(cmd, **kwargs):
-    log.debug("+ %s", cmd)
-    return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
-
-
 def _download(url, path):
     run(f'curl -Ls "{url}" -o "{path}"')
 
@@ -142,15 +159,11 @@ def _username():
     return run("whoami").strip()
 
 
-def _interface():
-    return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
-
-
 def configure():
     """ Generate configuration files. """
     _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
     _writefile(PATH.consul_hcl, CONFIG.consul())
-    _writefile(PATH.nomad_hcl, CONFIG.nomad(_interface()))
+    _writefile(PATH.nomad_hcl, CONFIG.nomad(OPTIONS.interface))
 
 
 class SubcommandParser(argparse.ArgumentParser):
