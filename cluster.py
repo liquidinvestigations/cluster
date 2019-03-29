@@ -99,16 +99,11 @@ bootstrap_expect = 1
 
 
 CONFIG.nomad = lambda interface: f'''\
-bind_addr = "0.0.0.0"
+bind_addr = "{{{{ GetInterfaceIP `{interface}` }}}}"
 data_dir = "{PATH.nomad_var}"
 leave_on_interrupt = true
 leave_on_terminate = true
 disable_update_check = true
-
-advertise {{
-  http = "{{{{ GetInterfaceIP `{interface}` }}}}"
-  serf = "{{{{ GetInterfaceIP `{interface}` }}}}"
-}}
 
 server {{
   enabled = true
