@@ -4,6 +4,7 @@
 Manage a nomad + consul cluster.
 """
 
+import os
 import logging
 import argparse
 from pathlib import Path
@@ -19,22 +20,35 @@ config = configparser.ConfigParser()
 config.read('cluster.ini')
 
 
+def get_config(env_key, ini_path, default):
+    value = os.environ.get(env_key)
+    if value is not None:
+        return value
+
+    (section_name, key) = ini_path.split(':')
+    if section_name in config:
+        section = config[section_name]
+        if key in section:
+            return section[key]
+
+    return default
+
+
 def run(cmd, **kwargs):
     log.debug("+ %s", cmd)
     return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
 
 
-def _interface():
-    if 'network' in config:
-        network = config['network']
-        if 'interface' in network:
-            return network['interface']
-
+def detect_interface():
     return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
 
 
 class OPTIONS:
-    interface = _interface()
+    interface = get_config(
+        'NOMAD_NETWORK_INTERFACE',
+        'network:interface',
+        None,
+    ) or detect_interface()
 
 
 class VERSION:
