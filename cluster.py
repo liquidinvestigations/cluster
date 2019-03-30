@@ -50,6 +50,12 @@ class OPTIONS:
         None,
     ) or detect_interface()
 
+    http_address = get_config(
+        'NOMAD_HTTP_ADDRESS',
+        'network:http_address',
+        '127.0.0.1',
+    )
+
 
 class VERSION:
     nomad = '0.8.7'
@@ -112,12 +118,20 @@ bootstrap_expect = 1
 '''
 
 
-CONFIG.nomad = lambda interface: f'''\
+CONFIG.nomad = lambda http_address, interface: f'''\
 bind_addr = "{{{{ GetInterfaceIP `{interface}` }}}}"
 data_dir = "{PATH.nomad_var}"
 leave_on_interrupt = true
 leave_on_terminate = true
 disable_update_check = true
+
+addresses {{
+  http = "{http_address}"
+}}
+
+advertise {{
+  http = "{http_address}"
+}}
 
 server {{
   enabled = true
@@ -170,9 +184,12 @@ def _username():
 
 def configure():
     """ Generate configuration files. """
+    http_address = OPTIONS.http_address
+    interface = OPTIONS.interface
+
     _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
     _writefile(PATH.consul_hcl, CONFIG.consul())
-    _writefile(PATH.nomad_hcl, CONFIG.nomad(OPTIONS.interface))
+    _writefile(PATH.nomad_hcl, CONFIG.nomad(http_address, interface))
 
 
 class SubcommandParser(argparse.ArgumentParser):
