@@ -44,15 +44,15 @@ def detect_interface():
 
 
 class OPTIONS:
-    interface = get_config(
-        'NOMAD_NETWORK_INTERFACE',
-        'network:interface',
+    nomad_interface = get_config(
+        'NOMAD_INTERFACE',
+        'nomad:interface',
         None,
     ) or detect_interface()
 
-    http_address = get_config(
+    nomad_http_address = get_config(
         'NOMAD_HTTP_ADDRESS',
-        'network:http_address',
+        'nomad:http_address',
         '127.0.0.1',
     )
 
@@ -101,18 +101,18 @@ class CONFIG:
     pass
 
 
-CONFIG.supervisor = lambda username, autostart: f'''\
+CONFIG.supervisor = lambda username: f'''\
 [program:nomad]
 user = {username}
 command = {PATH.nomad_bin} agent -config {PATH.nomad_hcl}
 redirect_stderr = true
-autostart = {autostart}
+autostart = {OPTIONS.supervisor_autostart}
 
 [program:consul]
 user = {username}
 command = {PATH.consul_bin} agent -config-file {PATH.consul_hcl}
 redirect_stderr = true
-autostart = {autostart}
+autostart = {OPTIONS.supervisor_autostart}
 '''
 
 
@@ -126,19 +126,19 @@ bootstrap_expect = 1
 '''
 
 
-CONFIG.nomad = lambda http_address, interface: f'''\
-bind_addr = "{{{{ GetInterfaceIP `{interface}` }}}}"
+CONFIG.nomad = lambda: f'''\
+bind_addr = "{{{{ GetInterfaceIP `{OPTIONS.nomad_interface}` }}}}"
 data_dir = "{PATH.nomad_var}"
 leave_on_interrupt = true
 leave_on_terminate = true
 disable_update_check = true
 
 addresses {{
-  http = "{http_address}"
+  http = "{OPTIONS.nomad_http_address}"
 }}
 
 advertise {{
-  http = "{http_address}"
+  http = "{OPTIONS.nomad_http_address}"
 }}
 
 server {{
@@ -148,7 +148,7 @@ server {{
 
 client {{
   enabled = true
-  network_interface = "{interface}"
+  network_interface = "{OPTIONS.nomad_interface}"
 }}
 '''
 
@@ -192,13 +192,9 @@ def _username():
 
 def configure():
     """ Generate configuration files. """
-    http_address = OPTIONS.http_address
-    interface = OPTIONS.interface
-    autostart = OPTIONS.supervisor_autostart
-
-    _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username(), autostart))
+    _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
     _writefile(PATH.consul_hcl, CONFIG.consul())
-    _writefile(PATH.nomad_hcl, CONFIG.nomad(http_address, interface))
+    _writefile(PATH.nomad_hcl, CONFIG.nomad())
 
 
 class SubcommandParser(argparse.ArgumentParser):
