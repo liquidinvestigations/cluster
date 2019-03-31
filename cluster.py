@@ -50,9 +50,9 @@ class OPTIONS:
         None,
     ) or detect_interface()
 
-    nomad_http_address = get_config(
-        'NOMAD_HTTP_ADDRESS',
-        'nomad:http_address',
+    nomad_address = get_config(
+        'NOMAD_ADDRESS',
+        'nomad:address',
         '127.0.0.1',
     )
 
@@ -133,18 +133,21 @@ bootstrap_expect = 1
 
 
 CONFIG.nomad = lambda: f'''\
-bind_addr = "{{{{ GetInterfaceIP `{OPTIONS.nomad_interface}` }}}}"
 data_dir = "{PATH.nomad_var}"
 leave_on_interrupt = true
 leave_on_terminate = true
 disable_update_check = true
 
 addresses {{
-  http = "{OPTIONS.nomad_http_address}"
+  http = "{OPTIONS.nomad_address}"
+  rpc = "{OPTIONS.nomad_address}"
+  serf = "{OPTIONS.nomad_address}"
 }}
 
 advertise {{
-  http = "{OPTIONS.nomad_http_address}"
+  http = "{OPTIONS.nomad_address}"
+  rpc = "{OPTIONS.nomad_address}"
+  serf = "{OPTIONS.nomad_address}"
 }}
 
 server {{
