@@ -56,6 +56,12 @@ class OPTIONS:
         '127.0.0.1',
     )
 
+    supervisor_autostart = get_config(
+        'SUPERVISOR_AUTOSTART',
+        'supervisor:autostart',
+        'off',
+    )
+
 
 class VERSION:
     nomad = '0.8.7'
@@ -95,16 +101,18 @@ class CONFIG:
     pass
 
 
-CONFIG.supervisor = lambda username: f'''\
+CONFIG.supervisor = lambda username, autostart: f'''\
 [program:nomad]
 user = {username}
 command = {PATH.nomad_bin} agent -config {PATH.nomad_hcl}
 redirect_stderr = true
+autostart = {autostart}
 
 [program:consul]
 user = {username}
 command = {PATH.consul_bin} agent -config-file {PATH.consul_hcl}
 redirect_stderr = true
+autostart = {autostart}
 '''
 
 
@@ -186,8 +194,9 @@ def configure():
     """ Generate configuration files. """
     http_address = OPTIONS.http_address
     interface = OPTIONS.interface
+    autostart = OPTIONS.supervisor_autostart
 
-    _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
+    _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username(), autostart))
     _writefile(PATH.consul_hcl, CONFIG.consul())
     _writefile(PATH.nomad_hcl, CONFIG.nomad(http_address, interface))
 
