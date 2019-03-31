@@ -56,6 +56,12 @@ class OPTIONS:
         '127.0.0.1',
     )
 
+    zombie_time = get_config(
+        'NOMAD_ZOMBIE_TIME',
+        'nomad:zombie_time',
+        'off',
+    )
+
     supervisor_autostart = get_config(
         'SUPERVISOR_AUTOSTART',
         'supervisor:autostart',
@@ -144,6 +150,7 @@ advertise {{
 server {{
   enabled = true
   bootstrap_expect = 1
+  job_gc_threshold = "{OPTIONS.zombie_time}"
 }}
 
 client {{
