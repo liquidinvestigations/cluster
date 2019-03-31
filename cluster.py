@@ -59,7 +59,7 @@ class OPTIONS:
     zombie_time = get_config(
         'NOMAD_ZOMBIE_TIME',
         'nomad:zombie_time',
-        'off',
+        '4h',
     )
 
     supervisor_autostart = get_config(
