@@ -19,7 +19,7 @@ The script generates a [supervisord][] configuration file in
 
 ```shell
 sudo apt update
-sudo apt install python3 git supervisor
+sudo apt install python3 git supervisor curl
 
 ./cluster.py install
 ./cluster.py configure
