@@ -68,10 +68,17 @@ class OPTIONS:
         'off',
     )
 
+    nomad_version = get_config(
+        'NOMAD_VERSION',
+        'nomad:version',
+        '0.8.7',
+    )
 
-class VERSION:
-    nomad = '0.8.7'
-    consul = '1.4.3'
+    consul_version = get_config(
+        'CONSUL_VERSION',
+        'consul:version',
+        '1.4.3',
+    )
 
 
 class PATH:
@@ -95,11 +102,11 @@ class PATH:
 class URL:
     consul = (
         'https://releases.hashicorp.com/consul/'
-        f'{VERSION.consul}/consul_{VERSION.consul}_linux_amd64.zip'
+        f'{OPTIONS.consul_version}/consul_{OPTIONS.consul_version}_linux_amd64.zip'
     )
     nomad = (
         'https://releases.hashicorp.com/nomad/'
-        f'{VERSION.nomad}/nomad_{VERSION.nomad}_linux_amd64.zip'
+        f'{OPTIONS.nomad_version}/nomad_{OPTIONS.nomad_version}_linux_amd64.zip'
     )
 
 
