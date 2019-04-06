@@ -36,3 +36,6 @@ sudo supervisorctl update
 
 * `./cluster.py configure` - Generate configuration files for Consul and Nomad
   and a `supervisord` configuration for the daemons.
+
+* `sudo supervisorctl [start|stop|restart] cluster:` - Start, stop and restart
+  Consul and Nomad.

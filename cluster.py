@@ -126,6 +126,9 @@ user = {username}
 command = {PATH.consul_bin} agent -config-file {PATH.consul_hcl}
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
+
+[group:cluster]
+programs = nomad,consul
 '''
 
 
