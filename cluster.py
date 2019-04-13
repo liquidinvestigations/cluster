@@ -16,6 +16,34 @@ LOG_LEVEL = logging.DEBUG
 log = logging.getLogger(__name__)
 log.setLevel(LOG_LEVEL)
 
+
+class PATH:
+    root = Path(__file__).parent.resolve()
+
+    bin = root / 'bin'
+    nomad_bin = bin / 'nomad'
+    consul_bin = bin / 'consul'
+
+    etc = root / 'etc'
+    nomad_hcl = etc / 'nomad.hcl'
+    consul_hcl = etc / 'consul.hcl'
+    supervisor_conf = etc / 'supervisor-cluster.conf'
+
+    var = root / 'var'
+    tmp = var / 'tmp'
+    nomad_var = var / 'nomad'
+    consul_var = var / 'consul'
+
+
+def run(cmd, **kwargs):
+    log.debug('+ %s', cmd)
+    return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
+
+
+def detect_interface():
+    return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
+
+
 config = configparser.ConfigParser()
 config.read('cluster.ini')
 
@@ -32,15 +60,6 @@ def get_config(env_key, ini_path, default):
             return section[key]
 
     return default
-
-
-def run(cmd, **kwargs):
-    log.debug("+ %s", cmd)
-    return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
-
-
-def detect_interface():
-    return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
 
 
 class OPTIONS:
@@ -79,24 +98,6 @@ class OPTIONS:
         'consul:version',
         '1.4.3',
     )
-
-
-class PATH:
-    root = Path(__file__).parent.resolve()
-
-    bin = root / 'bin'
-    nomad_bin = bin / 'nomad'
-    consul_bin = bin / 'consul'
-
-    etc = root / 'etc'
-    nomad_hcl = etc / 'nomad.hcl'
-    consul_hcl = etc / 'consul.hcl'
-    supervisor_conf = etc / 'supervisor-cluster.conf'
-
-    var = root / 'var'
-    tmp = var / 'tmp'
-    nomad_var = var / 'nomad'
-    consul_var = var / 'consul'
 
 
 class URL:
