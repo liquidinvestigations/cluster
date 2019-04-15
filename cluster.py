@@ -4,6 +4,7 @@
 Manage a nomad + consul cluster.
 """
 
+import os
 import logging
 import argparse
 from pathlib import Path
@@ -21,33 +22,6 @@ config.read('cluster.ini')
 def is_true(value):
      text = (value or '').lower().strip()
      return text in ['1', 'yes', 'true', 'on', 'enabled']
-
-
-def run(cmd, **kwargs):
-    log.debug("+ %s", cmd)
-    return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
-
-def _dev():
-	if 'cluster' in config:
-		cluster = config['cluster']
-		return is_true(cluster['dev'])
-
-def _interface():
-    if 'network' in config:
-        network = config['network']
-        if 'interface' in network:
-            return network['interface']
-
-    return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
-
-
-class OPTIONS:
-    interface = _interface()
-    dev = _dev()
-
-class VERSION:
-    nomad = '0.8.7'
-    consul = '1.4.3'
 
 
 class PATH:
@@ -68,14 +42,86 @@ class PATH:
     consul_var = var / 'consul'
 
 
+def run(cmd, **kwargs):
+    log.debug('+ %s', cmd)
+    return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
+
+def _dev():
+	if 'cluster' in config:
+		cluster = config['cluster']
+		return is_true(cluster['dev'])
+
+
+def detect_interface():
+    return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
+
+
+config = configparser.ConfigParser()
+config.read('cluster.ini')
+
+
+def get_config(env_key, ini_path, default):
+    value = os.environ.get(env_key)
+    if value is not None:
+        return value
+
+    (section_name, key) = ini_path.split(':')
+    if section_name in config:
+        section = config[section_name]
+        if key in section:
+            return section[key]
+
+    return default
+
+
+class OPTIONS:
+    nomad_interface = get_config(
+        'NOMAD_INTERFACE',
+        'nomad:interface',
+        None,
+    ) or detect_interface()
+
+    nomad_address = get_config(
+        'NOMAD_ADDRESS',
+        'nomad:address',
+        '127.0.0.1',
+    )
+
+    zombie_time = get_config(
+        'NOMAD_ZOMBIE_TIME',
+        'nomad:zombie_time',
+        '4h',
+    )
+
+    supervisor_autostart = get_config(
+        'SUPERVISOR_AUTOSTART',
+        'supervisor:autostart',
+        'off',
+    )
+
+    nomad_version = get_config(
+        'NOMAD_VERSION',
+        'nomad:version',
+        '0.8.7',
+    )
+
+    consul_version = get_config(
+        'CONSUL_VERSION',
+        'consul:version',
+        '1.4.3',
+    )
+    dev = _dev()
+
+
+
 class URL:
     consul = (
         'https://releases.hashicorp.com/consul/'
-        f'{VERSION.consul}/consul_{VERSION.consul}_linux_amd64.zip'
+        f'{OPTIONS.consul_version}/consul_{OPTIONS.consul_version}_linux_amd64.zip'
     )
     nomad = (
         'https://releases.hashicorp.com/nomad/'
-        f'{VERSION.nomad}/nomad_{VERSION.nomad}_linux_amd64.zip'
+        f'{OPTIONS.nomad_version}/nomad_{OPTIONS.nomad_version}_linux_amd64.zip'
     )
 
 
@@ -88,11 +134,16 @@ CONFIG.supervisor = lambda username: f'''\
 user = {username}
 command = {PATH.nomad_bin} agent {'-dev' if OPTIONS.dev else ''} -config {PATH.nomad_hcl}
 redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
 
 [program:consul]
 user = {username}
 command = {PATH.consul_bin} agent {'-dev' if OPTIONS.dev else ''} -config-file {PATH.consul_hcl}
 redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
+[group:cluster]
+programs = nomad,consul
 '''
 
 
@@ -106,21 +157,32 @@ bootstrap_expect = 1
 '''
 
 
-CONFIG.nomad = lambda interface: f'''\
-bind_addr = "0.0.0.0"
+CONFIG.nomad = lambda: f'''\
 data_dir = "{PATH.nomad_var}"
 leave_on_interrupt = true
 leave_on_terminate = true
-disable_update_check = true
+
+addresses {{
+  http = "{OPTIONS.nomad_address}"
+  rpc = "{OPTIONS.nomad_address}"
+  serf = "{OPTIONS.nomad_address}"
+}}
+
+advertise {{
+  http = "{OPTIONS.nomad_address}"
+  rpc = "{OPTIONS.nomad_address}"
+  serf = "{OPTIONS.nomad_address}"
+}}
 
 server {{
   enabled = true
   bootstrap_expect = 1
+  job_gc_threshold = "{OPTIONS.zombie_time}"
 }}
 
 client {{
   enabled = true
-  network_interface = "{interface}"
+  network_interface = "{OPTIONS.nomad_interface}"
 }}
 '''
 
@@ -166,7 +228,7 @@ def configure():
     """ Generate configuration files. """
     _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
     _writefile(PATH.consul_hcl, CONFIG.consul())
-    _writefile(PATH.nomad_hcl, CONFIG.nomad(OPTIONS.interface))
+    _writefile(PATH.nomad_hcl, CONFIG.nomad())
 
 
 class SubcommandParser(argparse.ArgumentParser):
