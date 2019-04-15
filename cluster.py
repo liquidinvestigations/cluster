@@ -90,13 +90,13 @@ class OPTIONS:
     nomad_version = get_config(
         'NOMAD_VERSION',
         'nomad:version',
-        '0.8.7',
+        '0.9.0',
     )
 
     consul_version = get_config(
         'CONSUL_VERSION',
         'consul:version',
-        '1.4.3',
+        '1.4.4',
     )
 
 
