@@ -19,11 +19,6 @@ log.setLevel(LOG_LEVEL)
 config = configparser.ConfigParser()
 config.read('cluster.ini')
 
-def is_true(value):
-     text = (value or '').lower().strip()
-     return text in ['1', 'yes', 'true', 'on', 'enabled']
-
-
 class PATH:
     root = Path(__file__).parent.resolve()
 
@@ -45,11 +40,6 @@ class PATH:
 def run(cmd, **kwargs):
     log.debug('+ %s', cmd)
     return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
-
-def _dev():
-	if 'cluster' in config:
-		cluster = config['cluster']
-		return is_true(cluster['dev'])
 
 
 def detect_interface():
@@ -110,7 +100,7 @@ class OPTIONS:
         'consul:version',
         '1.4.3',
     )
-    dev = _dev()
+    dev = config.getboolean('cluster', 'dev', fallback=False)
 
 
 
