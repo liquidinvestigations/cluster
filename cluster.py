@@ -16,6 +16,8 @@ LOG_LEVEL = logging.DEBUG
 log = logging.getLogger(__name__)
 log.setLevel(LOG_LEVEL)
 
+config = configparser.ConfigParser()
+config.read('cluster.ini')
 
 class PATH:
     root = Path(__file__).parent.resolve()
@@ -98,6 +100,8 @@ class OPTIONS:
         'consul:version',
         '1.4.3',
     )
+    dev = config.getboolean('cluster', 'dev', fallback=False)
+
 
 
 class URL:
@@ -118,13 +122,13 @@ class CONFIG:
 CONFIG.supervisor = lambda username: f'''\
 [program:nomad]
 user = {username}
-command = {PATH.nomad_bin} agent -config {PATH.nomad_hcl}
+command = {PATH.nomad_bin} agent {'-dev' if OPTIONS.dev else ''} -config {PATH.nomad_hcl}
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
 
 [program:consul]
 user = {username}
-command = {PATH.consul_bin} agent -config-file {PATH.consul_hcl}
+command = {PATH.consul_bin} agent {'-dev' if OPTIONS.dev else ''} -config-file {PATH.consul_hcl}
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
 
