@@ -114,13 +114,15 @@ class OPTIONS:
 
 
 class URL:
+    _sysname = os.uname().sysname.lower()
+
     consul = (
         'https://releases.hashicorp.com/consul/'
-        f'{OPTIONS.consul_version}/consul_{OPTIONS.consul_version}_linux_amd64.zip'
+        f'{OPTIONS.consul_version}/consul_{OPTIONS.consul_version}_{_sysname}_amd64.zip'
     )
     nomad = (
         'https://releases.hashicorp.com/nomad/'
-        f'{OPTIONS.nomad_version}/nomad_{OPTIONS.nomad_version}_linux_amd64.zip'
+        f'{OPTIONS.nomad_version}/nomad_{OPTIONS.nomad_version}_{_sysname}_amd64.zip'
     )
 
 
