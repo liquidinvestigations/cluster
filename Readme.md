@@ -38,4 +38,7 @@ sudo supervisorctl update
   and a `supervisord` configuration for the daemons.
 
 * `sudo supervisorctl [start|stop|restart] cluster:` - Start, stop and restart
-  Consul and Nomad.
+  Consul and Nomad as Supervisor programs.
+
+* `./cluster.py runserver consul` and `./cluster.py runserver nomad` - Start
+  Consul and Nomad in the foreground.
