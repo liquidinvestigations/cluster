@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Manage a nomad + consul cluster.
+Manage a Consul + Nomad cluster.
 """
 
 import os
@@ -23,21 +23,20 @@ class PATH:
     root = Path(__file__).parent.resolve()
 
     cluster_py = root / 'cluster.py'
+    cluster_ini = root / 'cluster.ini'
     shell = os.environ.get('SHELL', '/bin/sh')
 
     bin = root / 'bin'
-    nomad_bin = bin / 'nomad'
-    consul_bin = bin / 'consul'
 
     etc = root / 'etc'
-    nomad_hcl = etc / 'nomad.hcl'
     consul_hcl = etc / 'consul.hcl'
+    nomad_hcl = etc / 'nomad.hcl'
     supervisor_conf = etc / 'supervisor-cluster.conf'
 
     var = root / 'var'
     tmp = var / 'tmp'
-    nomad_var = var / 'nomad'
     consul_var = var / 'consul'
+    nomad_var = var / 'nomad'
 
 
 def run(cmd, **kwargs):
@@ -56,7 +55,7 @@ def detect_interface():
 
 
 config = configparser.ConfigParser()
-config.read('cluster.ini')
+config.read(PATH.cluster_ini)
 
 
 def get_config(env_key, ini_path, default):
@@ -86,7 +85,7 @@ class OPTIONS:
         '127.0.0.1',
     )
 
-    zombie_time = get_config(
+    nomad_zombie_time = get_config(
         'NOMAD_ZOMBIE_TIME',
         'nomad:zombie_time',
         '4h',
@@ -98,54 +97,24 @@ class OPTIONS:
         'off',
     )
 
-    nomad_version = get_config(
-        'NOMAD_VERSION',
-        'nomad:version',
-        '0.9.0',
-    )
+    versions = {
+        'consul': get_config(
+            'CONSUL_VERSION',
+            'consul:version',
+            '1.4.4',
+        ),
+        'nomad': get_config(
+            'NOMAD_VERSION',
+            'nomad:version',
+            '0.9.0',
+        ),
+    }
 
-    consul_version = get_config(
-        'CONSUL_VERSION',
-        'consul:version',
-        '1.4.4',
-    )
     dev = config.getboolean('cluster', 'dev', fallback=False)
-
-
-
-class URL:
-    _sysname = os.uname().sysname.lower()
-
-    consul = (
-        'https://releases.hashicorp.com/consul/'
-        f'{OPTIONS.consul_version}/consul_{OPTIONS.consul_version}_{_sysname}_amd64.zip'
-    )
-    nomad = (
-        'https://releases.hashicorp.com/nomad/'
-        f'{OPTIONS.nomad_version}/nomad_{OPTIONS.nomad_version}_{_sysname}_amd64.zip'
-    )
 
 
 class CONFIG:
     pass
-
-
-CONFIG.supervisor = lambda username: f'''\
-[program:nomad]
-user = {username}
-command = {PATH.cluster_py} runserver nomad
-redirect_stderr = true
-autostart = {OPTIONS.supervisor_autostart}
-
-[program:consul]
-user = {username}
-command = {PATH.cluster_py} runserver consul
-redirect_stderr = true
-autostart = {OPTIONS.supervisor_autostart}
-
-[group:cluster]
-programs = nomad,consul
-'''
 
 
 CONFIG.consul = lambda: f'''\
@@ -178,7 +147,7 @@ advertise {{
 server {{
   enabled = true
   bootstrap_expect = 1
-  job_gc_threshold = "{OPTIONS.zombie_time}"
+  job_gc_threshold = "{OPTIONS.nomad_zombie_time}"
 }}
 
 client {{
@@ -188,11 +157,29 @@ client {{
 '''
 
 
-def _download(url, path):
+CONFIG.supervisor = lambda username: f'''\
+[program:consul]
+user = {username}
+command = {PATH.cluster_py} runserver consul
+redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
+[program:nomad]
+user = {username}
+command = {PATH.cluster_py} runserver nomad
+redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
+[group:cluster]
+programs = consul,vault,nomad
+'''
+
+
+def download(url, path):
     run(f'curl -Ls "{url}" -o "{path}"')
 
 
-def _unzip(zip_path, **kwargs):
+def unzip(zip_path, **kwargs):
     run(f'unzip "{zip_path}"', **kwargs)
 
 
@@ -204,16 +191,15 @@ def install():
 
     with tempfile.TemporaryDirectory(dir=PATH.tmp) as _tmp:
         tmp = Path(_tmp)
+        sysname = os.uname().sysname.lower()
 
-        consul_zip = tmp / 'consul.zip'
-        _download(URL.consul, consul_zip)
-        _unzip(consul_zip, cwd=tmp)
-        (tmp / 'consul').rename(PATH.consul_bin)
-
-        nomad_zip = tmp / 'consul.zip'
-        _download(URL.nomad, nomad_zip)
-        _unzip(nomad_zip, cwd=tmp)
-        (tmp / 'nomad').rename(PATH.nomad_bin)
+        for name in ['consul', 'nomad']:
+            version = OPTIONS.versions[name]
+            zip = tmp / f'{name}_{version}_{sysname}_amd64.zip'
+            url = f'https://releases.hashicorp.com/{name}/{version}/{zip.name}'
+            download(url, zip)
+            unzip(zip, cwd=tmp)
+            (tmp / name).rename(PATH.bin / name)
 
 
 def _writefile(path, content):
@@ -227,24 +213,32 @@ def _username():
 
 def configure():
     """ Generate configuration files. """
-    _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
     _writefile(PATH.consul_hcl, CONFIG.consul())
     _writefile(PATH.nomad_hcl, CONFIG.nomad())
-
-
-def exec_nomad():
-    exec_shell(f'{PATH.nomad_bin} agent {"-dev" if OPTIONS.dev else ""} -config {PATH.nomad_hcl}')
+    _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
 
 
 def exec_consul():
-    exec_shell(f'{PATH.consul_bin} agent {"-dev" if OPTIONS.dev else ""} -config-file {PATH.consul_hcl}')
+    exec_shell(
+        f'{PATH.bin / "consul"} agent '
+        f'{"-dev " if OPTIONS.dev else ""}'
+        f'-config-file {PATH.consul_hcl}',
+    )
+
+
+def exec_nomad():
+    exec_shell(
+        f'{PATH.bin / "nomad"} agent '
+        f'{"-dev " if OPTIONS.dev else ""}'
+        f'-config {PATH.nomad_hcl}',
+    )
 
 
 def runserver(name):
     """ Run server [name] in foreground. """
     services = {
-        'nomad': exec_nomad,
         'consul': exec_consul,
+        'nomad': exec_nomad,
     }
 
     exec_service = services[name]
