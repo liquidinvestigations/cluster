@@ -45,10 +45,10 @@ def run(cmd, **kwargs):
     return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
 
 
-def exec_shell(cmd):
+def exec_shell(cmd, env=os.environ):
     log.debug('+ %s', cmd)
     os.chdir(PATH.root)
-    os.execv(PATH.shell, [PATH.shell, '-c', cmd])
+    os.execve(PATH.shell, [PATH.shell, '-c', cmd], env)
 
 
 def detect_interface():
@@ -96,6 +96,12 @@ class OPTIONS:
         'NOMAD_ADDRESS',
         'nomad:address',
         '127.0.0.1',
+    )
+
+    nomad_vault_token = get_config(
+        'NOMAD_VAULT_TOKEN',
+        'nomad:vault_token',
+        None,
     )
 
     nomad_zombie_time = get_config(
@@ -189,6 +195,12 @@ client {{
   enabled = true
   network_interface = "{OPTIONS.nomad_interface}"
 }}
+{f"""
+vault {{
+  enabled = true
+  address = "http://{OPTIONS.vault_address}:8200"
+}}
+""" if OPTIONS.nomad_vault_token else ""}
 '''
 
 
@@ -276,10 +288,12 @@ def exec_vault():
 
 
 def exec_nomad():
+    env = dict(os.environ, VAULT_TOKEN=OPTIONS.nomad_vault_token)
     exec_shell(
         f'{PATH.bin / "nomad"} agent '
         f'{"-dev " if OPTIONS.dev else ""}'
         f'-config {PATH.nomad_hcl}',
+        env=env,
     )
 
 
