@@ -1,6 +1,7 @@
 # Cluster - spin up a Consul + Vault + Nomad cluster
-This script installs and configures consul, vault and nomad. It's designed to
-be easy to use on a fresh Linux machine, therefore it's somewhat opinionated.
+This script installs and configures [consul][], [vault][] and [nomad][]. It's
+designed to be easy to use on a fresh Linux machine, therefore it's somewhat
+opinionated.
 
 It will install everything in subfolders of the repository:
 * `./bin` - Consul, Vault and Nomad binaries
@@ -11,6 +12,9 @@ The script generates a [supervisord][] configuration file in
 `./etc/supervisor-cluster.conf` that can be easily symlinked to e.g.
 `/etc/supervisor/conf.d/cluster.conf`.
 
+[consul]: https://www.consul.io/
+[vault]: https://www.vaultproject.io/
+[nomad]: https://www.nomadproject.io/
 [supervisord]: http://supervisord.org/
 
 
