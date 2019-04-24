@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Manage a Consul + Nomad cluster.
+Manage a Consul + Vault + Nomad cluster.
 """
 
 import os
@@ -30,6 +30,7 @@ class PATH:
 
     etc = root / 'etc'
     consul_hcl = etc / 'consul.hcl'
+    vault_hcl = etc / 'vault.hcl'
     nomad_hcl = etc / 'nomad.hcl'
     supervisor_conf = etc / 'supervisor-cluster.conf'
 
@@ -79,6 +80,18 @@ class OPTIONS:
         None,
     ) or detect_interface()
 
+    vault_address = get_config(
+        'VAULT_ADDRESS',
+        'vault:address',
+        '127.0.0.1',
+    )
+
+    vault_disable_mlock = get_config(
+        'VAULT_DISABLE_MLOCK',
+        'vault:disable_mlock',
+        'false',
+    )
+
     nomad_address = get_config(
         'NOMAD_ADDRESS',
         'nomad:address',
@@ -103,6 +116,11 @@ class OPTIONS:
             'consul:version',
             '1.4.4',
         ),
+        'vault': get_config(
+            'VAULT_VERSION',
+            'vault:version',
+            '1.1.1',
+        ),
         'nomad': get_config(
             'NOMAD_VERSION',
             'nomad:version',
@@ -124,6 +142,23 @@ datacenter = "dc1"
 server = true
 ui = true
 bootstrap_expect = 1
+'''
+
+
+CONFIG.vault = lambda: f'''\
+storage "consul" {{
+  address = "{OPTIONS.vault_address}:8500"
+  path = "vault/"
+}}
+
+listener "tcp" {{
+  address = "{OPTIONS.vault_address}:8200"
+  tls_disable = 1
+}}
+
+ui = true
+disable_mlock = {OPTIONS.vault_disable_mlock}
+api_addr = "http://{OPTIONS.vault_address}:8200"
 '''
 
 
@@ -164,6 +199,12 @@ command = {PATH.cluster_py} runserver consul
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
 
+[program:vault]
+user = {username}
+command = {PATH.cluster_py} runserver vault
+redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
 [program:nomad]
 user = {username}
 command = {PATH.cluster_py} runserver nomad
@@ -184,7 +225,7 @@ def unzip(zip_path, **kwargs):
 
 
 def install():
-    """ Install Consul and Nomad. """
+    """ Install Consul, Vault and Nomad. """
 
     for dir in [PATH.root, PATH.bin, PATH.etc, PATH.var, PATH.tmp]:
         dir.mkdir(exist_ok=True)
@@ -193,7 +234,7 @@ def install():
         tmp = Path(_tmp)
         sysname = os.uname().sysname.lower()
 
-        for name in ['consul', 'nomad']:
+        for name in ['consul', 'vault', 'nomad']:
             version = OPTIONS.versions[name]
             zip = tmp / f'{name}_{version}_{sysname}_amd64.zip'
             url = f'https://releases.hashicorp.com/{name}/{version}/{zip.name}'
@@ -214,6 +255,7 @@ def _username():
 def configure():
     """ Generate configuration files. """
     _writefile(PATH.consul_hcl, CONFIG.consul())
+    _writefile(PATH.vault_hcl, CONFIG.vault())
     _writefile(PATH.nomad_hcl, CONFIG.nomad())
     _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
 
@@ -223,6 +265,13 @@ def exec_consul():
         f'{PATH.bin / "consul"} agent '
         f'{"-dev " if OPTIONS.dev else ""}'
         f'-config-file {PATH.consul_hcl}',
+    )
+
+
+def exec_vault():
+    exec_shell(
+        f'{PATH.bin / "vault"} server '
+        f'-config {PATH.vault_hcl}',
     )
 
 
@@ -238,6 +287,7 @@ def runserver(name):
     """ Run server [name] in foreground. """
     services = {
         'consul': exec_consul,
+        'vault': exec_vault,
         'nomad': exec_nomad,
     }
 
