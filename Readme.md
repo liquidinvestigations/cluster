@@ -1,5 +1,4 @@
 # Cluster - spin up a Consul + Vault + Nomad cluster
-
 This script installs and configures consul, vault and nomad. It's designed to
 be easy to use on a fresh Linux machine, therefore it's somewhat opinionated.
 
@@ -16,7 +15,6 @@ The script generates a [supervisord][] configuration file in
 
 
 ## HowTo (Debian, Ubuntu)
-
 ```shell
 sudo apt update
 sudo apt install python3 git supervisor curl
@@ -30,7 +28,6 @@ sudo supervisorctl update
 
 
 ## Usage
-
 * `./cluster.py install` - Download Consul, Vault and Nomad and install their
   binaries.
 
@@ -55,3 +52,21 @@ sudo supervisorctl update
   in the foreground.
 
 [disable_mlock]: https://www.vaultproject.io/docs/configuration/#disable_mlock
+
+### Vault
+Vault requires manual setup before using it. First, [initialize][] it:
+```shell
+VAULT_ADDRESS=http://127.0.0.1:8200 bin/vault operator init
+```
+
+Check the root token by using it to authenticate into the Vault UI
+(http://127.0.0.1:8200/ui). Then copy the root token to `cluster.ini`:
+```ini
+[nomad]
+vault_token = s.MRGpK9FAMuTEBnZ3BNcWYuY2
+```
+
+Now restart nomad (`sudo supervisorctl restart cluster:nomad`) and you should
+be good to go.
+
+[initialize]: https://www.vaultproject.io/docs/commands/operator/init.html
