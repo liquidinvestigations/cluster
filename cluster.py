@@ -94,6 +94,12 @@ class OPTIONS:
         None,
     ) or detect_interface()
 
+    consul_address = get_config(
+        'CONSUL_ADDRESS',
+        'consul:address',
+        '127.0.0.1',
+    )
+
     vault_address = get_config(
         'VAULT_ADDRESS',
         'vault:address',
@@ -158,7 +164,8 @@ class CONFIG:
 
 
 CONFIG.consul = lambda: f'''\
-bind_addr = "127.0.0.1"
+bind_addr = "{OPTIONS.consul_address}"
+client_addr = "{OPTIONS.consul_address}"
 data_dir = "{PATH.consul_var}"
 datacenter = "dc1"
 server = true
@@ -169,7 +176,7 @@ bootstrap_expect = 1
 
 CONFIG.vault = lambda: f'''\
 storage "consul" {{
-  address = "{OPTIONS.vault_address}:8500"
+  address = "{OPTIONS.consul_address}:8500"
   path = "vault/"
 }}
 
