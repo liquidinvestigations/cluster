@@ -11,6 +11,10 @@ from pathlib import Path
 import tempfile
 import subprocess
 import configparser
+from time import time, sleep
+import json
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 
 LOG_LEVEL = logging.DEBUG
 log = logging.getLogger(__name__)
@@ -38,6 +42,7 @@ class PATH:
     tmp = var / 'tmp'
     consul_var = var / 'consul'
     nomad_var = var / 'nomad'
+    vault_secrets = var / 'vault-secrets.ini'
 
 
 def run(cmd, **kwargs):
@@ -73,6 +78,15 @@ def get_config(env_key, ini_path, default):
     return default
 
 
+def read_vault_secrets():
+    secrets = configparser.ConfigParser()
+    secrets.read(PATH.vault_secrets)
+    return {
+        'keys': secrets.get('vault', 'keys', fallback=''),
+        'root_token': secrets.get('vault', 'root_token', fallback=''),
+    }
+
+
 class OPTIONS:
     nomad_interface = get_config(
         'NOMAD_INTERFACE',
@@ -104,11 +118,7 @@ class OPTIONS:
         '127.0.0.1',
     )
 
-    nomad_vault_token = get_config(
-        'NOMAD_VAULT_TOKEN',
-        'nomad:vault_token',
-        '',
-    )
+    nomad_vault_token = read_vault_secrets()['root_token']
 
     nomad_zombie_time = get_config(
         'NOMAD_ZOMBIE_TIME',
@@ -201,12 +211,15 @@ client {{
   enabled = true
   network_interface = "{OPTIONS.nomad_interface}"
 }}
-{f"""
+
+consul {{
+  address = "{OPTIONS.consul_address}:8500"
+}}
+
 vault {{
   enabled = true
   address = "http://{OPTIONS.vault_address}:8200"
 }}
-""" if OPTIONS.nomad_vault_token else ""}
 '''
 
 
@@ -232,6 +245,31 @@ autostart = {OPTIONS.supervisor_autostart}
 [group:cluster]
 programs = consul,vault,nomad
 '''
+
+
+class JsonApi:
+
+    def __init__(self, endpoint):
+        self.endpoint = endpoint
+
+    def send(self, req):
+        log.debug('%s %s', req.get_method(), req.get_full_url())
+        with urlopen(req) as res:
+            if res.status == 200:
+                res_body = json.load(res)
+                log.debug('response: %r', res_body)
+                return res_body
+
+    def get(self, url):
+        return self.send(Request(f'{self.endpoint}{url}'))
+
+    def put(self, url, data):
+        return self.send(Request(
+            f'{self.endpoint}{url}',
+            json.dumps(data).encode('utf8'),
+            {'Content-Type': 'application/json'},
+            method='PUT',
+        ))
 
 
 def download(url, path):
@@ -315,6 +353,44 @@ def runserver(name):
     exec_service()
 
 
+def autovault(timeout=60):
+    """ Set up Vault automatically (initialize, unseal). """
+
+    vault = JsonApi(f'http://{OPTIONS.vault_address}:8200/v1/')
+
+    t0 = time()
+    while time() - t0 < int(timeout):
+        try:
+            status = vault.get('sys/seal-status')
+
+            if not status['sealed']:
+                return
+
+            break
+
+        except URLError:
+            sleep(.5)
+
+    if not PATH.vault_secrets.exists():
+        resp = vault.put('sys/init', {
+            'secret_shares': 1,
+            'secret_threshold': 1,
+        })
+
+        _secrets_ini = os.open(
+            PATH.vault_secrets,
+            os.O_WRONLY | os.O_CREAT,
+            0o600,
+        )
+        with os.fdopen(_secrets_ini, 'w') as secrets_ini:
+            secrets_ini.write('[vault]\n')
+            secrets_ini.write(f'keys = {",".join(resp["keys"])}\n')
+            secrets_ini.write(f'root_token = {resp["root_token"]}\n')
+
+    secrets = read_vault_secrets()
+    vault.put('sys/unseal', {'key': secrets['keys']})
+
+
 class SubcommandParser(argparse.ArgumentParser):
 
     def add_subcommands(self, name, subcommands):
@@ -337,6 +413,7 @@ def main():
         install,
         configure,
         runserver,
+        autovault,
     ])
 
     (options, extra_args) = parser.parse_known_args()
