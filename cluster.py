@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Manage a nomad + consul cluster.
+Manage a Consul + Vault + Nomad cluster.
 """
 
 import os
@@ -23,21 +23,21 @@ class PATH:
     root = Path(__file__).parent.resolve()
 
     cluster_py = root / 'cluster.py'
+    cluster_ini = root / 'cluster.ini'
     shell = os.environ.get('SHELL', '/bin/sh')
 
     bin = root / 'bin'
-    nomad_bin = bin / 'nomad'
-    consul_bin = bin / 'consul'
 
     etc = root / 'etc'
-    nomad_hcl = etc / 'nomad.hcl'
     consul_hcl = etc / 'consul.hcl'
+    vault_hcl = etc / 'vault.hcl'
+    nomad_hcl = etc / 'nomad.hcl'
     supervisor_conf = etc / 'supervisor-cluster.conf'
 
     var = root / 'var'
     tmp = var / 'tmp'
-    nomad_var = var / 'nomad'
     consul_var = var / 'consul'
+    nomad_var = var / 'nomad'
 
 
 def run(cmd, **kwargs):
@@ -45,10 +45,10 @@ def run(cmd, **kwargs):
     return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
 
 
-def exec_shell(cmd):
+def exec_shell(cmd, env=os.environ):
     log.debug('+ %s', cmd)
     os.chdir(PATH.root)
-    os.execv(PATH.shell, [PATH.shell, '-c', cmd])
+    os.execve(PATH.shell, [PATH.shell, '-c', cmd], env)
 
 
 def detect_interface():
@@ -56,7 +56,7 @@ def detect_interface():
 
 
 config = configparser.ConfigParser()
-config.read('cluster.ini')
+config.read(PATH.cluster_ini)
 
 
 def get_config(env_key, ini_path, default):
@@ -80,6 +80,18 @@ class OPTIONS:
         None,
     ) or detect_interface()
 
+    vault_address = get_config(
+        'VAULT_ADDRESS',
+        'vault:address',
+        '127.0.0.1',
+    )
+
+    vault_disable_mlock = get_config(
+        'VAULT_DISABLE_MLOCK',
+        'vault:disable_mlock',
+        'false',
+    )
+
     nomad_address = get_config(
         'NOMAD_ADDRESS',
         'nomad:address',
@@ -92,7 +104,13 @@ class OPTIONS:
         '127.0.0.1',
     )
 
-    zombie_time = get_config(
+    nomad_vault_token = get_config(
+        'NOMAD_VAULT_TOKEN',
+        'nomad:vault_token',
+        None,
+    )
+
+    nomad_zombie_time = get_config(
         'NOMAD_ZOMBIE_TIME',
         'nomad:zombie_time',
         '4h',
@@ -104,54 +122,29 @@ class OPTIONS:
         'off',
     )
 
-    nomad_version = get_config(
-        'NOMAD_VERSION',
-        'nomad:version',
-        '0.9.0',
-    )
+    versions = {
+        'consul': get_config(
+            'CONSUL_VERSION',
+            'consul:version',
+            '1.4.4',
+        ),
+        'vault': get_config(
+            'VAULT_VERSION',
+            'vault:version',
+            '1.1.1',
+        ),
+        'nomad': get_config(
+            'NOMAD_VERSION',
+            'nomad:version',
+            '0.9.0',
+        ),
+    }
 
-    consul_version = get_config(
-        'CONSUL_VERSION',
-        'consul:version',
-        '1.4.4',
-    )
     dev = config.getboolean('cluster', 'dev', fallback=False)
-
-
-
-class URL:
-    _sysname = os.uname().sysname.lower()
-
-    consul = (
-        'https://releases.hashicorp.com/consul/'
-        f'{OPTIONS.consul_version}/consul_{OPTIONS.consul_version}_{_sysname}_amd64.zip'
-    )
-    nomad = (
-        'https://releases.hashicorp.com/nomad/'
-        f'{OPTIONS.nomad_version}/nomad_{OPTIONS.nomad_version}_{_sysname}_amd64.zip'
-    )
 
 
 class CONFIG:
     pass
-
-
-CONFIG.supervisor = lambda username: f'''\
-[program:nomad]
-user = {username}
-command = {PATH.cluster_py} runserver nomad
-redirect_stderr = true
-autostart = {OPTIONS.supervisor_autostart}
-
-[program:consul]
-user = {username}
-command = {PATH.cluster_py} runserver consul
-redirect_stderr = true
-autostart = {OPTIONS.supervisor_autostart}
-
-[group:cluster]
-programs = nomad,consul
-'''
 
 
 CONFIG.consul = lambda: f'''\
@@ -161,6 +154,23 @@ datacenter = "dc1"
 server = true
 ui = true
 bootstrap_expect = 1
+'''
+
+
+CONFIG.vault = lambda: f'''\
+storage "consul" {{
+  address = "{OPTIONS.vault_address}:8500"
+  path = "vault/"
+}}
+
+listener "tcp" {{
+  address = "{OPTIONS.vault_address}:8200"
+  tls_disable = 1
+}}
+
+ui = true
+disable_mlock = {OPTIONS.vault_disable_mlock}
+api_addr = "http://{OPTIONS.vault_address}:8200"
 '''
 
 
@@ -184,42 +194,71 @@ advertise {{
 server {{
   enabled = true
   bootstrap_expect = 1
-  job_gc_threshold = "{OPTIONS.zombie_time}"
+  job_gc_threshold = "{OPTIONS.nomad_zombie_time}"
 }}
 
 client {{
   enabled = true
   network_interface = "{OPTIONS.nomad_interface}"
 }}
+{f"""
+vault {{
+  enabled = true
+  address = "http://{OPTIONS.vault_address}:8200"
+}}
+""" if OPTIONS.nomad_vault_token else ""}
 '''
 
 
-def _download(url, path):
+CONFIG.supervisor = lambda username: f'''\
+[program:consul]
+user = {username}
+command = {PATH.cluster_py} runserver consul
+redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
+[program:vault]
+user = {username}
+command = {PATH.cluster_py} runserver vault
+redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
+[program:nomad]
+user = {username}
+command = {PATH.cluster_py} runserver nomad
+redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
+[group:cluster]
+programs = consul,vault,nomad
+'''
+
+
+def download(url, path):
     run(f'curl -Ls "{url}" -o "{path}"')
 
 
-def _unzip(zip_path, **kwargs):
+def unzip(zip_path, **kwargs):
     run(f'unzip "{zip_path}"', **kwargs)
 
 
 def install():
-    """ Install Consul and Nomad. """
+    """ Install Consul, Vault and Nomad. """
 
     for dir in [PATH.root, PATH.bin, PATH.etc, PATH.var, PATH.tmp]:
         dir.mkdir(exist_ok=True)
 
     with tempfile.TemporaryDirectory(dir=PATH.tmp) as _tmp:
         tmp = Path(_tmp)
+        sysname = os.uname().sysname.lower()
 
-        consul_zip = tmp / 'consul.zip'
-        _download(URL.consul, consul_zip)
-        _unzip(consul_zip, cwd=tmp)
-        (tmp / 'consul').rename(PATH.consul_bin)
-
-        nomad_zip = tmp / 'consul.zip'
-        _download(URL.nomad, nomad_zip)
-        _unzip(nomad_zip, cwd=tmp)
-        (tmp / 'nomad').rename(PATH.nomad_bin)
+        for name in ['consul', 'vault', 'nomad']:
+            version = OPTIONS.versions[name]
+            zip_path = tmp / f'{name}_{version}_{sysname}_amd64.zip'
+            url = f'https://releases.hashicorp.com/{name}/{version}/{zip.name}'
+            download(url, zip_path)
+            unzip(zip_path, cwd=tmp)
+            (tmp / name).rename(PATH.bin / name)
 
 
 def _writefile(path, content):
@@ -233,24 +272,43 @@ def _username():
 
 def configure():
     """ Generate configuration files. """
-    _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
     _writefile(PATH.consul_hcl, CONFIG.consul())
+    _writefile(PATH.vault_hcl, CONFIG.vault())
     _writefile(PATH.nomad_hcl, CONFIG.nomad())
-
-
-def exec_nomad():
-    exec_shell(f'{PATH.nomad_bin} agent {"-dev" if OPTIONS.dev else ""} -config {PATH.nomad_hcl}')
+    _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
 
 
 def exec_consul():
-    exec_shell(f'{PATH.consul_bin} agent {"-dev" if OPTIONS.dev else ""} -config-file {PATH.consul_hcl}')
+    exec_shell(
+        f'{PATH.bin / "consul"} agent '
+        f'{"-dev " if OPTIONS.dev else ""}'
+        f'-config-file {PATH.consul_hcl}',
+    )
+
+
+def exec_vault():
+    exec_shell(
+        f'{PATH.bin / "vault"} server '
+        f'-config {PATH.vault_hcl}',
+    )
+
+
+def exec_nomad():
+    env = dict(os.environ, VAULT_TOKEN=OPTIONS.nomad_vault_token)
+    exec_shell(
+        f'{PATH.bin / "nomad"} agent '
+        f'{"-dev " if OPTIONS.dev else ""}'
+        f'-config {PATH.nomad_hcl}',
+        env=env,
+    )
 
 
 def runserver(name):
     """ Run server [name] in foreground. """
     services = {
-        'nomad': exec_nomad,
         'consul': exec_consul,
+        'vault': exec_vault,
+        'nomad': exec_nomad,
     }
 
     exec_service = services[name]
