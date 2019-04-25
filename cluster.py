@@ -101,7 +101,7 @@ class OPTIONS:
     nomad_vault_token = get_config(
         'NOMAD_VAULT_TOKEN',
         'nomad:vault_token',
-        None,
+        '',
     )
 
     nomad_zombie_time = get_config(
