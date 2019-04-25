@@ -60,17 +60,19 @@ sudo supervisorctl update
 ### Vault
 Vault requires manual setup before using it. First, [initialize][] it:
 ```shell
-bin/vault operator init -address http://127.0.0.1:8200
+bin/vault operator init -address http://127.0.0.1:8200 -key-shares=1 -key-threshold=1
 ```
 
 Check the root token by using it to authenticate into the Vault UI
-(http://127.0.0.1:8200/ui). Then copy the root token to `cluster.ini`:
+(http://127.0.0.1:8200/ui). Then copy the root token to `cluster.ini`, so that
+Nomad can access Vault secrets:
+
 ```ini
 [nomad]
 vault_token = s.MRGpK9FAMuTEBnZ3BNcWYuY2
 ```
 
-Now restart nomad (`sudo supervisorctl restart cluster:nomad`) and you should
-be good to go.
+Now reconfigure (`./cluster.py configure`) and then restart nomad (`sudo
+supervisorctl restart cluster:nomad`) and you should be good to go.
 
 [initialize]: https://www.vaultproject.io/docs/commands/operator/init.html
