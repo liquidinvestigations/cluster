@@ -248,10 +248,10 @@ def install():
 
         for name in ['consul', 'vault', 'nomad']:
             version = OPTIONS.versions[name]
-            zip = tmp / f'{name}_{version}_{sysname}_amd64.zip'
+            zip_path = tmp / f'{name}_{version}_{sysname}_amd64.zip'
             url = f'https://releases.hashicorp.com/{name}/{version}/{zip.name}'
-            download(url, zip)
-            unzip(zip, cwd=tmp)
+            download(url, zip_path)
+            unzip(zip_path, cwd=tmp)
             (tmp / name).rename(PATH.bin / name)
 
 
