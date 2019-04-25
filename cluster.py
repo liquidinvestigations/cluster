@@ -98,6 +98,12 @@ class OPTIONS:
         '127.0.0.1',
     )
 
+    nomad_advertise = get_config(
+        'NOMAD_ADVERTISE',
+        'nomad:advertise',
+        '127.0.0.1',
+    )
+
     nomad_vault_token = get_config(
         'NOMAD_VAULT_TOKEN',
         'nomad:vault_token',
@@ -180,9 +186,9 @@ addresses {{
 }}
 
 advertise {{
-  http = "{OPTIONS.nomad_address}"
-  rpc = "{OPTIONS.nomad_address}"
-  serf = "{OPTIONS.nomad_address}"
+  http = "{OPTIONS.nomad_advertise}"
+  rpc = "{OPTIONS.nomad_advertise}"
+  serf = "{OPTIONS.nomad_advertise}"
 }}
 
 server {{
