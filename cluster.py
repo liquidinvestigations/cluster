@@ -86,6 +86,12 @@ class OPTIONS:
         '127.0.0.1',
     )
 
+    nomad_advertise = get_config(
+        'NOMAD_ADVERTISE',
+        'nomad:advertise',
+        '127.0.0.1',
+    )
+
     zombie_time = get_config(
         'NOMAD_ZOMBIE_TIME',
         'nomad:zombie_time',
@@ -170,9 +176,9 @@ addresses {{
 }}
 
 advertise {{
-  http = "{OPTIONS.nomad_address}"
-  rpc = "{OPTIONS.nomad_address}"
-  serf = "{OPTIONS.nomad_address}"
+  http = "{OPTIONS.nomad_advertise}"
+  rpc = "{OPTIONS.nomad_advertise}"
+  serf = "{OPTIONS.nomad_advertise}"
 }}
 
 server {{
