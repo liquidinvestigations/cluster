@@ -60,7 +60,7 @@ sudo supervisorctl update
 ### Vault
 Vault requires manual setup before using it. First, [initialize][] it:
 ```shell
-VAULT_ADDRESS=http://127.0.0.1:8200 bin/vault operator init
+bin/vault operator init -address http://127.0.0.1:8200
 ```
 
 Check the root token by using it to authenticate into the Vault UI
