@@ -28,7 +28,6 @@ class PATH:
 
     cluster_py = root / 'cluster.py'
     cluster_ini = root / 'cluster.ini'
-    shell = os.environ.get('SHELL', '/bin/sh')
 
     bin = root / 'bin'
 
@@ -48,12 +47,6 @@ class PATH:
 def run(cmd, **kwargs):
     log.debug('+ %s', cmd)
     return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
-
-
-def exec_shell(cmd, env=os.environ):
-    log.debug('+ %s', cmd)
-    os.chdir(PATH.root)
-    os.execve(PATH.shell, [PATH.shell, '-c', cmd], env)
 
 
 def detect_interface():
@@ -267,41 +260,43 @@ def configure():
     log.info('Done.')
 
 
-def exec_consul():
-    exec_shell(
-        f'{PATH.bin / "consul"} agent '
-        f'{"-dev " if OPTIONS.dev else ""}'
-        f'-config-file {PATH.consul_hcl}',
-    )
+def consul_args():
+    yield from [PATH.bin / 'consul', 'agent']
+    if OPTIONS.dev:
+        yield '-dev'
+    yield from ['-config-file', PATH.consul_hcl]
 
 
-def exec_vault():
-    exec_shell(
-        f'{PATH.bin / "vault"} server '
-        f'-config {PATH.vault_hcl}',
-    )
+def vault_args():
+    yield from [PATH.bin / 'vault', 'server']
+    yield from ['-config', PATH.vault_hcl]
 
 
-def exec_nomad():
-    env = dict(os.environ, VAULT_TOKEN=OPTIONS.nomad_vault_token)
-    exec_shell(
-        f'{PATH.bin / "nomad"} agent '
-        f'{"-dev " if OPTIONS.dev else ""}'
-        f'-config {PATH.nomad_hcl}',
-        env=env,
-    )
+def nomad_args():
+    yield from [PATH.bin / 'nomad', 'agent']
+    if OPTIONS.dev:
+        yield '-dev'
+    yield from ['-config', PATH.nomad_hcl]
 
 
 def runserver(name):
     """ Run server [name] in foreground. """
+
     services = {
-        'consul': exec_consul,
-        'vault': exec_vault,
-        'nomad': exec_nomad,
+        'consul': consul_args,
+        'vault': vault_args,
+        'nomad': nomad_args,
     }
 
-    exec_service = services[name]
-    exec_service()
+    args = [str(a) for a in services[name]()]
+
+    env = dict(os.environ)
+    if name == 'nomad':
+        env['VAULT_TOKEN'] = OPTIONS.nomad_vault_token
+
+    log.debug('+ %s', ' '.join(args))
+    os.chdir(PATH.root)
+    os.execve(args[0], args, env)
 
 
 def autovault(timeout=60):
