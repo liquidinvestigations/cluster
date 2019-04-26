@@ -18,61 +18,80 @@ The script generates a [supervisord][] configuration file in
 [supervisord]: http://supervisord.org/
 
 
-## HowTo (Debian, Ubuntu)
-```shell
-sudo apt update
-sudo apt install python3 git supervisor curl
+## Installation
+This guide assumes a recent Debian/Ubuntu installation.
 
-./cluster.py install
-./cluster.py configure
+* Install dependencies:
+    ```shell
+    sudo apt update
+    sudo apt install python3 git supervisor curl
+    ```
 
-sudo ln -s $(pwd)/etc/supervisor-cluster.conf /etc/supervisor/conf.d/cluster.conf
-sudo supervisorctl update
-```
+* Download Consul, Vault and Nomad and install their binaries:
+    ```shell
+    ./cluster.py install
+    ```
 
+* Create a configuration file called `cluster.ini`:
+    ```ini
+    [cluster]
+    ## Run daemons in `-dev` mode:
+    # dev = true
 
-## Usage
-* `./cluster.py install` - Download Consul, Vault and Nomad and install their
-  binaries.
+    [supervisor]
+    ## Auto-start daemons on boot:
+    # autostart = on
 
-  If possible, allow the vault binary to call `mlock`:
-  ```shell
-  sudo setcap cap_ipc_lock=+ep bin/vault
-  ```
-  Otherwise, run it as root, or disable `mlock` entirely (after reading [the
-  warning][disable_mlock]) by adding the following to `cluster.ini`:
-  ```ini
-  [vault]
-  disable_mlock = true
-  ```
+    [consul]
+    # address = 127.0.0.1
 
-* `./cluster.py configure` - Generate configuration files for Consul, Vault and
-  Nomad and a `supervisord` configuration for the daemons.
+    [vault]
+    # address = 127.0.0.1
+    ## If vault complains with `Failed to lock memory`, either allow the vault
+    ## binary to call mlock (`sudo setcap cap_ipc_lock=+ep bin/vault`), or
+    ## disable mlock after reading
+    ## https://www.vaultproject.io/docs/configuration/#disable_mlock
+    # disable_mlock = true
 
-* `sudo supervisorctl <start|stop|restart> cluster:` - Start, stop and restart
-  Consul, Vault and Nomad as Supervisor programs.
+    [nomad]
+    # address = 127.0.0.1
+    # interface = eth0
+    # zombie_time = 4h
+    ```
 
-* `./cluster.py runserver <consul|vault|nomad>` - Start Consul, Vault and Nomad
-  in the foreground.
+* Generate configuration files for Consul, Vault and Nomad and a `supervisord`
+  configuration for the daemons:
+    ```shell
+    ./cluster.py configure
+    sudo ln -s $(pwd)/etc/supervisor-cluster.conf /etc/supervisor/conf.d/cluster.conf
+    sudo supervisorctl update
+    ```
 
-[disable_mlock]: https://www.vaultproject.io/docs/configuration/#disable_mlock
+* To control the daemons, run `sudo supervisorctl <start|stop|restart>
+  cluster:`
+
+* To run the daemons in the foreground: `./cluster.py runserver
+  <consul|vault|nomad>`
 
 ### Vault
-Vault requires manual setup before using it. First, [initialize][] it:
+Vault requires initialization when installing. It also requires that the Vault
+be unsealed after the daemon starts, including after reboot.
+
+For production environments, use the Vault commands [initialize][] and
+[unseal][].
+
+For development, to avoid manually copy/pasting keys, you can use the
+`autovault` command. On first run, it initializes the vault, stores the unseal
+key and root token in `var/vault-secrets.ini` with permissions `0600`, and
+unseals it. On subsequent runs, it uses the same key to unseal the vault, so
+it's safe to run at boot. Be sure to restart the Nomad daemon after running
+`autovault` so that Nomad picks up the new root token.
+
 ```shell
-bin/vault operator init -address http://127.0.0.1:8200 -key-shares=1 -key-threshold=1
+./cluster.py autovault
+sudo supervisorctl restart cluster:nomad
 ```
 
-Check the root token by using it to authenticate into the Vault UI
-(http://127.0.0.1:8200/ui). Then copy the root token to `cluster.ini`, so that
-Nomad can access Vault secrets:
-
-```ini
-[nomad]
-vault_token = s.MRGpK9FAMuTEBnZ3BNcWYuY2
-```
-
-Now reconfigure (`./cluster.py configure`) and then restart nomad (`sudo
-supervisorctl restart cluster:nomad`) and you should be good to go.
 
 [initialize]: https://www.vaultproject.io/docs/commands/operator/init.html
+[unseal]: https://www.vaultproject.io/docs/commands/operator/unseal.html
