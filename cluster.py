@@ -304,6 +304,7 @@ def install():
             download(url, zip_path)
             unzip(zip_path, cwd=tmp)
             (tmp / name).rename(PATH.bin / name)
+    log.info('Done.')
 
 
 def _writefile(path, content):
@@ -321,6 +322,7 @@ def configure():
     _writefile(PATH.vault_hcl, CONFIG.vault())
     _writefile(PATH.nomad_hcl, CONFIG.nomad())
     _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
+    log.info('Done.')
 
 
 def exec_consul():
@@ -396,6 +398,7 @@ def autovault(timeout=60):
 
     secrets = read_vault_secrets()
     vault.put('sys/unseal', {'key': secrets['keys']})
+    log.info('Done.')
 
 
 class SubcommandParser(argparse.ArgumentParser):
