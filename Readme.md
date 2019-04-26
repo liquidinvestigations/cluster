@@ -33,30 +33,9 @@ This guide assumes a recent Debian/Ubuntu installation.
     ```
 
 * Create a configuration file called `cluster.ini`:
-    ```ini
-    [cluster]
-    ## Run daemons in `-dev` mode:
-    # dev = true
-
-    [supervisor]
-    ## Auto-start daemons on boot:
-    # autostart = on
-
-    [consul]
-    # address = 127.0.0.1
-
-    [vault]
-    # address = 127.0.0.1
-    ## If vault complains with `Failed to lock memory`, either allow the vault
-    ## binary to call mlock (`sudo setcap cap_ipc_lock=+ep bin/vault`), or
-    ## disable mlock after reading
-    ## https://www.vaultproject.io/docs/configuration/#disable_mlock
-    # disable_mlock = true
-
-    [nomad]
-    # address = 127.0.0.1
-    # interface = eth0
-    # zombie_time = 4h
+    ```shell
+    cp examples/cluster.ini .
+    vim cluster.ini
     ```
 
 * Generate configuration files for Consul, Vault and Nomad and a `supervisord`
