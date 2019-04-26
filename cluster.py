@@ -64,20 +64,6 @@ config = configparser.ConfigParser()
 config.read(PATH.cluster_ini)
 
 
-def get_config(env_key, ini_path, default):
-    value = os.environ.get(env_key)
-    if value is not None:
-        return value
-
-    (section_name, key) = ini_path.split(':')
-    if section_name in config:
-        section = config[section_name]
-        if key in section:
-            return section[key]
-
-    return default
-
-
 def read_vault_secrets():
     secrets = configparser.ConfigParser()
     secrets.read(PATH.vault_secrets)
@@ -88,75 +74,31 @@ def read_vault_secrets():
 
 
 class OPTIONS:
-    nomad_interface = get_config(
-        'NOMAD_INTERFACE',
-        'nomad:interface',
-        None,
-    ) or detect_interface()
+    nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()
 
-    consul_address = get_config(
-        'CONSUL_ADDRESS',
-        'consul:address',
-        '127.0.0.1',
-    )
+    consul_address = config.get('consul', 'address', fallback='127.0.0.1')
 
-    vault_address = get_config(
-        'VAULT_ADDRESS',
-        'vault:address',
-        '127.0.0.1',
-    )
+    vault_address = config.get('vault', 'address', fallback='127.0.0.1')
 
-    vault_disable_mlock = get_config(
-        'VAULT_DISABLE_MLOCK',
-        'vault:disable_mlock',
-        'false',
-    )
+    vault_disable_mlock = config.getboolean('vault', 'disable_mlock', fallback=False)
 
-    nomad_address = get_config(
-        'NOMAD_ADDRESS',
-        'nomad:address',
-        '127.0.0.1',
-    )
+    nomad_address = config.get('nomad', 'address', fallback='127.0.0.1')
 
-    nomad_advertise = get_config(
-        'NOMAD_ADVERTISE',
-        'nomad:advertise',
-        '127.0.0.1',
-    )
+    nomad_advertise = config.get('nomad', 'advertise', fallback='127.0.0.1')
 
-    nomad_vault_token = read_vault_secrets()['root_token']
+    nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
 
-    nomad_zombie_time = get_config(
-        'NOMAD_ZOMBIE_TIME',
-        'nomad:zombie_time',
-        '4h',
-    )
-
-    supervisor_autostart = get_config(
-        'SUPERVISOR_AUTOSTART',
-        'supervisor:autostart',
-        'off',
-    )
+    supervisor_autostart = config.getboolean('supervisor', 'autostart', fallback=False)
 
     versions = {
-        'consul': get_config(
-            'CONSUL_VERSION',
-            'consul:version',
-            '1.4.4',
-        ),
-        'vault': get_config(
-            'VAULT_VERSION',
-            'vault:version',
-            '1.1.1',
-        ),
-        'nomad': get_config(
-            'NOMAD_VERSION',
-            'nomad:version',
-            '0.9.0',
-        ),
+        'consul': config.get('consul', 'version', fallback='1.4.4'),
+        'vault': config.get('vault', 'version', fallback='1.1.1'),
+        'nomad': config.get('nomad', 'version', fallback='0.9.0'),
     }
 
     dev = config.getboolean('cluster', 'dev', fallback=False)
+
+    nomad_vault_token = read_vault_secrets()['root_token']
 
 
 class CONFIG:
@@ -186,7 +128,7 @@ listener "tcp" {{
 }}
 
 ui = true
-disable_mlock = {OPTIONS.vault_disable_mlock}
+disable_mlock = {'true' if OPTIONS.vault_disable_mlock else 'false'}
 api_addr = "http://{OPTIONS.vault_address}:8200"
 '''
 
