@@ -42,6 +42,7 @@ class PATH:
     consul_var = var / 'consul'
     nomad_var = var / 'nomad'
     vault_secrets = var / 'vault-secrets.ini'
+    consul_socket = var / 'consul.socket'
 
 
 def run(cmd, **kwargs):
@@ -101,6 +102,9 @@ class CONFIG:
 CONFIG.consul = lambda: f'''\
 bind_addr = "{OPTIONS.consul_address}"
 client_addr = "{OPTIONS.consul_address}"
+addresses {{
+  http = "{OPTIONS.consul_address} unix://{PATH.consul_socket}"
+}}
 data_dir = "{PATH.consul_var}"
 datacenter = "dc1"
 server = true
