@@ -1,6 +1,23 @@
 #!/bin/bash
 set -ex
 
+# Set up local bridge network
+#
+#       sudo ./network.sh
+#
+# Then edit `cluster.ini` and edit:
+#
+#       [nomad]
+#       interface = liquid-bridge
+#       address = 10.66.60.01
+#       advertise = 10.66.60.01
+#
+#       [vault]
+#       address = 10.66.60.01
+#
+#       [consul]
+#       address = 10.66.60.01
+
 BRIDGE_NAME=liquid-bridge
 BRIDGE_ADDRESS=10.66.60.1
 
