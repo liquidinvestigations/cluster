@@ -38,6 +38,8 @@ This guide assumes a recent Debian/Ubuntu installation.
     vim cluster.ini
     ```
 
+* Set up the network. You can use our example configuration in `examples/network.sh`.
+
 * Generate configuration files for Consul, Vault and Nomad and a `supervisord`
   configuration for the daemons:
     ```shell
