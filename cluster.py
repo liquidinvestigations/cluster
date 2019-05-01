@@ -80,6 +80,8 @@ class OPTIONS:
 
     nomad_advertise = config.get('nomad', 'advertise', fallback='127.0.0.1')
 
+    nomad_memory = config.get('nomad', 'memory', fallback=0)
+
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
 
     supervisor_autostart = config.getboolean('supervisor', 'autostart', fallback=False)
@@ -156,6 +158,7 @@ server {{
 client {{
   enabled = true
   network_interface = "{OPTIONS.nomad_interface}"
+  memory_total_mb = {OPTIONS.nomad_memory or '0 # autodetect'}
 }}
 
 consul {{
