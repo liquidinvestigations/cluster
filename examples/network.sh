@@ -35,3 +35,5 @@ iptables -t nat -A PREROUTING \
 iptables -t nat -A POSTROUTING -o $bridge_name -j MASQUERADE
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
+
+echo "Network set up successfully." > /dev/null
