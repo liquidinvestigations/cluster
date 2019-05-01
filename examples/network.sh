@@ -1,5 +1,4 @@
-#!/bin/bash
-set -ex
+#!/bin/bash -ex
 
 # Set up local bridge network
 #
@@ -18,13 +17,21 @@ set -ex
 #       [consul]
 #       address = 10.66.60.01
 
-BRIDGE_NAME=liquid-bridge
-BRIDGE_ADDRESS=10.66.60.1
+bridge_name=liquid-bridge
+bridge_address=10.66.60.1
+public_address=$(ip route get 8.8.8.8 | awk '{ print $7; exit }')
 
-ip link delete $BRIDGE_NAME type bridge || echo 'nothing to delete'
-ip link add name $BRIDGE_NAME type bridge
-ip link set dev $BRIDGE_NAME up
-ip address add dev $BRIDGE_NAME $BRIDGE_ADDRESS/24
+ip link add name $bridge_name type bridge
+ip link set dev $bridge_name up
+ip address add dev $bridge_name $bridge_address/24
 
-# TODO: add bridge to external interface
-# TODO: firewall
+iptables -t nat -A PREROUTING \
+  -d $public_address -p tcp --dport 80 \
+  -j DNAT --to-destination $bridge_address
+iptables -t nat -A PREROUTING \
+  -d $public_address -p tcp --dport 443 \
+  -j DNAT --to-destination $bridge_address
+
+iptables -t nat -A POSTROUTING -o $bridge_name -j MASQUERADE
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
