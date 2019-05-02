@@ -76,3 +76,16 @@ sudo supervisorctl restart cluster:nomad
 
 [initialize]: https://www.vaultproject.io/docs/commands/operator/init.html
 [unseal]: https://www.vaultproject.io/docs/commands/operator/unseal.html
+
+
+## Docker
+```shell
+docker run --rm \
+  --publish 8500:8500 \
+  --publish 8200:8200 \
+  --publish 4646:4646 \
+  --name cluster \
+  --volume /tmp/cluster-var:/opt/cluster/var \
+  --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+  cluster
+```
