@@ -80,12 +80,16 @@ sudo supervisorctl restart cluster:nomad
 
 ## Docker
 ```shell
+docker build . --tag cluster
 docker run --rm \
+  --privileged \
+  --name cluster \
+  --env NOMAD_CLIENT_INTERFACE=wg0 \
+  --volume /tmp/cluster-var:/opt/cluster/var \
+  --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+  --net host \
   --publish 8500:8500 \
   --publish 8200:8200 \
   --publish 4646:4646 \
-  --name cluster \
-  --volume /tmp/cluster-var:/opt/cluster/var \
-  --volume /var/run/docker.sock:/var/run/docker.sock:ro \
   cluster
 ```
