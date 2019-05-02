@@ -24,5 +24,8 @@ RUN set -e \
   && mv /tmp/autovault.conf /etc/supervisor/conf.d/autovault.conf
 
 VOLUME /opt/cluster/var
+EXPOSE 8500
+EXPOSE 8200
+EXPOSE 4646
 
-CMD ./cluster.py configure && supervisord -c /etc/supervisor/supervisord.conf -n
+CMD ./cluster.py configure && exec supervisord -c /etc/supervisor/supervisord.conf -n
