@@ -80,13 +80,12 @@ sudo supervisorctl restart cluster:nomad
 
 ## Docker
 ```shell
-docker build . --tag cluster
-docker run --rm \
-  --privileged \
+docker run --detach --restart always \
   --name cluster \
-  --env NOMAD_CLIENT_INTERFACE=wg0 \
-  --volume /tmp/cluster-var:/opt/cluster/var \
+  --volume /opt/cluster/var:/opt/cluster/var \
   --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+  --privileged \
   --net host \
-  cluster
+  --env NOMAD_CLIENT_INTERFACE=wg0 \
+  liquidinvestigations/cluster
 ```
