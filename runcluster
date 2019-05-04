@@ -1,0 +1,22 @@
+#!/bin/bash -ex
+
+cd /opt/cluster
+
+cat > /etc/supervisor/conf.d/autovault.conf <<EOF
+[program:autovault]
+command = bash -c 'cd /opt/cluster && ./cluster.py autovault && chmod 666 /opt/cluster/var/vault-secrets.ini && supervisorctl restart cluster:nomad'
+autostart = true
+autorestart = false
+EOF
+
+cat > cluster.ini <<EOF
+[supervisor]
+autostart = true
+
+[nomad]
+interface = $NOMAD_CLIENT_INTERFACE
+EOF
+
+./cluster.py configure
+
+exec supervisord -c /etc/supervisor/supervisord.conf -n

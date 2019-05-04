@@ -89,3 +89,6 @@ docker run --detach --restart always \
   --env NOMAD_CLIENT_INTERFACE=wg0 \
   liquidinvestigations/cluster
 ```
+
+Then go to consul (`http://localhost:8500/ui/dc1/services`) and wait for the
+health check lights to turn green.
