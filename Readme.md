@@ -30,6 +30,7 @@ This guide assumes a recent Debian/Ubuntu installation.
 * Download Consul, Vault and Nomad and install their binaries:
     ```shell
     ./cluster.py install
+    sudo setcap cap_ipc_lock=+ep bin/vault  # or disable mlock, see below
     ```
 
 * Create a configuration file called `cluster.ini`:
@@ -73,6 +74,16 @@ it's safe to run at boot. Be sure to restart the Nomad daemon after running
 sudo supervisorctl restart cluster:nomad
 ```
 
-
 [initialize]: https://www.vaultproject.io/docs/commands/operator/init.html
 [unseal]: https://www.vaultproject.io/docs/commands/operator/unseal.html
+
+#### Disabling mlock
+Disabling mlock is [**not recommended**][disable_mlock], but if you insist, add
+this to `cluster.ini`:
+
+```ini
+[vault]
+disable_mlock = true
+```
+
+[disable_mlock]: https://www.vaultproject.io/docs/configuration/#disable_mlock
