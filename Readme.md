@@ -24,10 +24,19 @@ The script generates a [supervisord][] configuration file in
 This guide assumes a recent Debian/Ubuntu installation.
 
 * Install dependencies:
-
+    - Linux:
     ```shell
     sudo apt update
     sudo apt install python3 git supervisor curl unzip
+    ```
+    - Mac OS:
+    Install `brew` (see [brew]: https://brew.sh)
+
+    ```shell
+    brew install python git supervisor curl
+    sudo chown root:wheel /usr/local/Cellar/supervisor/3.3.5/homebrew.mxcl.supervisor.plist
+    sudo ln -s /usr/local/Cellar/supervisor/3.3.5/homebrew.mxcl.supervisor.plist /Library/LaunchDaemons
+    sudo launchctl load /Library/LaunchDaemons/homebrew.mxcl.supervisor.plist
     ```
 
 * Download Consul, Vault and Nomad and install their binaries:
@@ -44,14 +53,22 @@ This guide assumes a recent Debian/Ubuntu installation.
     vim cluster.ini
     ```
 
-* Set up the network. You can use our example configuration in `examples/network.sh`.
+* Set up the network. You can use our example configuration in `examples/network.sh` (`network-mac.sh` for MacOS).
 
 * Generate configuration files for Consul, Vault and Nomad and a `supervisord`
   configuration for the daemons:
-
+    - Linux:
     ```shell
     ./cluster.py configure
     sudo ln -s $(pwd)/etc/supervisor-cluster.conf /etc/supervisor/conf.d/cluster.conf
+    sudo supervisorctl update
+    ```
+
+    - Mac OS:
+    ```shell
+    ./cluster.py configure
+    sudo mkdir /usr/local/etc/supervisor.d
+    sudo ln -s $(pwd)/etc/supervisor-cluster.conf /usr/local/etc/supervisor.d/cluster.ini
     sudo supervisorctl update
     ```
 

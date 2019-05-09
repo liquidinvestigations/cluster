@@ -15,6 +15,7 @@ from time import time, sleep
 import json
 from urllib.request import Request, urlopen
 from urllib.error import URLError
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,8 @@ config = configparser.ConfigParser()
 config.read('cluster.ini')
 
 class PATH:
+    env = os.getenv('PATH')
+
     root = Path(__file__).parent.resolve()
 
     cluster_py = root / 'cluster.py'
@@ -36,6 +39,7 @@ class PATH:
     supervisor_conf = etc / 'supervisor-cluster.conf'
 
     var = root / 'var'
+    log = var / 'log'
     tmp = var / 'tmp'
     consul_var = var / 'consul'
     nomad_var = var / 'nomad'
@@ -49,7 +53,11 @@ def run(cmd, **kwargs):
 
 
 def detect_interface():
-    return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
+    if sys.platform == 'darwin':
+        return run("route get 8.8.8.8 | awk '/interface:/ {print $2}'").strip()
+    elif sys.platform == 'linux' or sys.platform == 'linux2':
+        return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
+    raise RuntimeError(f'Unsupported platform {sys.platform}')
 
 
 config = configparser.ConfigParser()
@@ -174,21 +182,27 @@ vault {{
 
 CONFIG.supervisor = lambda username: f'''\
 [program:consul]
+environment = PATH="{PATH.env}"
 user = {username}
 command = {PATH.cluster_py} runserver consul
 redirect_stderr = true
+stdout_logfile = {PATH.log / 'consul.log'}
 autostart = {OPTIONS.supervisor_autostart}
 
 [program:vault]
+environment = PATH="{PATH.env}"
 user = {username}
 command = {PATH.cluster_py} runserver vault
 redirect_stderr = true
+stdout_logfile = {PATH.log / 'vault.log'}
 autostart = {OPTIONS.supervisor_autostart}
 
 [program:nomad]
+environment = PATH="{PATH.env}"
 user = {username}
 command = {PATH.cluster_py} runserver nomad
 redirect_stderr = true
+stdout_logfile = {PATH.log / 'nomad.log'}
 autostart = {OPTIONS.supervisor_autostart}
 
 [group:cluster]
