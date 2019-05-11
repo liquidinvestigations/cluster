@@ -102,6 +102,6 @@ disable_mlock = true
 When updating an existing installation using `./cluster.py install`, you'll
 need to reapply the `mlock` file capabilities for `bin/vault`:
 
-   ```shell
-    sudo setcap cap_ipc_lock=+ep bin/vault
-    ```
+```shell
+sudo setcap cap_ipc_lock=+ep bin/vault
+```
