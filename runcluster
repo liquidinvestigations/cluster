@@ -9,13 +9,15 @@ autostart = true
 autorestart = false
 EOF
 
-cat > cluster.ini <<EOF
-[supervisor]
-autostart = true
+if ! [ -e cluster.ini ]; then
+  cat > cluster.ini <<EOF
+  [supervisor]
+  autostart = true
 
-[nomad]
-interface = $NOMAD_CLIENT_INTERFACE
-EOF
+  [nomad]
+  interface = $NOMAD_CLIENT_INTERFACE
+  EOF
+fi
 
 ./cluster.py configure
 
