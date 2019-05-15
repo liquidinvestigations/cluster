@@ -97,6 +97,15 @@ disable_mlock = true
 
 [disable_mlock]: https://www.vaultproject.io/docs/configuration/#disable_mlock
 
+#### Updating
+
+When updating an existing installation using `./cluster.py install`, you'll
+need to reapply the `mlock` file capabilities for `bin/vault`:
+
+```shell
+sudo setcap cap_ipc_lock=+ep bin/vault
+```
+
 ## Docker
 ```shell
 docker run --detach --restart always \
