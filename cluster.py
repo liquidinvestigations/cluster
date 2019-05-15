@@ -16,9 +16,7 @@ import json
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
-LOG_LEVEL = logging.DEBUG
 log = logging.getLogger(__name__)
-log.setLevel(LOG_LEVEL)
 
 config = configparser.ConfigParser()
 config.read('cluster.ini')
@@ -93,6 +91,8 @@ class OPTIONS:
     }
 
     dev = config.getboolean('cluster', 'dev', fallback=False)
+
+    debug = config.getboolean('cluster', 'debug', fallback=False)
 
     nomad_vault_token = read_vault_secrets()['root_token']
 
@@ -375,8 +375,10 @@ def main():
 
 
 if __name__ == '__main__':
+    level = logging.DEBUG if OPTIONS.debug else logging.INFO
+    log.setLevel(level)
     logging.basicConfig(
-        level=LOG_LEVEL,
+        level=level,
         format='%(asctime)s %(levelname)s %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
     )
