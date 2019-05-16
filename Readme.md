@@ -19,7 +19,6 @@ The script generates a [supervisord][] configuration file in
 [nomad]: https://www.nomadproject.io/
 [supervisord]: http://supervisord.org/
 
-
 ## Installation
 
 This guide assumes a recent Debian/Ubuntu installation.
