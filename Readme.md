@@ -102,6 +102,22 @@ disable_mlock = true
 When updating an existing installation using `./cluster.py install`, you'll
 need to reapply the `mlock` file capabilities for `bin/vault`:
 
-   ```shell
-    sudo setcap cap_ipc_lock=+ep bin/vault
-    ```
+```shell
+sudo setcap cap_ipc_lock=+ep bin/vault
+```
+
+## Docker
+
+```shell
+docker run --detach --restart always \
+  --name cluster \
+  --volume /opt/cluster/var:/opt/cluster/var \
+  --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+  --privileged \
+  --net host \
+  --env NOMAD_CLIENT_INTERFACE=wg0 \
+  liquidinvestigations/cluster
+```
+
+Then go to consul (`http://localhost:8500/ui/dc1/services`) and wait for the
+health check lights to turn green.
