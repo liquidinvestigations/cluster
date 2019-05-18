@@ -17,10 +17,10 @@
 #       [consul]
 #       address = 10.66.60.01
 
-bridge_name=liquid-bridge
+bridge_name=bridge1
 bridge_address=10.66.60.1
-public_interface=$(route get 8.8.8.8 | awk '/interface:/ {print $2}')
 
-ifconfig $public_interface alias $bridge_address/24 up
+ifconfig $bridge_name create
+ifconfig $bridge_name $bridge_address/24 up
 
 echo "Network set up successfully." > /dev/null
