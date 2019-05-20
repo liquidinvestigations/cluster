@@ -26,6 +26,7 @@ The script generates a [supervisord][] configuration file in
 This guide assumes a recent Debian/Ubuntu installation.
 
 * Install dependencies:
+
     ```shell
     sudo apt update
     sudo apt install python3 git supervisor curl unzip
@@ -45,10 +46,11 @@ This guide assumes a recent Debian/Ubuntu installation.
     vim cluster.ini
     ```
 
-* Set up the network. You can use our example configuration in `examples/network.sh` (`network-mac.sh` for MacOS).
+* Set up the network. You can use our example configuration in `examples/network.sh`.
 
 * Generate configuration files for Consul, Vault and Nomad and a `supervisord`
   configuration for the daemons:
+
     ```shell
     ./cluster.py configure
     sudo ln -s $(pwd)/etc/supervisor-cluster.conf /etc/supervisor/conf.d/cluster.conf
@@ -73,12 +75,14 @@ This guide assumes a recent Debian/Ubuntu installation.
     ```
 
 * Download Consul, Vault and Nomad and install their binaries:
+
     ```shell
     ./cluster.py install
     sudo setcap cap_ipc_lock=+ep bin/vault  # or disable mlock, see below
     ```
 
 * Create a configuration file called `cluster.ini`:
+
     ```shell
     cp examples/cluster.ini .
     vim cluster.ini
