@@ -27,7 +27,7 @@ This guide assumes a recent Debian/Ubuntu installation.
 
     ```shell
     sudo apt update
-    sudo apt install python3 git supervisor curl
+    sudo apt install python3 git supervisor curl unzip
     ```
 
 * Download Consul, Vault and Nomad and install their binaries:
