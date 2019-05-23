@@ -15,6 +15,7 @@ from time import time, sleep
 import json
 from urllib.request import Request, urlopen
 from urllib.error import URLError
+import sys
 
 log = logging.getLogger(__name__)
 
@@ -49,7 +50,11 @@ def run(cmd, **kwargs):
 
 
 def detect_interface():
-    return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
+    if sys.platform == 'darwin':
+        return run("route get 8.8.8.8 | awk '/interface:/ {print $2}'").strip()
+    elif sys.platform == 'linux' or sys.platform == 'linux2':
+        return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
+    raise RuntimeError(f'Unsupported platform {sys.platform}')
 
 
 config = configparser.ConfigParser()
@@ -175,19 +180,19 @@ vault {{
 CONFIG.supervisor = lambda username: f'''\
 [program:consul]
 user = {username}
-command = {PATH.cluster_py} runserver consul
+command = {sys.executable} {PATH.cluster_py} runserver consul
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
 
 [program:vault]
 user = {username}
-command = {PATH.cluster_py} runserver vault
+command = {sys.executable} {PATH.cluster_py} runserver vault
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
 
 [program:nomad]
 user = {username}
-command = {PATH.cluster_py} runserver nomad
+command = {sys.executable} {PATH.cluster_py} runserver nomad
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
 

@@ -19,7 +19,9 @@ The script generates a [supervisord][] configuration file in
 [nomad]: https://www.nomadproject.io/
 [supervisord]: http://supervisord.org/
 
-## Installation
+# Installation
+
+## Installation on Linux
 
 This guide assumes a recent Debian/Ubuntu installation.
 
@@ -55,13 +57,55 @@ This guide assumes a recent Debian/Ubuntu installation.
     sudo supervisorctl update
     ```
 
-* To control the daemons, run `sudo supervisorctl <start|stop|restart>
-  cluster:`
+* To control the daemons, run `sudo supervisorctl <start|stop|restart> cluster:<consul|vault|nomad>`
 
-* To run the daemons in the foreground: `./cluster.py runserver
-  <consul|vault|nomad>`
+* To run the daemons in the foreground: `./cluster.py runserver <consul|vault|nomad>`
 
-### Vault
+## Installation on Mac OS
+
+* Install dependencies
+
+    Install `brew` (see [brew]: https://brew.sh)
+
+    ```shell
+    brew install python git supervisor curl
+    sudo chown root:wheel /usr/local/Cellar/supervisor/$(brew list supervisor | tail -1 | cut -f 6 -d /)/homebrew.mxcl.supervisor.plist
+    sudo ln -s /usr/local/opt/supervisor/homebrew.mxcl.supervisor.plist /Library/LaunchDaemons
+    sudo launchctl load /Library/LaunchDaemons/homebrew.mxcl.supervisor.plist
+    ```
+
+* Download Consul, Vault and Nomad and install their binaries:
+
+    ```shell
+    ./cluster.py install
+    sudo setcap cap_ipc_lock=+ep bin/vault  # or disable mlock, see below
+    ```
+
+* Create a configuration file called `cluster.ini`:
+
+    ```shell
+    cp examples/cluster.ini .
+    vim cluster.ini
+    ```
+
+* Set up the network. You can use our example configuration in `examples/network-mac.sh`
+
+* Generate configuration files for Consul, Vault and Nomad and a `supervisord`
+  configuration for the daemons:
+
+    ```shell
+    ./cluster.py configure
+    mkdir /usr/local/etc/supervisor.d
+    sudo ln -s $(pwd)/etc/supervisor-cluster.conf /usr/local/etc/supervisor.d/cluster.ini
+    sudo supervisorctl update
+    ```
+
+* To control the daemons, run `sudo supervisorctl <start|stop|restart> cluster:<consul|vault|nomad>`
+
+* To run the daemons in the foreground: `./cluster.py runserver <consul|vault|nomad>`
+
+
+## Vault
 
 Vault requires initialization when installing. It also requires that the Vault
 be unsealed after the daemon starts, including after reboot.
@@ -84,7 +128,7 @@ sudo supervisorctl restart cluster:nomad
 [initialize]: https://www.vaultproject.io/docs/commands/operator/init.html
 [unseal]: https://www.vaultproject.io/docs/commands/operator/unseal.html
 
-#### Disabling mlock
+### Disabling mlock
 
 Disabling mlock is [**not recommended**][disable_mlock], but if you insist, add
 this to `cluster.ini`:
