@@ -23,8 +23,6 @@ config = configparser.ConfigParser()
 config.read('cluster.ini')
 
 class PATH:
-    env = os.getenv('PATH')
-
     root = Path(__file__).parent.resolve()
 
     cluster_py = root / 'cluster.py'
@@ -182,27 +180,21 @@ vault {{
 
 CONFIG.supervisor = lambda username: f'''\
 [program:consul]
-environment = PATH="{PATH.env}"
 user = {username}
-command = {PATH.cluster_py} runserver consul
+command = {sys.executable} {PATH.cluster_py} runserver consul
 redirect_stderr = true
-stdout_logfile = {PATH.log / 'consul.log'}
 autostart = {OPTIONS.supervisor_autostart}
 
 [program:vault]
-environment = PATH="{PATH.env}"
 user = {username}
-command = {PATH.cluster_py} runserver vault
+command = {sys.executable} {PATH.cluster_py} runserver vault
 redirect_stderr = true
-stdout_logfile = {PATH.log / 'vault.log'}
 autostart = {OPTIONS.supervisor_autostart}
 
 [program:nomad]
-environment = PATH="{PATH.env}"
 user = {username}
-command = {PATH.cluster_py} runserver nomad
+command = {sys.executable} {PATH.cluster_py} runserver nomad
 redirect_stderr = true
-stdout_logfile = {PATH.log / 'nomad.log'}
 autostart = {OPTIONS.supervisor_autostart}
 
 [group:cluster]
