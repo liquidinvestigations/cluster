@@ -37,7 +37,6 @@ class PATH:
     supervisor_conf = etc / 'supervisor-cluster.conf'
 
     var = root / 'var'
-    log = var / 'log'
     tmp = var / 'tmp'
     consul_var = var / 'consul'
     nomad_var = var / 'nomad'
