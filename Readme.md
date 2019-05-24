@@ -151,13 +151,14 @@ sudo setcap cap_ipc_lock=+ep bin/vault
 
 ## Docker
 
-The whole set of services run inside docker.
+The whole set of services can run in Docker.
 
-Just run this script:
+First fill out `liquid.ini` normally. Then set the desired network interface and run this script:
 
 ```shell
+export NOMAD_CLIENT_INTERFACE=eth6
 ./examples/docker.sh
 ```
 
-Then go to consul (`http://10.66.60.1:8500/ui/dc1/services`) and wait for the
-health check lights to turn green.
+Then go to consul (port 8500 on the network interface you chose) and wait for
+the health check lights to turn green.
