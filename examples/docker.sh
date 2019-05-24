@@ -9,6 +9,7 @@ docker run --detach --restart always \
   --name cluster \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume /opt/cluster/var:/opt/cluster/var \
+  --volume /opt/cluster/etc:/opt/cluster/etc \
   --volume /opt/cluster/cluster.ini:/opt/cluster/cluster.ini \
   --privileged \
   --net host \
