@@ -73,22 +73,22 @@ def read_vault_secrets():
 def nomad_retry_join_section(servers):
     if not servers:
         return ''
-    servers = [f'"{ip}:4648"' for ip in servers]
-    return f'server_join {{ retry_join = [{", ".join(servers)}] }}'
+    quoted = [f'"{ip}:4648"' for ip in servers]
+    return f'server_join {{ retry_join = [{", ".join(quoted)}] }}'
 
 
 def nomad_client_servers_section(servers):
     if not servers:
         return ''
-    servers = [f'"{ip}:4647"' for ip in servers]
-    return f'servers = [{", ".join(servers)}]'
+    quoted = [f'"{ip}:4647"' for ip in servers]
+    return f'servers = [{", ".join(quoted)}]'
 
 
 def consul_retry_join_section(servers):
     if not servers:
         return ''
-    servers = [f'"{ip}"' for ip in servers]
-    return f'retry_join = [{", ".join(servers)}]'
+    quoted = [f'"{ip}"' for ip in servers]
+    return f'retry_join = [{", ".join(quoted)}]'
 
 class OPTIONS:
     nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()
