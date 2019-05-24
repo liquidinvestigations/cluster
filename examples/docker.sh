@@ -4,7 +4,7 @@ if [ -z "${NOMAD_CLIENT_INTERFACE}" ]; then
   export NOMAD_CLIENT_INTERFACE=liquid-bridge
 fi
 
-HERE=$(dirname "$(dirname "$0")")
+HERE=$(realpath "$(dirname "$(dirname "$0")")")
 
 docker run --detach \
   --restart always \
