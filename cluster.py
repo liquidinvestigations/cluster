@@ -92,6 +92,8 @@ def consul_retry_join_section(servers):
 
 class OPTIONS:
     nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()
+    _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}
+    nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())
 
     consul_address = config.get('consul', 'address', fallback='127.0.0.1')
 
@@ -193,6 +195,9 @@ client {{
   network_interface = "{OPTIONS.nomad_interface}"
   memory_total_mb = {OPTIONS.nomad_memory or '0 # autodetect'}
   {OPTIONS.nomad_client_servers}
+  meta {{
+    {OPTIONS.nomad_meta}
+  }}
 }}
 
 consul {{
