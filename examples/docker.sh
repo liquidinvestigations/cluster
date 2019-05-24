@@ -1,9 +1,5 @@
 #!/bin/bash -ex
 
-if [ -z "${NOMAD_CLIENT_INTERFACE}" ]; then
-  export NOMAD_CLIENT_INTERFACE=liquid-bridge
-fi
-
 HERE=$(realpath "$(dirname "$(dirname "$0")")")
 
 docker run --detach \
@@ -16,5 +12,4 @@ docker run --detach \
   --volume $HERE/cluster.py:/opt/cluster/cluster.py:ro \
   --privileged \
   --net host \
-  --env NOMAD_CLIENT_INTERFACE=$NOMAD_CLIENT_INTERFACE \
   liquidinvestigations/cluster

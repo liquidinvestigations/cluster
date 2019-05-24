@@ -153,10 +153,9 @@ sudo setcap cap_ipc_lock=+ep bin/vault
 
 The whole set of services can run in Docker.
 
-First fill out `liquid.ini` normally. Then set the desired network interface and run this script:
+First fill out `cluster.ini` normally and run this script:
 
 ```shell
-export NOMAD_CLIENT_INTERFACE=eth6
 ./examples/docker.sh
 ```
 
