@@ -70,6 +70,26 @@ def read_vault_secrets():
     }
 
 
+def nomad_retry_join_section(servers):
+    if not servers:
+        return ''
+    quoted = [f'"{ip}:4648"' for ip in servers]
+    return f'server_join {{ retry_join = [{", ".join(quoted)}] }}'
+
+
+def nomad_client_servers_section(servers):
+    if not servers:
+        return ''
+    quoted = [f'"{ip}:4647"' for ip in servers]
+    return f'servers = [{", ".join(quoted)}]'
+
+
+def consul_retry_join_section(servers):
+    if not servers:
+        return ''
+    quoted = [f'"{ip}"' for ip in servers]
+    return f'retry_join = [{", ".join(quoted)}]'
+
 class OPTIONS:
     nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()
 
@@ -101,6 +121,12 @@ class OPTIONS:
 
     nomad_vault_token = read_vault_secrets()['root_token']
 
+    bootstrap_expect = config.getint('cluster', 'bootstrap_expect', fallback=1)
+    _retry_join = config.get('cluster', 'retry_join', fallback='')
+    retry_join = _retry_join.split(',') if _retry_join else []
+    nomad_retry_join = nomad_retry_join_section(retry_join)
+    consul_retry_join = consul_retry_join_section(retry_join)
+    nomad_client_servers = nomad_client_servers_section(retry_join)
 
 class CONFIG:
     pass
@@ -116,7 +142,8 @@ data_dir = "{PATH.consul_var}"
 datacenter = "dc1"
 server = true
 ui = true
-bootstrap_expect = 1
+bootstrap_expect = {OPTIONS.bootstrap_expect}
+{OPTIONS.consul_retry_join}
 '''
 
 
@@ -156,14 +183,16 @@ advertise {{
 
 server {{
   enabled = true
-  bootstrap_expect = 1
+  bootstrap_expect = {OPTIONS.bootstrap_expect}
   job_gc_threshold = "{OPTIONS.nomad_zombie_time}"
+  {OPTIONS.nomad_retry_join}
 }}
 
 client {{
   enabled = true
   network_interface = "{OPTIONS.nomad_interface}"
   memory_total_mb = {OPTIONS.nomad_memory or '0 # autodetect'}
+  {OPTIONS.nomad_client_servers}
 }}
 
 consul {{

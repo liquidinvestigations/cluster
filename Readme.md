@@ -162,3 +162,16 @@ export NOMAD_CLIENT_INTERFACE=eth6
 
 Then go to consul (port 8500 on the network interface you chose) and wait for
 the health check lights to turn green.
+
+
+## Multi Host
+
+Run an instance of each service (or a docker container) on each host to be used. Set the following configuration flags on each one:
+
+```ini
+[cluster]
+bootstrap_expect = 3
+retry_join = 10.66.60.1,10.66.60.2,10.66.60.4
+```
+
+After launching the services, all but one Vault instance will fail. The one left running is the primary instance; you can find it in the Consul UI. To make them all work, copy the keys from the leader's `var/vault-secrets.ini` file to the other nodes.
