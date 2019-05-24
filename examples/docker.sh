@@ -13,6 +13,7 @@ docker run --detach \
   --volume $HERE/var:/opt/cluster/var \
   --volume $HERE/etc:/opt/cluster/etc \
   --volume $HERE/cluster.ini:/opt/cluster/cluster.ini:ro \
+  --volume $HERE/cluster.py:/opt/cluster/cluster.py:ro \
   --privileged \
   --net host \
   --env NOMAD_CLIENT_INTERFACE=$NOMAD_CLIENT_INTERFACE \
