@@ -122,9 +122,11 @@ class OPTIONS:
     nomad_vault_token = read_vault_secrets()['root_token']
 
     bootstrap_expect = config.getint('cluster', 'bootstrap_expect', fallback=1)
-    retry_join = config.get('cluster', 'retry_join', fallback='')
-    if retry_join:
-        retry_join = retry_join.split(',')
+    _retry_join = config.get('cluster', 'retry_join', fallback='')
+    if _retry_join:
+        retry_join = _retry_join.split(',')
+    else:
+        retry_join = []
     nomad_retry_join = nomad_retry_join_section(retry_join)
     consul_retry_join = consul_retry_join_section(retry_join)
     nomad_client_servers = nomad_client_servers_section(retry_join)
