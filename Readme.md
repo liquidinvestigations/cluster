@@ -151,16 +151,13 @@ sudo setcap cap_ipc_lock=+ep bin/vault
 
 ## Docker
 
+The whole set of services run inside docker.
+
+Just run this script:
+
 ```shell
-docker run --detach --restart always \
-  --name cluster \
-  --volume /opt/cluster/var:/opt/cluster/var \
-  --volume /var/run/docker.sock:/var/run/docker.sock:ro \
-  --privileged \
-  --net host \
-  --env NOMAD_CLIENT_INTERFACE=wg0 \
-  liquidinvestigations/cluster
+./examples/docker.sh
 ```
 
-Then go to consul (`http://localhost:8500/ui/dc1/services`) and wait for the
+Then go to consul (`http://10.66.60.1:8500/ui/dc1/services`) and wait for the
 health check lights to turn green.
