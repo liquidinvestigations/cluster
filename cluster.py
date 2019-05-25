@@ -198,6 +198,9 @@ client {{
   meta {{
     {OPTIONS.nomad_meta}
   }}
+  options {{
+    "fingerprint.blacklist" = "env_aws"
+  }}
 }}
 
 consul {{
