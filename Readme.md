@@ -175,7 +175,7 @@ In this scenario we create a bridge network interface with IPv4 address
 [nomad](http://10.66.60.1:4646)) and by services running inside the cluster.
 
 ```shell
-git clone https://liquidinvesitgations/cluster /opt/cluster
+git clone https://github.com/liquidinvesitgations/cluster /opt/cluster
 cd /opt/cluster
 cp examples/cluster.ini ./
 ./examples/network.sh  # network-mac.sh for MacOS
