@@ -169,6 +169,11 @@ mount docker volumes for `/opt/cluster/etc` and `/opt/cluster/var`.
 
 ### Docker deployment example
 
+In this scenario we create a bridge network interface with IPv4 address
+`10.66.60.1`. It will be used by the cluster components
+([consul](http://10.66.60.1:8500), [vault](http://10.66.60.1:8200) and
+[nomad](http://10.66.60.1:4646)) and by services running inside the cluster.
+
 ```shell
 git clone https://liquidinvesitgations/cluster /opt/cluster
 cd /opt/cluster
