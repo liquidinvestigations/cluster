@@ -153,14 +153,32 @@ sudo setcap cap_ipc_lock=+ep bin/vault
 
 The whole set of services can run in Docker.
 
-First fill out `cluster.ini` normally and run this script:
+```shell
+docker run --detach \
+  --name cluster \
+  --restart always \
+  --privileged \
+  --net host \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  --volume $HERE/cluster.ini:/opt/cluster/cluster.ini:ro \
+  liquidinvestigations/cluster
+```
+
+You need to provide `cluster.ini` (there is one in `examples/`) and optionally
+mount docker volumes for `/opt/cluster/etc` and `/opt/cluster/var`.
+
+### Docker deployment example
 
 ```shell
+git clone https://liquidinvesitgations/cluster /opt/cluster
+cd /opt/cluster
+cp examples/cluster.ini ./
+./examples/network.sh  # network-mac.sh for MacOS
 ./examples/docker.sh
 ```
 
-Then go to consul (port 8500 on the network interface you chose) and wait for
-the health check lights to turn green.
+Then go to consul (http://10.66.60.1:8500) and wait for the health check lights
+to turn green.
 
 
 ## Multi Host
