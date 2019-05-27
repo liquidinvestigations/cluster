@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED true
 RUN set -e \
  && apt-get update -qq \
  && apt-get install  -qq -y --no-install-recommends \
-    curl unzip supervisor libcap2-bin \
+    curl unzip supervisor libcap2-bin qemu-kvm \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /opt/cluster \
  && ln -s /opt/cluster/etc/supervisor-cluster.conf /etc/supervisor/conf.d/cluster.conf
