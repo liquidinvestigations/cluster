@@ -1,0 +1,19 @@
+kind: pipeline
+name: build qemu image
+
+steps:
+- name: build qemu image
+  image: mgax/vmck:build-copy-file
+  privileged: true
+  volumes:
+  - name: vmck-images
+    path: /vmck-images
+  commands:
+  - tar czvf /tmp/cluster.tar.gz .
+  - /opt/vmck/contrib/build.py /vmck-images/cluster-master.qcow2.tmp --script /drone/src/examples/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/tmp/cluster.tar.gz
+  - mv /vmck-images/cluster-master.qcow2.tmp /vmck-images/cluster-master.qcow2
+
+volumes:
+- name: vmck-images
+  host:
+      path: /opt/volumes/vmck-images
