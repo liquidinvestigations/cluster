@@ -1,4 +1,15 @@
 kind: pipeline
+name: test
+
+steps:
+- name: flake8
+  image: python:3.7
+  commands:
+  - pip install flake8
+  - flake8
+---
+
+kind: pipeline
 name: build qemu image
 
 steps:
@@ -13,7 +24,12 @@ steps:
   - /opt/vmck/contrib/build.py /vmck-images/cluster-master.qcow2.tmp --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
   - mv /vmck-images/cluster-master.qcow2.tmp /vmck-images/cluster-master.qcow2
 
+depends_on:
+- test
+
 trigger:
+  status:
+  - success
   branch:
   - master
   event:

@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
 config = configparser.ConfigParser()
 config.read('cluster.ini')
 
+
 class PATH:
     root = Path(__file__).parent.resolve()
 
@@ -90,16 +91,17 @@ def consul_retry_join_section(servers):
     quoted = [f'"{ip}"' for ip in servers]
     return f'retry_join = [{", ".join(quoted)}]'
 
+
 class OPTIONS:
-    nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()
-    _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}
-    nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())
+    nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()  # noqa: E501
+    _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
+    nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
 
     consul_address = config.get('consul', 'address', fallback='127.0.0.1')
 
     vault_address = config.get('vault', 'address', fallback='127.0.0.1')
 
-    vault_disable_mlock = config.getboolean('vault', 'disable_mlock', fallback=False)
+    vault_disable_mlock = config.getboolean('vault', 'disable_mlock', fallback=False)  # noqa: E501
 
     nomad_address = config.get('nomad', 'address', fallback='127.0.0.1')
 
@@ -109,7 +111,7 @@ class OPTIONS:
 
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
 
-    supervisor_autostart = config.getboolean('supervisor', 'autostart', fallback=False)
+    supervisor_autostart = config.getboolean('supervisor', 'autostart', fallback=False)  # noqa: E501
 
     versions = {
         'consul': config.get('consul', 'version', fallback='1.4.5'),
@@ -129,6 +131,7 @@ class OPTIONS:
     nomad_retry_join = nomad_retry_join_section(retry_join)
     consul_retry_join = consul_retry_join_section(retry_join)
     nomad_client_servers = nomad_client_servers_section(retry_join)
+
 
 class CONFIG:
     pass
@@ -284,7 +287,7 @@ def install():
         for name in ['consul', 'vault', 'nomad']:
             version = OPTIONS.versions[name]
             zip_path = tmp / f'{name}_{version}_{sysname}_amd64.zip'
-            url = f'https://releases.hashicorp.com/{name}/{version}/{zip_path.name}'
+            url = f'https://releases.hashicorp.com/{name}/{version}/{zip_path.name}'  # noqa: E501
             download(url, zip_path)
             unzip(zip_path, cwd=tmp)
             (tmp / name).rename(PATH.bin / name)
