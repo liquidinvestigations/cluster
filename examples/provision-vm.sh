@@ -9,7 +9,7 @@ adduser vagrant docker
 
 mkdir /opt/cluster
 cd /opt/cluster
-tar xzvf /tmp/cluster.tar.gz
+tar xzvf /opt/cluster.tar.gz
 chown vagrant: .
 
 cp examples/cluster.ini .
