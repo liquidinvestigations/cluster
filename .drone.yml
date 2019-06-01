@@ -15,23 +15,25 @@ steps:
     path: /var/run
   commands:
   - sleep 5; until docker version; do sleep 5; done
-  - docker build . --tag test
+  - docker build . --tag liquidinvestigations/cluster
 
-- name: docker run and tail logs
+- name: run servers and autovault
   image: docker:dind
   volumes:
   - name: dockersock
     path: /var/run
   commands:
-  - cp examples/cluster.ini .
+  - apk update && apk add bash iptables net-tools curl
   - ./examples/network.sh
-  - docker run --detach --name test -v $(pwd)/cluster.ini:/opt/cluster/cluster.ini:ro test
-  - sleep 10
-  - docker exec test /bin/sh -exc 'until supervisorctl status; do sleep 3; done'
-  - docker exec test supervisorctl tail autovault
-  - docker exec test supervisorctl tail cluster:nomad
-  - docker exec test supervisorctl tail cluster:consul
-  - docker exec test supervisorctl tail cluster:vault
+  - cp examples/cluster.ini .
+  - ./examples/docker.sh
+  - docker exec cluster /bin/sh -exc 'until supervisorctl status; do sleep 3; done'
+  - docker exec cluster supervisorctl tail autovault
+  - docker exec cluster supervisorctl tail cluster:nomad
+  - docker exec cluster supervisorctl tail cluster:consul
+  - docker exec cluster supervisorctl tail cluster:vault
+  - docker exec cluster python cluster.py autovault
+  - curl -v 10.66.60.1:8500/ui/ > /dev/null
 
 services:
 - name: docker
