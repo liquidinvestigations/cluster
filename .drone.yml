@@ -22,8 +22,6 @@ steps:
   volumes:
   - name: dockersock
     path: /var/run
-  cap_add:
-  - NET_ADMIN
   commands:
   - apk update && apk add bash curl sed
   - cp examples/cluster.ini .
