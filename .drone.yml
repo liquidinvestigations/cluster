@@ -17,17 +17,18 @@ steps:
   - sleep 5; until docker version; do sleep 5; done
   - docker build . --tag test
 
-- name: docker run, check supervisor
+- name: docker run and tail logs
   image: docker:dind
   volumes:
   - name: dockersock
     path: /var/run
   commands:
   - cp examples/cluster.ini .
+  - ./examples/network.sh
   - docker run --detach --name test -v $(pwd)/cluster.ini:/opt/cluster/cluster.ini:ro test
-  - until docker exec test supervisorctl status; do sleep 3; done
-  - docker exec test false
+  - sleep 10
   - docker exec test /bin/sh -exc 'until supervisorctl status; do sleep 3; done'
+  - docker exec test supervisorctl tail autovault
   - docker exec test supervisorctl tail cluster:nomad
   - docker exec test supervisorctl tail cluster:consul
   - docker exec test supervisorctl tail cluster:vault
