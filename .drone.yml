@@ -36,7 +36,7 @@ steps:
   - curl -v 10.66.60.1:8500/ui/ > /dev/null
 
 services:
-- name: docker
+- name: docker in docker daemon
   image: docker:dind
   privileged: true
   volumes:
