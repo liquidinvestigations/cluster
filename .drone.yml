@@ -13,6 +13,12 @@ steps:
   - /opt/vmck/contrib/build.py /vmck-images/cluster-master.qcow2.tmp --script /drone/src/examples/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
   - mv /vmck-images/cluster-master.qcow2.tmp /vmck-images/cluster-master.qcow2
 
+trigger:
+  branch:
+  - master
+  event:
+  - push
+
 volumes:
 - name: vmck-images
   host:
