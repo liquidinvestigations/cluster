@@ -7,6 +7,41 @@ steps:
   commands:
   - pip install flake8 > /dev/null
   - flake8
+
+- name: docker build
+  image: docker:dind
+  volumes:
+  - name: dockersock
+    path: /var/run
+  commands:
+  - sleep 5; until docker version; do sleep 5; done
+  - docker build . --tag test
+
+- name: docker run, check supervisor
+  image: docker:dind
+  volumes:
+  - name: dockersock
+    path: /var/run
+  commands:
+  - cp examples/cluster.ini .
+  - docker run --detach --name test -v $(pwd)/cluster.ini:/opt/cluster/cluster.ini:ro test
+  - docker exec test supervisorctl status
+  - docker exec test supervisorctl tail autovault
+  - docker exec test supervisorctl tail cluster:nomad
+  - docker exec test supervisorctl tail cluster:consul
+  - docker exec test supervisorctl tail cluster:vault
+
+services:
+- name: docker
+  image: docker:dind
+  privileged: true
+  volumes:
+  - name: dockersock
+    path: /var/run
+
+volumes:
+- name: dockersock
+  temp: {}
 ---
 
 kind: pipeline
