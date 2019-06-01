@@ -8,17 +8,18 @@ sysctl --system
 adduser vagrant docker
 
 chown vagrant: /opt
+
 mkdir /opt/cluster
 cd /opt/cluster
 tar xzf /opt/cluster.tar.gz
-chown vagrant: .
-
 cp examples/cluster.ini .
+
+chown -R vagrant: .
 
 docker pull liquidinvestigations/cluster | cat
 cat > /etc/supervisor/conf.d/boot-vm.conf <<EOF
 [program:boot-vm]
-command = /opt/cluster/examples/boot-vm.sh
+command = /opt/cluster/ci/boot-vm.sh
 redirect_stderr = true
 autostart = true
 autorestart = false

@@ -10,7 +10,7 @@ steps:
     path: /vmck-images
   commands:
   - tar czf /tmp/cluster.tar.gz .
-  - /opt/vmck/contrib/build.py /vmck-images/cluster-master.qcow2.tmp --script /drone/src/examples/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
+  - /opt/vmck/contrib/build.py /vmck-images/cluster-master.qcow2.tmp --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
   - mv /vmck-images/cluster-master.qcow2.tmp /vmck-images/cluster-master.qcow2
 
 trigger:
