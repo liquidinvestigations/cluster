@@ -9,11 +9,12 @@ adduser vagrant docker
 
 mkdir /opt/cluster
 cd /opt/cluster
-tar xzvf /opt/cluster.tar.gz
+tar xzf /opt/cluster.tar.gz
 chown vagrant: .
 
 cp examples/cluster.ini .
 
+docker pull liquidinvestigations/cluster | cat
 cat > /etc/supervisor/conf.d/boot-vm.conf <<EOF
 [program:boot-vm]
 command = /opt/cluster/examples/boot-vm.sh
