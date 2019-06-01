@@ -37,7 +37,7 @@ steps:
   - docker exec cluster python cluster.py autovault
 
 services:
-- name: docker in docker daemon
+- name: docker daemon in docker
   image: docker:dind
   privileged: true
   volumes:
