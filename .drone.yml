@@ -23,7 +23,9 @@ steps:
   - name: dockersock
     path: /var/run
   commands:
-  - apk update && apk add bash iptables net-tools curl
+  - apk update && apk add bash iptables net-tools curl sed
+  - ifconfig
+  - whoami
   - ./examples/network.sh
   - cp examples/cluster.ini .
   - ./examples/docker.sh
@@ -42,6 +44,7 @@ services:
   volumes:
   - name: dockersock
     path: /var/run
+  command: [ "--cap-add=NET_ADMIN" ]
 
 volumes:
 - name: dockersock
