@@ -25,11 +25,11 @@ steps:
   cap_add:
   - NET_ADMIN
   commands:
-  - apk update && apk add bash iptables net-tools curl sed
-  - ifconfig
-  - whoami
-  - ./examples/network.sh
+  - apk update && apk add bash curl sed
   - cp examples/cluster.ini .
+  - sed -i -- 's/liquid-bridge/lo/g' cluster.ini
+  - sed -i -- 's/10.66.60.1/127.0.0.1/g' cluster.ini
+  - cat cluster.ini
   - ./examples/docker.sh
   - docker exec cluster /bin/sh -exc 'until supervisorctl status; do sleep 3; done'
   - docker exec cluster supervisorctl tail autovault
@@ -37,7 +37,6 @@ steps:
   - docker exec cluster supervisorctl tail cluster:consul
   - docker exec cluster supervisorctl tail cluster:vault
   - docker exec cluster python cluster.py autovault
-  - curl -v 10.66.60.1:8500/ui/ > /dev/null
 
 services:
 - name: docker in docker daemon
