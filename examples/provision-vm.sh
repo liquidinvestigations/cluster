@@ -7,6 +7,7 @@ echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/es.conf
 sysctl --system
 adduser vagrant docker
 
+chown vagrant: /opt
 mkdir /opt/cluster
 cd /opt/cluster
 tar xzf /opt/cluster.tar.gz
