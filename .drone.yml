@@ -25,8 +25,9 @@ steps:
   commands:
   - cp examples/cluster.ini .
   - docker run --detach --name test -v $(pwd)/cluster.ini:/opt/cluster/cluster.ini:ro test
-  - docker exec test supervisorctl status
-  - docker exec test supervisorctl tail autovault
+  - until docker exec test supervisorctl status; do sleep 3; done
+  - docker exec test false
+  - docker exec test /bin/sh -exc 'until supervisorctl status; do sleep 3; done'
   - docker exec test supervisorctl tail cluster:nomad
   - docker exec test supervisorctl tail cluster:consul
   - docker exec test supervisorctl tail cluster:vault
