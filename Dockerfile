@@ -13,6 +13,7 @@ RUN set -e \
 
 WORKDIR /opt/cluster
 ADD cluster.py ./
+ADD kubectl ./
 ADD charts ./
 
 RUN set -e \

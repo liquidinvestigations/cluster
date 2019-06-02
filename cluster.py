@@ -260,7 +260,7 @@ programs = consul,vault,nomad,k3s,k3s-setup
 '''
 
 
-K3S_LOCAL_STORAGE_PATCH = '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'  # noqa: E501
+K3S_LOCAL_STORAGE_PATCH = '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'  # noqa: E501
 
 
 CONFIG.k3s_setup = lambda: f'''\
@@ -272,7 +272,7 @@ until ./kubectl get node; do sleep 3; done
 
 echo 'install and set default storage class'
 ./kubectl apply -f {PATH.root}/charts/local-path-storage.yaml
-./kubectl patch storageclass local-path -p {K3S_LOCAL_STORAGE_PATCH}
+./kubectl patch storageclass local-path -p \'{K3S_LOCAL_STORAGE_PATCH}\'
 
 echo 'install sentry'
 ./kubectl apply --wait=true -f {PATH.root}/charts/sentry.yaml
@@ -381,7 +381,6 @@ def k3s_args():
     return [
         PATH.bin / 'k3s',
         'server',
-        #'--docker',
         '--data-dir', PATH.k3s_var,
         '--bind-address', OPTIONS.k3s_address,
         '--node-ip', OPTIONS.k3s_address,
