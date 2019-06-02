@@ -34,6 +34,8 @@ steps:
   - docker exec cluster supervisorctl tail cluster:nomad
   - docker exec cluster supervisorctl tail cluster:consul
   - docker exec cluster supervisorctl tail cluster:vault
+  - docker exec cluster supervisorctl tail cluster:k3s
+  - docker exec cluster supervisorctl tail cluster:k3s-setup
   - docker exec cluster python cluster.py autovault
 
 services:

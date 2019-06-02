@@ -41,13 +41,17 @@ class PATH:
     tmp = var / 'tmp'
     consul_var = var / 'consul'
     nomad_var = var / 'nomad'
+    k3s_setup = etc / 'k3s-setup.sh'
+    k3s_var = var / 'k3s'
+    k3s_kubeconfig = var / 'kubeconfig.yml'
     vault_secrets = var / 'vault-secrets.ini'
     consul_socket = var / 'consul.socket'
 
 
 def run(cmd, **kwargs):
-    log.debug('+ %s', cmd)
-    return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
+    log.info('+ %s', cmd)
+    kwargs.setdefault('shell', True)
+    return subprocess.check_output(cmd, **kwargs).decode('latin1')
 
 
 def detect_interface():
@@ -111,12 +115,15 @@ class OPTIONS:
 
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
 
+    k3s_address = config.get('k3s', 'address', fallback=None)
+
     supervisor_autostart = config.getboolean('supervisor', 'autostart', fallback=False)  # noqa: E501
 
     versions = {
         'consul': config.get('consul', 'version', fallback='1.4.5'),
         'vault': config.get('vault', 'version', fallback='1.1.2'),
         'nomad': config.get('nomad', 'version', fallback='0.9.1'),
+        'k3s': config.get('k3s', 'version', fallback='0.5.0'),
     }
 
     dev = config.getboolean('cluster', 'dev', fallback=False)
@@ -236,8 +243,41 @@ command = {sys.executable} {PATH.cluster_py} runserver nomad
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
 
+[program:k3s]
+user = root
+command = {sys.executable} {PATH.cluster_py} runserver k3s
+redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
+[program:k3s-setup]
+user = root
+command = {PATH.k3s_setup}
+redirect_stderr = true
+autostart = {OPTIONS.supervisor_autostart}
+
 [group:cluster]
-programs = consul,vault,nomad
+programs = consul,vault,nomad,k3s,k3s-setup
+'''
+
+
+K3S_LOCAL_STORAGE_PATCH = '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'  # noqa: E501
+
+
+CONFIG.k3s_setup = lambda: f'''\
+#!/bin/bash -ex
+
+cd {PATH.root}
+
+until ./kubectl get node; do sleep 3; done
+
+echo 'install and set default storage class'
+./kubectl apply -f {PATH.root}/charts/local-path-storage.yaml
+./kubectl patch storageclass local-path -p {K3S_LOCAL_STORAGE_PATCH}
+
+echo 'install sentry'
+./kubectl apply --wait=true -f {PATH.root}/charts/sentry.yaml
+
+echo 'K3s setup done!'
 '''
 
 
@@ -291,6 +331,10 @@ def install():
             download(url, zip_path)
             unzip(zip_path, cwd=tmp)
             (tmp / name).rename(PATH.bin / name)
+
+        download(f'https://github.com/rancher/k3s/releases/download/v{OPTIONS.versions["k3s"]}/k3s',  # noqa: E501
+                 PATH.bin / 'k3s')
+        run(f'chmod +x {str(PATH.bin / "k3s")}')
     log.info('Done.')
 
 
@@ -308,7 +352,9 @@ def configure():
     _writefile(PATH.consul_hcl, CONFIG.consul())
     _writefile(PATH.vault_hcl, CONFIG.vault())
     _writefile(PATH.nomad_hcl, CONFIG.nomad())
+    _writefile(PATH.k3s_setup, CONFIG.k3s_setup())
     _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
+    run(f'chmod +x {PATH.k3s_setup}')
     log.info('Done.')
 
 
@@ -331,6 +377,19 @@ def nomad_args():
     yield from ['-config', PATH.nomad_hcl]
 
 
+def k3s_args():
+    return [
+        PATH.bin / 'k3s',
+        'server',
+        #'--docker',
+        '--data-dir', PATH.k3s_var,
+        '--bind-address', OPTIONS.k3s_address,
+        '--node-ip', OPTIONS.k3s_address,
+        '--write-kubeconfig', PATH.k3s_kubeconfig,
+        '--no-deploy=traefik',
+    ]
+
+
 def runserver(name):
     """ Run server [name] in foreground. """
 
@@ -338,6 +397,7 @@ def runserver(name):
         'consul': consul_args,
         'vault': vault_args,
         'nomad': nomad_args,
+        'k3s': k3s_args,
     }
 
     args = [str(a) for a in services[name]()]
@@ -346,7 +406,7 @@ def runserver(name):
     if name == 'nomad':
         env['VAULT_TOKEN'] = OPTIONS.nomad_vault_token
 
-    log.debug('+ %s', ' '.join(args))
+    log.info('+ %s', ' '.join(args))
     os.chdir(PATH.root)
     os.execve(args[0], args, env)
 

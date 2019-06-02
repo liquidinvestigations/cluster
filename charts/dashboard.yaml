@@ -1,0 +1,12 @@
+apiVersion: k3s.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: dashboard
+  namespace: kube-system
+spec:
+  chart: stable/kubernetes-dashboard
+  valuesContent: |-
+    enableSkipLogin: true
+    enableInsecureLogin: true
+    service.type: LoadBalancer
+    service.externalPort: 16668

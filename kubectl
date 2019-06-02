@@ -1,0 +1,2 @@
+#!/bin/bash -ex
+./bin/k3s kubectl --kubeconfig ./var/kubeconfig.yml "$@"

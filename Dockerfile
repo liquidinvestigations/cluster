@@ -13,6 +13,7 @@ RUN set -e \
 
 WORKDIR /opt/cluster
 ADD cluster.py ./
+ADD charts ./
 
 RUN set -e \
  && ./cluster.py install \
@@ -21,8 +22,15 @@ RUN set -e \
 ADD runcluster ./
 
 VOLUME /opt/cluster/var
+# consul
 EXPOSE 8500
+# vault
 EXPOSE 8200
+# nomad
 EXPOSE 4646
+# k3s
+EXPOSE 6443
+# sentry
+EXPOSE 9000
 
 CMD ./runcluster

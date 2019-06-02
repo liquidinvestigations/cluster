@@ -1,0 +1,18 @@
+apiVersion: k3s.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: grafana
+  namespace: kube-system
+spec:
+  chart: stable/grafana
+  valuesContent: |-
+    env:
+      GF_EXPLORE_ENABLED: true
+    adminUser: admin
+    adminPassword: password
+    sidecar.datasources.enabled: true
+    persistence.enabled: true
+    persistence.storageClassName: local-path
+    persistence.existingClaim: local-path-pvc-grafana
+    service.type: LoadBalancer
+    service.port: 16667
