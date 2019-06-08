@@ -114,9 +114,9 @@ class OPTIONS:
     supervisor_autostart = config.getboolean('supervisor', 'autostart', fallback=False)  # noqa: E501
 
     versions = {
-        'consul': config.get('consul', 'version', fallback='1.4.5'),
-        'vault': config.get('vault', 'version', fallback='1.1.2'),
-        'nomad': config.get('nomad', 'version', fallback='0.9.1'),
+        'consul': config.get('consul', 'version', fallback='1.5.1'),
+        'vault': config.get('vault', 'version', fallback='1.1.3'),
+        'nomad': config.get('nomad', 'version', fallback='0.9.2'),
     }
 
     dev = config.getboolean('cluster', 'dev', fallback=False)
