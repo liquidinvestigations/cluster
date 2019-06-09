@@ -54,15 +54,17 @@ name: build qemu image
 
 steps:
 - name: build qemu image
-  image: mgax/vmck:build-copy-file
+  image: vmck/vmck:0.0.1
   privileged: true
   volumes:
   - name: vmck-images
     path: /vmck-images
   commands:
+  - BRANCH=$(echo $DRONE_COMMIT_BRANCH | tr -s '/' '_')
   - tar czf /tmp/cluster.tar.gz .
-  - /opt/vmck/contrib/build.py /vmck-images/cluster-master.qcow2.tmp --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
-  - mv /vmck-images/cluster-master.qcow2.tmp /vmck-images/cluster-master.qcow2
+  - /opt/vmck/contrib/build.py /tmp/cluster-$BRANCH.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
+  - tar czvf /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz -C /tmp cluster-$BRANCH.qcow2
+  - mv /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz /vmck-images/cluster-$BRANCH.qcow2.tar.gz
 
 depends_on:
 - test
@@ -72,6 +74,7 @@ trigger:
   - success
   branch:
   - master
+  - build-image/*
   event:
   - push
 
