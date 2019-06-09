@@ -54,7 +54,7 @@ name: build qemu image
 
 steps:
 - name: build qemu image
-  image: mgax/vmck:0.0.1
+  image: vmck/vmck:0.0.1
   privileged: true
   volumes:
   - name: vmck-images
