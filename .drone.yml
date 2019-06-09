@@ -60,10 +60,11 @@ steps:
   - name: vmck-images
     path: /vmck-images
   commands:
+  - BRANCH=$DRONE_COMMIT_BRANCH
   - tar czf /tmp/cluster.tar.gz .
-  - /opt/vmck/contrib/build.py /vmck-images/cluster-master-tmp.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
-  - gzip /vmck-images/cluster-master-tmp.qcow2
-  - mv /vmck-images/cluster-master-tmp.qcow2.gz /vmck-images/cluster-master.qcow2.gz
+  - /opt/vmck/contrib/build.py /vmck-images/cluster-$BRANCH-tmp.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
+  - gzip /vmck-images/cluster-$BRANCH-tmp.qcow2
+  - mv /vmck-images/cluster-$BRANCH-tmp.qcow2.gz /vmck-images/cluster-$BRANCH.qcow2.gz
 
 depends_on:
 - test
