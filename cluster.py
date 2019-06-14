@@ -223,18 +223,21 @@ user = {username}
 command = {sys.executable} {PATH.cluster_py} runserver consul
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
+autorestart = true
 
 [program:vault]
 user = {username}
 command = {sys.executable} {PATH.cluster_py} runserver vault
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
+autorestart = true
 
 [program:nomad]
 user = {username}
 command = {sys.executable} {PATH.cluster_py} runserver nomad
 redirect_stderr = true
 autostart = {OPTIONS.supervisor_autostart}
+autorestart = true
 
 [group:cluster]
 programs = consul,vault,nomad
