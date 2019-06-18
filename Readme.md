@@ -73,7 +73,7 @@ This guide assumes a recent Debian/Ubuntu installation.
 
 * Install dependencies
 
-    Install `brew` (see [brew]: https://brew.sh)
+    Install `brew` (see [brew])
 
     ```shell
     brew install python git supervisor curl
@@ -81,6 +81,8 @@ This guide assumes a recent Debian/Ubuntu installation.
     sudo ln -s /usr/local/opt/supervisor/homebrew.mxcl.supervisor.plist /Library/LaunchDaemons
     sudo launchctl load /Library/LaunchDaemons/homebrew.mxcl.supervisor.plist
     ```
+
+    [brew]: https://brew.sh
 
 * Download Consul, Vault and Nomad and install their binaries:
 
@@ -189,7 +191,7 @@ cp examples/cluster.ini ./
 ./examples/docker.sh
 ```
 
-Then go to consul (http://10.66.60.1:8500) and wait for the health check lights
+Then go to [consul](http://10.66.60.1:8500) and wait for the health check lights
 to turn green.
 
 ## Multi Host
