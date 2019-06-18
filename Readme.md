@@ -19,9 +19,9 @@ The script generates a [supervisord][] configuration file in
 [nomad]: https://www.nomadproject.io/
 [supervisord]: http://supervisord.org/
 
-# Installation
+## Installation
 
-## Installation on Linux
+### Installation on Linux
 
 This guide assumes a recent Debian/Ubuntu installation.
 
@@ -69,7 +69,7 @@ This guide assumes a recent Debian/Ubuntu installation.
 
 * To run the daemons in the foreground: `./cluster.py runserver <consul|vault|nomad>`
 
-## Installation on Mac OS
+### Installation on Mac OS
 
 * Install dependencies
 
@@ -112,8 +112,7 @@ This guide assumes a recent Debian/Ubuntu installation.
 
 * To run the daemons in the foreground: `./cluster.py runserver <consul|vault|nomad>`
 
-
-## Vault
+### Vault
 
 Vault requires initialization when installing. It also requires that the Vault
 be unsealed after the daemon starts, including after reboot.
@@ -192,7 +191,6 @@ cp examples/cluster.ini ./
 
 Then go to consul (http://10.66.60.1:8500) and wait for the health check lights
 to turn green.
-
 
 ## Multi Host
 
