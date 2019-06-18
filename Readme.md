@@ -46,22 +46,20 @@ This guide assumes a recent Debian/Ubuntu installation.
     vim cluster.ini
     ```
 
-* Set up the network. You can use our example configuration in `examples/network.sh`.
-
-    ```shell
-    cp examples/network.sh etc/network.sh
-    vim etc/network.sh
-    cp examples/supervisor-boot.conf etc/supervisor-boot.conf
-    sudo ln -s $(pwd)/etc/supervisor-boot.conf /etc/supervisor/conf.d/boot.conf
-    sudo supervisorctl update
-    ```
-
 * Generate configuration files for Consul, Vault and Nomad and a `supervisord`
   configuration for the daemons:
 
     ```shell
     ./cluster.py configure
     sudo ln -s $(pwd)/etc/supervisor-cluster.conf /etc/supervisor/conf.d/cluster.conf
+    sudo supervisorctl update
+    ```
+
+* Set up the network. You can use our example configuration in `examples/network.sh`.
+
+    ```shell
+    cp examples/network.sh etc/network.sh
+    sudo ln -s $(pwd)/etc/supervisor-boot.conf /etc/supervisor/conf.d/boot.conf
     sudo supervisorctl update
     ```
 

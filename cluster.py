@@ -36,6 +36,8 @@ class PATH:
     vault_hcl = etc / 'vault.hcl'
     nomad_hcl = etc / 'nomad.hcl'
     supervisor_conf = etc / 'supervisor-cluster.conf'
+    boot_conf = etc / 'supervisor-boot.conf'
+    network_sh = etc / 'network.sh'
 
     var = root / 'var'
     tmp = var / 'tmp'
@@ -243,6 +245,13 @@ autorestart = true
 programs = consul,vault,nomad
 '''
 
+CONFIG.boot = lambda: f'''\
+[program:boot]
+user = root
+command = {PATH.network_sh}
+autostart = true
+autorestart = false
+'''
 
 class JsonApi:
 
@@ -312,6 +321,7 @@ def configure():
     _writefile(PATH.vault_hcl, CONFIG.vault())
     _writefile(PATH.nomad_hcl, CONFIG.nomad())
     _writefile(PATH.supervisor_conf, CONFIG.supervisor(_username()))
+    _writefile(PATH.boot_conf, CONFIG.boot())
     log.info('Done.')
 
 
