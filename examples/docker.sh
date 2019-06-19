@@ -1,7 +1,26 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 HERE=$(realpath "$(dirname "$(dirname "$0")")")
 
+rmdocker=''
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--rm") rmdocker=1 ;;
+    *) echo "Unknown option $arg" >&2; exit 1
+  esac
+done
+
+if [ ! -z $rmdocker ]; then (
+  container=$(docker ps -f name=cluster -aq)
+  if [ ! -z $container ]; then (
+    set -x
+    docker stop $container
+    docker rm $container
+  ) fi
+) fi
+
+set -x
 docker run --detach \
   --restart always \
   --name cluster \
