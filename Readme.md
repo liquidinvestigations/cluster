@@ -1,8 +1,10 @@
-# Cluster - spin up a Consul + Vault + Nomad cluster
+# Cluster - spin up Consul + Vault + Nomad + friends
 
-This script installs and configures [consul][], [vault][] and [nomad][]. It's
-designed to be easy to use on a fresh Linux machine, therefore it's somewhat
-opinionated.
+This script installs and configures [consul][], [vault][] and [nomad][]. After
+those are up, we're running [dnsmasq][] to forward Consul's DNS, [Prometheus][]
+to collect Nomad stats and [Grafana][] to display them in a nice dashboard.
+It's designed to be easy to use on a fresh Linux machine, therefore it's
+somewhat opinionated.
 
 It will install everything in subfolders of the repository:
 
@@ -11,13 +13,18 @@ It will install everything in subfolders of the repository:
 * `./etc` - configuration files
 
 The script generates a [supervisord][] configuration file in
-`./etc/supervisor-cluster.conf` that can be easily symlinked to e.g.
-`/etc/supervisor/conf.d/cluster.conf`.
+`./etc/supervisord.conf` that should be run with your
 
 [consul]: https://www.consul.io/
 [vault]: https://www.vaultproject.io/
 [nomad]: https://www.nomadproject.io/
 [supervisord]: http://supervisord.org/
+[dnsmasq]: http://www.thekelleys.org.uk/dnsmasq/doc.html
+[Prometheus]: http://prometheus.io/
+[Grafana]: https://grafana.com/
+
+
+## How it works
 
 # Installation
 
@@ -30,6 +37,9 @@ This guide assumes a recent Debian/Ubuntu installation.
     ```shell
     sudo apt update
     sudo apt install python3 git supervisor curl unzip
+    pip3 install pipenv
+    pipenv install
+    pipenv shell
     ```
 
 * Download Consul, Vault and Nomad and install their binaries:

@@ -3,50 +3,30 @@ name: test
 
 steps:
 - name: flake8
-  image: python:3.7
+  image: python:3.6
   commands:
   - pip install flake8 > /dev/null
   - flake8
 
-- name: docker build
-  image: docker:dind
-  volumes:
-  - name: dockersock
-    path: /var/run
-  commands:
-  - sleep 5; until docker version; do sleep 5; done
-  - docker build . --tag liquidinvestigations/cluster
-
-- name: run servers and autovault
-  image: docker:dind
-  volumes:
-  - name: dockersock
-    path: /var/run
-  commands:
-  - apk update && apk add bash curl sed
-  - cp examples/cluster.ini .
-  - sed -i -- 's/liquid-bridge/lo/g' cluster.ini
-  - sed -i -- 's/10.66.60.1/127.0.0.1/g' cluster.ini
-  - cat cluster.ini
-  - ./examples/docker.sh
-  - docker exec cluster /bin/sh -exc 'until supervisorctl status; do sleep 3; done'
-  - docker exec cluster supervisorctl tail autovault
-  - docker exec cluster supervisorctl tail cluster:nomad
-  - docker exec cluster supervisorctl tail cluster:consul
-  - docker exec cluster supervisorctl tail cluster:vault
-  - docker exec cluster python cluster.py autovault
-
-services:
-- name: docker daemon in docker
+- name: test
   image: docker:dind
   privileged: true
-  volumes:
-  - name: dockersock
-    path: /var/run
-
-volumes:
-- name: dockersock
-  temp: {}
+  commands:
+  - apk add --update libcap bash curl wget git python3 py3-pip  > /dev/null
+  - pip3 install -q pipenv supervisor
+  - pipenv install --system --deploy --ignore-pipfile
+  - ./examples/network.sh
+  - ./cluster.py install
+  - setcap cap_ipc_lock=+ep bin/vault
+  - ls -al bin
+  - ./bin/nomad --version
+  - dockerd &
+  - sleep 5; until docker version; do sleep 5; done
+  - cp examples/cluster.ini .
+  - ./cluster.py supervisord &
+  - sleep 20
+  - ./cluster.py supervisorctl -- tail -f nomad &
+  - ./cluster.py wait
 ---
 
 kind: pipeline
