@@ -23,9 +23,5 @@ RUN set -e \
  && setcap cap_ipc_lock=+ep bin/vault
 
 VOLUME /opt/cluster/var
-EXPOSE 8500
-EXPOSE 8600
-EXPOSE 8200
-EXPOSE 4646
 
-CMD ./cluster.py supervisord
+ENTRYPOINT ["./cluster.py", "supervisord"]

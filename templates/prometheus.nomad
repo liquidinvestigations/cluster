@@ -93,20 +93,20 @@ EOH
           "local/prometheus.yml:/etc/prometheus/prometheus.yml"
         ]
         port_map {
-          prometheus_ui = 9090
+          http = 9090
         }
       }
       resources {
         network {
           mbits = 10
-          port "prometheus_ui" {
-            static = 6660
+          port "http" {
           }
         }
       }
       service {
         name = "prometheus"
-        port = "prometheus_ui"
+        port = "http"
+        tags = ["fabio-/prometheus"]
         check {
           name     = "Prometheus alive on HTTP"
           type     = "http"

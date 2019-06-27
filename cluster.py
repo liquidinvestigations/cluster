@@ -15,6 +15,8 @@ import json
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 import sys
+import signal
+import shutil
 
 import click
 from jinja2 import Template
@@ -215,6 +217,7 @@ def configure():
     etc. """
 
     log.info("Configuring...")
+    PATH.etc.mkdir(exist_ok=True)
     for template in PATH.templates.iterdir():
         with open(PATH.etc / template.name, 'w') as dest:
             log.info('rendering %s', str(template))
@@ -262,6 +265,50 @@ def runserver(name):
     log.debug('+ %s', ' '.join(args))
     os.chdir(PATH.root)
     os.execve(args[0], args, env)
+
+
+def nomad_drain(enabled):
+    """Forcefully drain nomad jobs on the current node."""
+
+    if enabled:
+        log.info("Draining nomad jobs...")
+    else:
+        log.info("Disabling nomad drain...")
+    args = [PATH.bin / 'nomad', 'node', 'drain', '-self']
+    if enabled:
+        args += ['-force', '-enable']
+    else:
+        args += ['-disable']
+
+    env = dict(os.environ)
+    env['NOMAD_ADDR'] = 'http://' + OPTIONS.nomad_address + ':4646'
+    subprocess.check_call(args, env=env)
+    log.info("Drain set.")
+
+
+@cli.command()
+def stop():
+    """Drains Nomad jobs and stops all supervisor services."""
+    _stop()
+
+
+def _stop():
+    log.info("Stopping cluster...")
+    try:
+        nomad_drain(True)
+    except subprocess.CalledProcessError as e:
+        log.warning(e)
+        log.warning("Nomad drain failed, it's probably dead.")
+
+    conf = PATH.etc / "supervisord.conf"
+    pid = subprocess.check_output(
+        f'supervisorctl -c {conf} pid',
+        shell=True
+    ).decode('latin1')
+    pid = int(pid)
+    log.info(f"Supervisor has PID={pid}")
+    os.kill(pid, signal.SIGQUIT)
+    log.info("SIGQUIT sent to supervisor!")
 
 
 @cli.command()
@@ -325,13 +372,24 @@ def autovault(timeout):
 @click.pass_context
 def supervisord(ctx):
     """ Run the supervisor daemon in the foreground with the current user. """
+
+    log.info("setting signal handler")
+    signal.signal(signal.SIGTERM, lambda _signum, _frame: _stop())
+
     ctx.invoke(configure)
     (PATH.var / 'supervisor').mkdir(exist_ok=True)
 
     log.info("Starting supervisord...")
-    args = ['supervisord', '-c', str(PATH.etc / 'supervisord.conf'), '-n']
-    log.debug('+ %s', ' '.join(args))
-    os.execvp(args[0], args)
+    pid = os.fork()
+    if pid == 0:
+        args = ['supervisord', '-c', str(PATH.etc / 'supervisord.conf'), '-n']
+        log.debug('+ %s', ' '.join(args))
+        os.execvp(args[0], args)
+
+    # wait for signal
+    while True:
+        ctx.invoke(supervisorctl, args=['status'])
+        sleep(100)
 
 
 @cli.command()
@@ -341,7 +399,8 @@ def supervisorctl(args):
 
     joined_args = " ".join(args)
     conf = PATH.etc / "supervisord.conf"
-    subprocess.check_call(f'supervisorctl -c {conf} {joined_args}', shell=True)
+    subprocess.check_call(f'supervisorctl -c {conf} {joined_args}',
+                          shell=True)
 
 
 def wait_for_service_health_checks(health_checks):
@@ -411,19 +470,23 @@ def wait_for_service_health_checks(health_checks):
     raise RuntimeError(msg)
 
 
+HEALTH_CHECKS = {
+    'nomad': ['Nomad Server RPC Check',
+              'Nomad Server HTTP Check',
+              'Nomad Server Serf Check'],
+    'nomad-client': ['Nomad Client HTTP Check'],
+    'vault': ['Vault Sealed Status'],
+    'grafana': ['Grafana alive on HTTP'],
+    'prometheus': ['Prometheus alive on HTTP'],
+    'fabio': ["Service 'fabio' check"],
+}
+
+
 @cli.command()
 def wait():
     """ Wait for all services to be up and running. """
 
-    wait_for_service_health_checks({
-        'nomad': ['Nomad Server RPC Check',
-                  'Nomad Server HTTP Check',
-                  'Nomad Server Serf Check'],
-        'nomad-client': ['Nomad Client HTTP Check'],
-        'vault': ['Vault Sealed Status'],
-        'grafana': ['Grafana alive on HTTP'],
-        'prometheus': ['Prometheus alive on HTTP'],
-    })
+    wait_for_service_health_checks(HEALTH_CHECKS)
 
 
 @cli.command()
@@ -431,20 +494,24 @@ def wait():
 def start(ctx):
     """ Configures and starts all services if they're not already up. """
 
+    ctx.invoke(supervisorctl,
+               args=["stop", "nomad", "consul", "vault", "autovault"])
     ctx.invoke(supervisorctl, args=["update"])
+
+    shutil.rmtree(PATH.var / 'consul' / 'checks', ignore_errors=True)
     ctx.invoke(supervisorctl, args=["start", "consul"])
 
     ctx.invoke(supervisorctl, args=["start", "vault"])
     ctx.invoke(supervisorctl, args=["start", "autovault"])
-    wait_for_service_health_checks({'vault': ['Vault Sealed Status']})
+    wait_for_service_health_checks({'vault': HEALTH_CHECKS['vault']})
 
+    # TODO remove PATH.var / nomad
     ctx.invoke(supervisorctl, args=["start", "nomad"])
     wait_for_service_health_checks({
-        'nomad': ['Nomad Server RPC Check',
-                  'Nomad Server HTTP Check',
-                  'Nomad Server Serf Check'],
-        'nomad-client': ['Nomad Client HTTP Check'],
+        'nomad': HEALTH_CHECKS['nomad'],
+        'nomad-client': HEALTH_CHECKS['nomad-client'],
     })
+    nomad_drain(False)
 
     ctx.invoke(run_jobs)
     ctx.invoke(wait)

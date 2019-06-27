@@ -20,20 +20,20 @@ job "alertmanager" {
       config {
         image = "prom/alertmanager:v0.17.0"
         port_map {
-          alertmanager_ui = 9093
+          http = 9093
         }
       }
       resources {
         network {
           mbits = 10
-          port "alertmanager_ui" {
-            static = 6661
+          port "http" {
           }
         }
       }
       service {
         name = "alertmanager"
-        port = "alertmanager_ui"
+        port = "http"
+        tags = ["fabio-/alertmanager"]
         check {
           type     = "http"
           path     = "/-/healthy"

@@ -21,12 +21,14 @@ job "grafana" {
       driver = "docker"
       config {
         image = "grafana/grafana:6.2.4"
+        port_map {
+          http = 3000
+        }
       }
 
       env {
         GF_LOG_LEVEL = "DEBUG"
         GF_LOG_MODE = "console"
-        GF_SERVER_HTTP_PORT = "${NOMAD_PORT_http}"
         GF_PATHS_PROVISIONING = "/local/provisioning"
         GF_DEFAULT_INSTANCE_NAME = "cluster"
 
@@ -42,7 +44,6 @@ job "grafana" {
         network {
           mbits = 10
           port "http" {
-            static = 6662
           }
         }
       }
@@ -50,6 +51,7 @@ job "grafana" {
       service {
         name = "grafana"
         port = "http"
+        tags = ["fabio-/grafana"]
         check {
           name     = "Grafana alive on HTTP"
           type     = "http"
@@ -57,8 +59,8 @@ job "grafana" {
           interval = "4s"
           timeout  = "2s"
           check_restart {
-            limit = 2
-            grace = "60s"
+            limit = 3
+            grace = "20s"
             ignore_warnings = false
           }
         }
