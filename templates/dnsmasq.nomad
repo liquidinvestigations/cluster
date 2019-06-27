@@ -27,23 +27,23 @@ job "dnsmasq" {
       template {
         data = <<-EOF
         bind-interfaces
-        no-resolv
-        no-poll
-        no-hosts
-        log-dhcp
-        log-queries
+        #no-resolv
+        #no-poll
+        #no-hosts
+        #log-dhcp
+        #log-queries
         server=/consul/{{OPTIONS.consul_address}}#8600
-        server=1.2.3.4
-        server=208.67.222.222
-        server=8.8.8.8
+        #server=1.2.3.4
+        #server=208.67.222.222
+        #server=8.8.8.8
         EOF
 
         destination = "local/dnsmasq.conf"
       }
 
       resources {
-        cpu    = 100
-        memory = 100
+        cpu    = 50
+        memory = 50
         network {
           mbits = 10
           port "dns" {

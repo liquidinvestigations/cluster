@@ -24,6 +24,7 @@ job "alertmanager" {
         }
       }
       resources {
+        memory = 200
         network {
           mbits = 10
           port "http" {

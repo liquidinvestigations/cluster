@@ -97,6 +97,7 @@ EOH
         }
       }
       resources {
+        memory = 200
         network {
           mbits = 10
           port "http" {
