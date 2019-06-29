@@ -1,7 +1,7 @@
 bind_addr = "{{OPTIONS.consul_address}}"
 client_addr = "{{OPTIONS.consul_address}}"
 addresses {
-  http = "{{OPTIONS.consul_address}} unix://{{PATH.consul_socket}}"
+  http = "{{OPTIONS.consul_address}}"
 }
 data_dir = "{{PATH.consul_var}}"
 datacenter = "dc1"

@@ -40,11 +40,12 @@ class PATH:
     templates = root / 'templates'
 
     var = root / 'var'
-    tmp = var / 'tmp'
     consul_var = var / 'consul'
     nomad_var = var / 'nomad'
     vault_secrets = var / 'vault-secrets.ini'
-    consul_socket = var / 'consul.socket'
+
+    supervisord_conf = etc / 'supervisord.conf'
+    supervisord_sock = var / 'supervisor' / 'supervisor.sock'
 
 
 def render(template_filename, options):
@@ -119,8 +120,8 @@ class OPTIONS:
     nomad_memory = config.get('nomad', 'memory', fallback=0)
 
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
-
-    supervisor_autostart = config.getboolean('supervisor', 'autostart', fallback=False)  # noqa: E501
+    nomad_delete_data_on_start = config.getboolean(
+        'nomad', 'delete_data_on_start', fallback=False)
 
     versions = {
         'consul': config.get('consul', 'version', fallback='1.5.1'),
@@ -143,7 +144,7 @@ class OPTIONS:
 
     wait_max = config.getfloat('deploy', 'wait_max_sec', fallback=100)
     wait_interval = config.getfloat('deploy', 'wait_interval', fallback=3)
-    wait_green_count = config.getint('deploy', 'wait_green_count', fallback=4)
+    wait_green_count = config.getint('deploy', 'wait_green_count', fallback=3)
 
 
 class JsonApi:
@@ -187,10 +188,9 @@ def install():
     """ Install Consul, Vault and Nomad. """
 
     log.info("Installing...")
-    for dir in [PATH.root, PATH.bin, PATH.etc, PATH.var, PATH.tmp]:
-        dir.mkdir(exist_ok=True)
+    PATH.bin.mkdir(exist_ok=True)
 
-    with tempfile.TemporaryDirectory(dir=PATH.tmp) as _tmp:
+    with tempfile.TemporaryDirectory() as _tmp:
         tmp = Path(_tmp)
         sysname = os.uname().sysname.lower()
 
@@ -217,7 +217,9 @@ def configure():
     etc. """
 
     log.info("Configuring...")
-    PATH.etc.mkdir(exist_ok=True)
+    for dir in [PATH.etc, PATH.var]:
+        dir.mkdir(exist_ok=True)
+
     for template in PATH.templates.iterdir():
         with open(PATH.etc / template.name, 'w') as dest:
             log.info('rendering %s', str(template))
@@ -293,6 +295,8 @@ def stop():
 
 
 def _stop():
+    """Implements draining Nomad jobs and stopping supervisor with SIGQUIT."""
+
     log.info("Stopping cluster...")
     try:
         nomad_drain(True)
@@ -300,12 +304,7 @@ def _stop():
         log.warning(e)
         log.warning("Nomad drain failed, it's probably dead.")
 
-    conf = PATH.etc / "supervisord.conf"
-    pid = subprocess.check_output(
-        f'supervisorctl -c {conf} pid',
-        shell=True
-    ).decode('latin1')
-    pid = int(pid)
+    pid = supervisor_pid()
     log.info(f"Supervisor has PID={pid}")
     os.kill(pid, signal.SIGQUIT)
     log.info("SIGQUIT sent to supervisor!")
@@ -331,13 +330,13 @@ def run_jobs():
 def autovault(timeout):
     """ Set up Vault automatically (initialize, unseal). """
 
-    vault = JsonApi(f'http://{OPTIONS.vault_address}:8200/v1/')
+    vault = JsonApi(f'http://{OPTIONS.vault_address}:8200/v1')
 
     log.info('Unsealing vault...')
     t0 = time()
     while time() - t0 < int(timeout):
         try:
-            status = vault.get('sys/seal-status')
+            status = vault.get('/sys/seal-status')
 
             if not status['sealed']:
                 return
@@ -348,7 +347,7 @@ def autovault(timeout):
             sleep(.5)
 
     if not PATH.vault_secrets.exists():
-        resp = vault.put('sys/init', {
+        resp = vault.put('/sys/init', {
             'secret_shares': 1,
             'secret_threshold': 1,
         })
@@ -364,7 +363,7 @@ def autovault(timeout):
             secrets_ini.write(f'root_token = {resp["root_token"]}\n')
 
     secrets = read_vault_secrets()
-    vault.put('sys/unseal', {'key': secrets['keys']})
+    vault.put('/sys/unseal', {'key': secrets['keys']})
     log.info('Done.')
 
 
@@ -382,20 +381,43 @@ def supervisord(ctx):
     log.info("Starting supervisord...")
     pid = os.fork()
     if pid == 0:
-        args = ['supervisord', '-c', str(PATH.etc / 'supervisord.conf'), '-n']
+        args = ['supervisord', '-c', str(PATH.supervisord_conf), '-n']
+        sleep(5)
         log.debug('+ %s', ' '.join(args))
         os.execvp(args[0], args)
 
-    # wait for signal
+    wait_for_supervisor()
+    # wait for signal and die if supervisor dies
     while True:
-        ctx.invoke(supervisorctl, args=['status'])
-        sleep(100)
+        supervisor_pid()
+        sleep(1)
+
+
+def supervisor_pid():
+    cmd = f'supervisorctl -c {PATH.supervisord_conf} pid'
+    return int(subprocess.check_output(cmd, shell=True).decode('latin1'))
+
+
+def wait_for_supervisor():
+    SUPERVISOR_TIMEOUT = 15
+    t0 = time()
+    while time() < t0 + SUPERVISOR_TIMEOUT:
+        try:
+            supervisor_pid()
+            break
+        except subprocess.CalledProcessError as e:
+            log.warning(e)
+        sleep(2)
+    else:
+        raise RuntimeError('supervisord did not start')
 
 
 @cli.command()
 @click.argument('args', nargs=-1, type=str)
 def supervisorctl(args):
     """ Runs a supervisorctl command. """
+
+    wait_for_supervisor()
 
     joined_args = " ".join(args)
     conf = PATH.etc / "supervisord.conf"
@@ -406,7 +428,7 @@ def supervisorctl(args):
 def wait_for_service_health_checks(health_checks):
     """Waits health checks to become green for green_count times in a row. """
 
-    consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1/')
+    consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
 
     def get_failed_checks():
         """Generates a list of (service, check, status)
@@ -448,7 +470,7 @@ def wait_for_service_health_checks(health_checks):
             greens += 1
 
         if greens >= OPTIONS.wait_green_count:
-            log.info(f"Checks green {services} after {time() - t0:.02f}s")
+            log.info(f"Checks {services} green after {time() - t0:.02f}s")
             return
 
         # No chance to get enough greens
@@ -482,10 +504,31 @@ HEALTH_CHECKS = {
 }
 
 
+def wait_for_consul():
+    consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
+    CONSUL_TIMEOUT = 15
+    t0 = time()
+    while time() < t0 + CONSUL_TIMEOUT:
+        try:
+            leader = consul.get('/status/leader')
+            assert leader
+            log.info("Consul UP and running with leader %s", leader)
+            break
+        except AssertionError:
+            log.warning('Consul has no leader...')
+        except URLError:
+            log.warning('Waiting for Consul...')
+        sleep(2)
+    else:
+        raise RuntimeError('Consul did not start.')
+
+
 @cli.command()
 def wait():
     """ Wait for all services to be up and running. """
 
+    wait_for_supervisor()
+    wait_for_consul()
     wait_for_service_health_checks(HEALTH_CHECKS)
 
 
@@ -493,19 +536,23 @@ def wait():
 @click.pass_context
 def start(ctx):
     """ Configures and starts all services if they're not already up. """
-
     ctx.invoke(supervisorctl,
                args=["stop", "nomad", "consul", "vault", "autovault"])
     ctx.invoke(supervisorctl, args=["update"])
 
+    # delete consul health checks so they won't get doubled
+    log.info("Deleting old Consul health checks...")
     shutil.rmtree(PATH.var / 'consul' / 'checks', ignore_errors=True)
     ctx.invoke(supervisorctl, args=["start", "consul"])
+    wait_for_consul()
 
     ctx.invoke(supervisorctl, args=["start", "vault"])
     ctx.invoke(supervisorctl, args=["start", "autovault"])
     wait_for_service_health_checks({'vault': HEALTH_CHECKS['vault']})
 
-    # TODO remove PATH.var / nomad
+    if OPTIONS.nomad_delete_data_on_start:
+        log.info("Deleting old Nomad data...")
+        shutil.rmtree(PATH.var / 'nomad', ignore_errors=True)
     ctx.invoke(supervisorctl, args=["start", "nomad"])
     wait_for_service_health_checks({
         'nomad': HEALTH_CHECKS['nomad'],
