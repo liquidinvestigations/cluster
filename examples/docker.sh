@@ -31,6 +31,7 @@ set -x
 docker run --detach \
   --restart always \
   --name cluster \
+  --user "$(id -u $USER):$(id -g $USER)" \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume $HERE/var:/opt/cluster/var \
   --volume $HERE/etc:/opt/cluster/etc \
