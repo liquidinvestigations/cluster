@@ -19,7 +19,7 @@ cp examples/cluster.ini .
 pipenv run ./cluster.py configure
 
 echo "running supervisord"
-pipenv run ./cluster.py supervisord &
+pipenv run ./cluster.py supervisord -d
 
 echo "spam the logs"
 pipenv run ./cluster.py supervisorctl -- tail -f start &

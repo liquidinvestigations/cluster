@@ -369,7 +369,8 @@ def autovault(timeout):
 
 @cli.command()
 @click.pass_context
-def supervisord(ctx):
+@click.option('-d', '--detach', is_flag=True)
+def supervisord(ctx, detach):
     """ Run the supervisor daemon in the foreground with the current user. """
 
     log.info("setting signal handler")
@@ -387,6 +388,9 @@ def supervisord(ctx):
         os.execvp(args[0], args)
 
     wait_for_supervisor()
+    if detach:
+        return
+
     # wait for signal and stop if supervisor dies
     while True:
         try:
