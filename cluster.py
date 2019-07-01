@@ -120,8 +120,12 @@ class OPTIONS:
     nomad_memory = config.get('nomad', 'memory', fallback=0)
 
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
+
     nomad_delete_data_on_start = config.getboolean(
         'nomad', 'delete_data_on_start', fallback=False)
+
+    nomad_drain_on_stop = config.getboolean(
+        'nomad', 'drain_on_stop', fallback=True)
 
     versions = {
         'consul': config.get('consul', 'version', fallback='1.5.1'),
@@ -299,11 +303,12 @@ def _stop():
     """Implements draining Nomad jobs and stopping supervisor with SIGQUIT."""
 
     log.info("Stopping cluster...")
-    try:
-        nomad_drain(True)
-    except subprocess.CalledProcessError as e:
-        log.warning(e)
-        log.warning("Nomad drain failed, it's probably dead.")
+    if OPTIONS.nomad_drain_on_stop:
+        try:
+            nomad_drain(True)
+        except subprocess.CalledProcessError as e:
+            log.warning(e)
+            log.warning("Nomad drain failed, it's probably dead.")
 
     pid = supervisor_pid()
     log.info(f"Supervisor has PID={pid}")

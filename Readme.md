@@ -42,6 +42,9 @@ Wait a minute and visit:
 - http://10.66.60.1:8500 - Consul
 - http://10.66.60.1:4646 - Nomad
 - http://10.66.60.1:8200 - Vault
+
+If `fabio` has been enabled, visit:
+
 - http://10.66.60.1:9990/fabio
 - http://10.66.60.1:9990/prometheus
 - http://10.66.60.1:9990/grafana
@@ -131,8 +134,9 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 
 * To control the daemons, run `./cluster.py supervisorctl <start|stop|restart|tail> <consul|vault|nomad>`
 
-* Stop everything: `./cluster.py stop`. This will drain the Nomad node and kill
-  supervisor. This is triggered by `SIGTERM` and therefore by `docker stop`.
+* Stop everything: `./cluster.py stop`. This will drain the Nomad node if
+  configuration enables that. It will also stop supervisor with a `SIGQUIT`.
+  This is triggered by `SIGTERM` and therefore by `docker stop`.
 
 * To run the daemons in the foreground: `./cluster.py runserver <consul|vault|nomad>`
 
@@ -190,7 +194,7 @@ disable_mlock = true
 [disable_mlock]: https://www.vaultproject.io/docs/configuration/#disable_mlock
 
 
-## Updating
+## Updating versions
 
 When updating an existing installation using `./cluster.py install`, you'll
 need to reapply the `mlock` file capabilities for `bin/vault`:
