@@ -5,8 +5,7 @@ cd /opt/cluster
 ./examples/network.sh
 ip a
 
-until docker version; do sleep 3; done
+until docker version; do sleep 1; done
 
-docker rm -f cluster || true
-./examples/docker.sh
-until docker exec cluster /opt/cluster/cluster.py autovault; do sleep 10; done
+./examples/docker.sh --rm
+docker exec cluster ./cluster.py wait

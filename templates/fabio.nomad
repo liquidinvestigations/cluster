@@ -24,6 +24,7 @@ job "fabio" {
         registry.consul.checksRequired = all
         registry.consul.tagprefix = fabio-
         registry.consul.register.tags = fabio-/fabio
+        registry.consul.register.addr = ${NOMAD_ADDR_ui}
         EOH
       }
 
@@ -33,7 +34,7 @@ job "fabio" {
         network {
           mbits = 20
           port "lb" {
-            static = 6660
+            static = 9990
           }
           port "ui" {
           }
