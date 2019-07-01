@@ -131,6 +131,7 @@ class OPTIONS:
 
     dev = config.getboolean('cluster', 'dev', fallback=False)
 
+    disable = config.get('cluster', 'disable', fallback='').split(',')
     debug = config.getboolean('cluster', 'debug', fallback=False)
 
     nomad_vault_token = read_vault_secrets()['root_token']
@@ -319,6 +320,9 @@ def run_jobs():
     env['NOMAD_ADDR'] = 'http://' + OPTIONS.nomad_address + ':4646'
 
     for nomad_job_file in PATH.etc.glob("*.nomad"):
+        if nomad_job_file.stem in OPTIONS.disable:
+            log.info('skipping job %s', nomad_job_file)
+            continue
         log.info('running job %s', nomad_job_file)
         subprocess.check_call(f'{PATH.bin / "nomad"} job run {nomad_job_file}',
                               env=env, shell=True)
@@ -537,7 +541,9 @@ def wait():
 
     wait_for_supervisor()
     wait_for_consul()
-    wait_for_service_health_checks(HEALTH_CHECKS)
+    checks = {k: v for k, v in HEALTH_CHECKS.items()
+              if k not in OPTIONS.disable}
+    wait_for_service_health_checks(checks)
 
 
 @cli.command()

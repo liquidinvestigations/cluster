@@ -6,15 +6,6 @@ to collect Nomad stats and [Grafana][] to display them in a nice dashboard.
 It's designed to be easy to use on a fresh Linux machine, therefore it's
 somewhat opinionated.
 
-It will install everything in subfolders of the repository:
-
-* `./bin` - Consul, Vault and Nomad binaries
-* `./var` - cluster state and temporary files
-* `./etc` - configuration files
-
-The script generates a [supervisord][] configuration file in
-`./etc/supervisord.conf` that should be run with your
-
 [consul]: https://www.consul.io/
 [vault]: https://www.vaultproject.io/
 [nomad]: https://www.nomadproject.io/
@@ -23,10 +14,11 @@ The script generates a [supervisord][] configuration file in
 [Prometheus]: http://prometheus.io/
 [Grafana]: https://grafana.com/
 
+
 ## Quick Start (Linux)
 
-Have `Docker` up and running.
-
+Have `Docker` up and running. You can use
+[`get.docker.com`](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-using-the-convenience-script).
 
 The first script, `examples/network.sh`, will create a local network bridge
 called `liquid-bridge` with IP address `10.66.60.1`.
@@ -34,7 +26,8 @@ It will also set up `iptables` rules to forward ports 80 and 443 from your
 outgoing interface to the local bridge IP address.
 
 
-Clone this repository, then:
+Clone this repository. If using an older version of this repository, `chown`
+everything back from `root:` to your current user. Then:
 
 
 ```bash
@@ -133,10 +126,13 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
     ./cluster.py supervisord -d
     ```
 
-* To control the daemons, run `./cluster.py supervisorctl <start|stop|restart> <consul|vault|nomad>`
+* The `./cluster.py wait` command will poll service health checks until
+  everything is running. This can be used in CI before running the tests.
+
+* To control the daemons, run `./cluster.py supervisorctl <start|stop|restart|tail> <consul|vault|nomad>`
 
 * Stop everything: `./cluster.py stop`. This will drain the Nomad node and kill
-  supervisor. This gets triggered by `SIGTERM` and therefore to `docker stop`.
+  supervisor. This is triggered by `SIGTERM` and therefore by `docker stop`.
 
 * To run the daemons in the foreground: `./cluster.py runserver <consul|vault|nomad>`
 
@@ -150,9 +146,17 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 * Follow the [Installation Guide](#installation-guide)
   taking care to edit the nomad interface name in `cluster.ini`.
 
+---
+
 You may encounter some limitations:
 
-* Fabio may not be able to connect to Consul.
+* Fabio may not be able to connect to Consul. Turn it off by adding this
+  configuration to `cluster.ini`:
+
+```ini
+[cluster]
+disable = fabio
+```
 
 
 ## Vault Configuration
