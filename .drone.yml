@@ -3,30 +3,22 @@ name: test
 
 steps:
 - name: flake8
-  image: python:3.6
+  image: alpine/flake8:3.7.7
   commands:
-  - pip install flake8 > /dev/null
   - flake8
-
-- name: test
-  image: docker:dind
-  privileged: true
+- name: test on host
+  image: vmck/vagrant-vmck
   commands:
-  - apk add --update libcap bash curl wget git python3 py3-pip  > /dev/null
-  - pip3 install -q pipenv supervisor
-  - pipenv install --system --deploy --ignore-pipfile
-  - ./examples/network.sh
-  - ./cluster.py install
-  - setcap cap_ipc_lock=+ep bin/vault
-  - ls -al bin
-  - ./bin/nomad --version
-  - dockerd &
-  - sleep 5; until docker version; do sleep 5; done
-  - cp examples/cluster.ini .
-  - ./cluster.py supervisord &
-  - sleep 20
-  - ./cluster.py supervisorctl -- tail -f nomad &
-  - ./cluster.py wait
+  - export VMCK_URL=http://$VMCK_IP:11111
+  - export PROVISION=/opt/cluster/ci/test-host.sh
+  - ./ci/run-vagrant-test.sh
+- name: test docker
+  image: vmck/vagrant-vmck
+  commands:
+  - export VMCK_URL=http://$VMCK_IP:11111
+  - export PROVISION=/opt/cluster/ci/test-docker.sh
+  - ./ci/run-vagrant-test.sh
+
 ---
 
 kind: pipeline
@@ -34,7 +26,7 @@ name: build qemu image
 
 steps:
 - name: build qemu image
-  image: vmck/vmck:0.0.1
+  image: vmck/vmck
   privileged: true
   volumes:
   - name: vmck-images

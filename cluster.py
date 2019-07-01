@@ -561,6 +561,8 @@ def start(ctx):
     nomad_drain(False)
 
     ctx.invoke(run_jobs)
+
+    # mark that something's up by failing this "start" job
     ctx.invoke(wait)
     log.info("All done.")
 
