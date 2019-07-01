@@ -20,42 +20,6 @@ steps:
   - ./ci/run-vagrant-test.sh
 
 ---
-
-kind: pipeline
-name: build qemu image
-
-steps:
-- name: build qemu image
-  image: vmck/vmck
-  privileged: true
-  volumes:
-  - name: vmck-images
-    path: /vmck-images
-  commands:
-  - BRANCH=$(echo $DRONE_COMMIT_BRANCH | tr -s '/' '_')
-  - tar czf /tmp/cluster.tar.gz .
-  - /opt/vmck/contrib/build.py /tmp/cluster-$BRANCH.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
-  - tar czvf /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz -C /tmp cluster-$BRANCH.qcow2
-  - mv /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz /vmck-images/cluster-$BRANCH.qcow2.tar.gz
-
-depends_on:
-- test
-
-trigger:
-  status:
-  - success
-  branch:
-  - master
-  - build-image/*
-  event:
-  - push
-
-volumes:
-- name: vmck-images
-  host:
-      path: /opt/volumes/vmck-images
-
----
 kind: pipeline
 name: publish to docker hub
 
@@ -94,6 +58,41 @@ steps:
       from_secret: docker_password
 
 ---
+kind: pipeline
+name: build qemu image
+
+steps:
+- name: build qemu image
+  image: vmck/vmck
+  privileged: true
+  volumes:
+  - name: vmck-images
+    path: /vmck-images
+  commands:
+  - BRANCH=$(echo $DRONE_COMMIT_BRANCH | tr -s '/' '_')
+  - tar czf /tmp/cluster.tar.gz .
+  - /opt/vmck/contrib/build.py /tmp/cluster-$BRANCH.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
+  - tar czvf /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz -C /tmp cluster-$BRANCH.qcow2
+  - mv /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz /vmck-images/cluster-$BRANCH.qcow2.tar.gz
+
+depends_on:
+- publish to docker hub
+
+trigger:
+  status:
+  - success
+  branch:
+  - master
+  - build-image/*
+  event:
+  - push
+
+volumes:
+- name: vmck-images
+  host:
+      path: /opt/volumes/vmck-images
+
+---
 kind: secret
 name: docker_username
 get:
@@ -106,3 +105,4 @@ name: docker_password
 get:
   path: liquid/ci/drone.docker
   name: password
+
