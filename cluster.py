@@ -387,9 +387,13 @@ def supervisord(ctx):
         os.execvp(args[0], args)
 
     wait_for_supervisor()
-    # wait for signal and die if supervisor dies
+    # wait for signal and stop if supervisor dies
     while True:
-        supervisor_pid()
+        try:
+            supervisor_pid()
+        except subprocess.CalledProcessError:
+            log.info('Supervisor stopped.')
+            return
         sleep(1)
 
 
