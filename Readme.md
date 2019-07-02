@@ -53,7 +53,7 @@ If `fabio` has been enabled in `cluster.ini`, visit:
 In case of panic, `docker stop cluster` will make it all go away.
 
 
-## How it works
+## Usage
 
 `./cluster.py install` shells out to `curl` and `unzip` to get binaries for Nomad, Consul
 and Vault in the `bin` directory. The Docker image comes with the binaries unpacked.
@@ -147,6 +147,7 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 
 Example usage: [ci/test-host.sh](ci/test-host.sh)
 
+
 ### Installation on Mac OS
 
 * Use Homebrew to install `python3`, `git` and `curl`
@@ -156,7 +157,6 @@ Example usage: [ci/test-host.sh](ci/test-host.sh)
 * Follow the [Installation Guide](#installation-guide)
   taking care to edit the nomad interface name in `cluster.ini`.
 
----
 
 You may encounter some limitations:
 
@@ -187,6 +187,7 @@ runs, it uses the same key to unseal the vault, so it's safe to run at boot.
 [initialize]: https://www.vaultproject.io/docs/commands/operator/init.html
 [unseal]: https://www.vaultproject.io/docs/commands/operator/unseal.html
 
+
 ### Disabling mlock
 
 Disabling mlock is [**not recommended**][disable_mlock], but if you insist, add
@@ -200,7 +201,14 @@ disable_mlock = true
 [disable_mlock]: https://www.vaultproject.io/docs/configuration/#disable_mlock
 
 
-## Updating versions
+## Updating
+
+With the one Docker container setup, you can just:
+
+```bash
+./examples/docker.sh --rm --pull
+```
+
 
 When updating an existing installation using `./cluster.py install`, you'll
 need to reapply the `mlock` file capabilities for `bin/vault`:
@@ -211,13 +219,35 @@ sudo setcap cap_ipc_lock=+ep bin/vault
 
 After that, run `./cluster.py stop` and restart `cluster.py supervisord`.
 
----
+
+## Nomad Jobs
+
+We've included Nomad jobs for the following:
+
+System jobs run on all nodes. We have the following:
+
+- `dnsmasq` -- DNS server on port 53. Forwards requests like `prometheus.service.consul`
+  to the local Consul server, and uses the container's resolv.conf to reply to
+  all other requests. This allows all jobs to set the `dns_servers` Docker
+  config to the node IP.
+- `fabio` -- HTTP load balancer. Used to forward apps to `:9990/$APP_NAME`. Set
+  a Consul service tag like `fabio-/something` and it will forward traffic from
+  `:9990/something` to that service.
 
 
-With the one Docker container setup, you can just:
+We also run some jobs as services:
 
-```bash
-./examples/docker.sh --rm --pull
+- `prometheus` -- collects metrics from Nomad
+- `alertmanager` -- runs alerts for Prometheus
+- `grafana` -- displays dashboards from Prometheus
+
+
+You can find the definition for these jobs as `templates/*.nomad`. To disable
+starting one of these jobs, set:
+
+```ini
+[cluster]
+disable = fabio,grafana
 ```
 
 
