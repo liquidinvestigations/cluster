@@ -147,7 +147,7 @@ class OPTIONS:
     consul_retry_join = consul_retry_join_section(retry_join)
     nomad_client_servers = nomad_client_servers_section(retry_join)
 
-    wait_max = config.getfloat('deploy', 'wait_max_sec', fallback=100)
+    wait_max = config.getfloat('deploy', 'wait_max_sec', fallback=240)
     wait_interval = config.getfloat('deploy', 'wait_interval', fallback=3)
     wait_green_count = config.getint('deploy', 'wait_green_count', fallback=3)
 
