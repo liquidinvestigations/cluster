@@ -6,7 +6,7 @@ echo "setting up network"
 sudo ./examples/network.sh
 
 echo "installing dependencies"
-apt-get update -yqq && apt-get install -yqq python3-pip git curl unzip
+apt-get update -yqq && apt-get install -yqq python3-pip python3-venv git curl unzip
 pip3 install pipenv
 pipenv install
 
