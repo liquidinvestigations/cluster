@@ -102,7 +102,6 @@ def consul_retry_join_section(servers):
 
 
 class OPTIONS:
-    username = run("whoami").strip()
     nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()  # noqa: E501
     _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
     nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
