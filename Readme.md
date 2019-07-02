@@ -43,7 +43,7 @@ Wait a minute and visit:
 - http://10.66.60.1:4646 - Nomad
 - http://10.66.60.1:8200 - Vault
 
-If `fabio` has been enabled, visit:
+If `fabio` has been enabled in `cluster.ini`, visit:
 
 - http://10.66.60.1:9990/fabio
 - http://10.66.60.1:9990/prometheus
@@ -75,6 +75,7 @@ configure and wait for Consul, Vault, Nomad and the system services.
 
 Consul, Vault and Nomad can run in one Docker container with host networking mode.
 
+
 ```bash
 docker run --detach \
   --name cluster \
@@ -89,6 +90,9 @@ docker run --detach \
 
 You need to provide `cluster.ini` (there is one in `examples/`) and optionally
 mount docker volumes for `/opt/cluster/etc` and `/opt/cluster/var`.
+
+
+Example usage: [ci/test-docker.sh](ci/test-docker.sh)
 
 
 ### Installation Guide
@@ -141,9 +145,11 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 * To run the daemons in the foreground: `./cluster.py runserver <consul|vault|nomad>`
 
 
+Example usage: [ci/test-host.sh](ci/test-host.sh)
+
 ### Installation on Mac OS
 
-* Use [Homebrew][] to install `python3`, `git` and `curl`
+* Use Homebrew to install `python3`, `git` and `curl`
 * Clone this repository
 * Install Docker for Mac
 * Run `sudo ./examples/network-mac.sh`
