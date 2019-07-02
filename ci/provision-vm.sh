@@ -19,6 +19,7 @@ chown -R vagrant: .
 docker pull liquidinvestigations/cluster
 cat > /etc/supervisor/conf.d/boot-vm.conf <<EOF
 [program:boot-vm]
+user = vagrant
 command = /opt/cluster/ci/boot-vm.sh
 redirect_stderr = true
 autostart = true
