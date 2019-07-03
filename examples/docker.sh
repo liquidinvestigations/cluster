@@ -27,22 +27,28 @@ if [ ! -z $rmdocker ]; then (
   ) fi
 ) fi
 
-if ! getent group docker | grep -q $USER; then
-  echo "The current user $USER is not part of the docker group"
+USERNAME="$(whoami)"
+if ! getent group docker | grep -q $(whoami); then
+  echo "The current user $USERNAME is not part of the docker group"
   exit 1
 fi
+USERID="$(id -u $USERNAME)"
+GROUPID="$(id -g $USERNAME)"
+DOCKERGROUPID="$(getent group docker | cut -d: -f3)"
 
 set -x
 docker run --detach \
   --restart always \
   --name cluster \
-  --user "$(id -u $USER):$(getent group docker | cut -d: -f3)" \
+  --env USERID=$USERID \
+  --env GROUPID=$GROUPID \
+  --env DOCKERGROUPID=$DOCKERGROUPID \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume $HERE/var:/opt/cluster/var \
   --volume $HERE/etc:/opt/cluster/etc \
-  --volume $HERE/templates:/opt/cluster/templates \
+  --volume $HERE/templates:/opt/cluster/templates:ro \
   --volume $HERE/cluster.ini:/opt/cluster/cluster.ini:ro \
-  --volume $HERE/cluster.py:/opt/cluster/cluster.py \
+  --volume $HERE/cluster.py:/opt/cluster/cluster.py:ro \
   --privileged \
   --net host \
   $IMAGE

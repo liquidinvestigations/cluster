@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED true
 RUN set -e \
  && apt-get update -qq \
  && apt-get install  -qq -y --no-install-recommends \
-    curl unzip libcap2-bin qemu-kvm \
+    sudo curl unzip libcap2-bin qemu-kvm dnsutils \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /opt/cluster
 
@@ -24,4 +24,4 @@ RUN set -e \
 
 VOLUME /opt/cluster/var
 
-ENTRYPOINT ["./cluster.py", "supervisord"]
+ENTRYPOINT ["/opt/cluster/docker-entrypoint.sh"]

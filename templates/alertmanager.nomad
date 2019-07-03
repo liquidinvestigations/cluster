@@ -19,6 +19,10 @@ job "alertmanager" {
       driver = "docker"
       config {
         image = "prom/alertmanager:v0.17.0"
+        args = [
+          "--web.route-prefix=/alertmanager",
+          "--web.external-url=http://{{OPTIONS.consul_address}}:9990/alertmanager",
+         ]
         port_map {
           http = 9093
         }
@@ -37,7 +41,7 @@ job "alertmanager" {
         tags = ["fabio-/alertmanager"]
         check {
           type     = "http"
-          path     = "/-/healthy"
+          path     = "/alertmanager/-/healthy"
           interval = "4s"
           timeout  = "2s"
         }

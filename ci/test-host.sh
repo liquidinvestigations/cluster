@@ -1,14 +1,18 @@
 #!/bin/bash -ex
 
+id $(whoami)
 cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
 
 echo "setting up network"
 sudo ./examples/network.sh
 
 echo "installing dependencies"
-apt-get update -yqq && apt-get install -yqq python3-pip python3-venv git curl unzip
-pip3 install pipenv
-pipenv install
+sudo apt-get update -yqq > /dev/null
+sudo apt-get install -yqq python3-pip python3-venv git curl unzip dnsutils > /dev/null
+pip3 install --user --upgrade pipenv > /dev/null
+export PATH="~/.local/bin:$PATH"
+pipenv --version
+pipenv install > /dev/null
 
 echo "installing services"
 pipenv run ./cluster.py install
@@ -32,10 +36,16 @@ echo "running common tests"
 
 echo "stopping everything"
 pipenv run ./cluster.py stop
-docker ps
 if [ -s "$(docker ps -q)" ]; then
     echo "some docker containers still up!"
     exit 1
 fi
+
+echo "restarting it"
+pipenv run ./cluster.py supervisord -d
+pipenv run ./cluster.py wait
+
+echo "running common tests (again)"
+./ci/test-common.sh
 
 echo "done!"
