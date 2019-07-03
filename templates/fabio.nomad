@@ -11,10 +11,6 @@ job "fabio" {
         volumes = [
           "local/fabio.properties:/etc/fabio/fabio.properties"
         ]
-        port_map {
-          lb = 9999
-          ui = 9998
-        }
       }
       template {
         destination = "local/fabio.properties"
@@ -24,7 +20,9 @@ job "fabio" {
         registry.consul.checksRequired = all
         registry.consul.tagprefix = fabio-
         registry.consul.register.tags = fabio-/fabio
+        ui.addr = ${NOMAD_ADDR_ui}
         registry.consul.register.addr = ${NOMAD_ADDR_ui}
+        proxy.addr = ${NOMAD_ADDR_lb}
         EOH
       }
 
