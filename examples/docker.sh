@@ -14,6 +14,10 @@ for arg in "$@"; do
   esac
 done
 
+if [ ! -z $pulldocker ]; then
+  docker pull $IMAGE
+fi
+
 if [ ! -z $rmdocker ]; then (
   container=$(docker ps -f name=cluster -aq)
   if [ ! -z $container ]; then (
@@ -23,21 +27,22 @@ if [ ! -z $rmdocker ]; then (
   ) fi
 ) fi
 
-if [ ! -z $pulldocker ]; then
-  docker pull $IMAGE
+if ! getent group docker | grep -q $USER; then
+  echo "The current user $USER is not part of the docker group"
+  exit 1
 fi
 
 set -x
 docker run --detach \
   --restart always \
   --name cluster \
-  --user "$(id -u $USER):$(id -g $USER)" \
+  --user "$(id -u $USER):$(getent group docker | cut -d: -f3)" \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume $HERE/var:/opt/cluster/var \
   --volume $HERE/etc:/opt/cluster/etc \
+  --volume $HERE/templates:/opt/cluster/templates \
   --volume $HERE/cluster.ini:/opt/cluster/cluster.ini:ro \
   --volume $HERE/cluster.py:/opt/cluster/cluster.py \
-  --volume $HERE/templates:/opt/cluster/templates \
   --privileged \
   --net host \
   $IMAGE
