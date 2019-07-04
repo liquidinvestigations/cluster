@@ -45,7 +45,7 @@ Wait a minute and visit:
 
 If `fabio` has been enabled in `cluster.ini`, visit:
 
-- http://10.66.60.1:9990/fabio
+- http://10.66.60.1:9990/  (Fabio UI)
 - http://10.66.60.1:9990/prometheus
 - http://10.66.60.1:9990/grafana
 - http://10.66.60.1:9990/alertmanager

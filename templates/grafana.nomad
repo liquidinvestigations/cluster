@@ -20,17 +20,26 @@ job "grafana" {
     task "grafana" {
       driver = "docker"
       config {
-        image = "grafana/grafana:6.2.4"
+        image = "grafana/grafana:6.2.5"
         port_map {
           http = 3000
         }
       }
 
       env {
+        GF_DEFAULT_INSTANCE_NAME = "cluster"
         GF_LOG_LEVEL = "DEBUG"
         GF_LOG_MODE = "console"
+
         GF_PATHS_PROVISIONING = "/local/provisioning"
-        GF_DEFAULT_INSTANCE_NAME = "cluster"
+
+        GF_SECURITY_ADMIN_USER = "admin"
+        GF_SECURITY_ADMIN_PASSWORD = "admin"
+        GF_SECURITY_DISABLE_GRAVATAR = "true"
+
+        GF_SERVER_ROOT_URL = "http://{{OPTIONS.consul_address}}:9990/grafana"
+        GF_SERVER_SERVE_FROM_SUB_PATH = "true"
+        GF_SERVER_ENABLE_GZIP = "true"
 
         GF_AUTH_BASIC_ENABLED = "false"
         GF_AUTH_ANONYMOUS_ENABLED = "true"

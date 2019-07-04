@@ -6,14 +6,20 @@ steps:
   image: alpine/flake8:3.7.7
   commands:
   - flake8
+
 - name: test on host
   image: vmck/vagrant-vmck
+  depends_on:
+  - flake8
   commands:
   - export VMCK_URL=http://$VMCK_IP:11111
   - export PROVISION=/opt/cluster/ci/test-host.sh
   - ./ci/run-vagrant-test.sh
-- name: test docker
+
+- name: test docker container
   image: vmck/vagrant-vmck
+  depends_on:
+  - flake8
   commands:
   - export VMCK_URL=http://$VMCK_IP:11111
   - export PROVISION=/opt/cluster/ci/test-docker.sh
