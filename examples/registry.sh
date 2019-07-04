@@ -8,7 +8,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 docker run --detach \
   --restart always \
   --name registry \
-  --volume ./examples/registry-config.yml:/etc/docker/registry/config.yml \
-  --volume ./var/registry:/var/lib/registry \
+  --volume $(pwd)/examples/registry-config.yml:/etc/docker/registry/config.yml \
+  --volume $(pwd)/var/registry:/var/lib/registry \
   --publish 6665:5000 \
   registry:2
