@@ -2,7 +2,7 @@
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -yqq git python3 unzip docker.io supervisor python3-venv
+apt-get install -yqq git unzip supervisor docker.io python3-pip python3-venv
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/es.conf
 sysctl --system
 adduser vagrant docker
@@ -16,9 +16,10 @@ cp examples/cluster.ini .
 
 chown -R vagrant: .
 
-docker pull liquidinvestigations/cluster | cat
+docker pull liquidinvestigations/cluster
 cat > /etc/supervisor/conf.d/boot-vm.conf <<EOF
 [program:boot-vm]
+user = vagrant
 command = /opt/cluster/ci/boot-vm.sh
 redirect_stderr = true
 autostart = true

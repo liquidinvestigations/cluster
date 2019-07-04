@@ -1,0 +1,26 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'etc'
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "base"
+  config.vm.define "cluster-drone-" + ENV['DRONE_BUILD_NUMBER']
+
+  # disable implicit mount for /vagrant
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+  config.vm.synced_folder "..", "/opt/cluster", type: "rsync",
+      rsync__exclude: [".vagrant/", ".git/", "__pycache__/",
+                       "var/", "etc/"]
+
+  config.vm.provision "shell", inline: ENV['PROVISION']
+
+  config.vm.box = "base"
+  config.nfs.functional = false
+
+  config.vm.provider :vmck do |vmck, override|
+    vmck.vmck_url = ENV['VMCK_URL']
+    vmck.memory = 2000
+    vmck.cpus = 1
+  end
+end
