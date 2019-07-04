@@ -19,8 +19,9 @@ job "fabio" {
         registry.consul.addr = {{OPTIONS.consul_address}}:8500
         registry.consul.checksRequired = all
         registry.consul.tagprefix = fabio-
-        registry.consul.register.tags = fabio-/fabio
+        registry.consul.register.tags = fabio-/
         ui.addr = ${NOMAD_ADDR_ui}
+        ui.color = green
         registry.consul.register.addr = ${NOMAD_ADDR_ui}
         proxy.addr = ${NOMAD_ADDR_lb}
         EOH

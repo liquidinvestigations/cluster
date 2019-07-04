@@ -314,6 +314,17 @@ def _stop():
     os.kill(pid, signal.SIGQUIT)
     log.info("SIGQUIT sent to supervisor!")
 
+    STOP_TIMEOUT = 15
+    t0 = time()
+    while time() < t0 + STOP_TIMEOUT:
+        try:
+            sleep(1)
+            supervisor_pid()
+        except subprocess.CalledProcessError:
+            log.info("Everything stopped.")
+            return
+    log.warning(f"Supervisor didn't die in {STOP_TIMEOUT} seconds...")
+
 
 @cli.command()
 def run_jobs():
