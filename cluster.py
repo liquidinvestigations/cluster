@@ -149,6 +149,13 @@ class OPTIONS:
     wait_interval = config.getfloat('deploy', 'wait_interval', fallback=3)
     wait_green_count = config.getint('deploy', 'wait_green_count', fallback=3)
 
+    @classmethod
+    def validate(cls):
+        assert cls.network_address, \
+            "cluster.ini: network.address not set"
+        assert cls.network_interface, \
+            "cluster.ini: network.interface not set"
+
 
 class JsonApi:
     def __init__(self, endpoint):
@@ -220,6 +227,9 @@ def configure():
     etc. """
 
     log.info("Configuring...")
+
+    OPTIONS.validate()
+
     for dir in [PATH.etc, PATH.var]:
         dir.mkdir(exist_ok=True)
 
@@ -603,9 +613,6 @@ def configure_network():
     forward_script = str((PATH.root / 'scripts' / 'iptables-dnat.sh'))
 
     if OPTIONS.network_create_bridge:
-        assert OPTIONS.network_interface
-        assert OPTIONS.network_address
-
         env = dict(os.environ)
         env['bridge_name'] = OPTIONS.network_interface
         env['bridge_address'] = OPTIONS.network_address
@@ -616,9 +623,6 @@ def configure_network():
         log.info("Skipping bridge creation.")
 
     if OPTIONS.network_forward_ports:
-        assert OPTIONS.network_interface
-        assert OPTIONS.network_address
-
         env = dict(os.environ)
         env['bridge_name'] = OPTIONS.network_interface
         env['bridge_address'] = OPTIONS.network_address
