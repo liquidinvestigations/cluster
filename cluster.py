@@ -102,27 +102,26 @@ def consul_retry_join_section(servers):
 
 
 class OPTIONS:
-    nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()  # noqa: E501
-    _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
-    nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
+    network_address = config.get('network', 'address', fallback=None)
+    network_interface = config.get('network', 'interface', fallback=None)
+    network_create_bridge = config.getboolean('network', 'create_bridge',
+                                              fallback=False)
+    network_forward_ports = config.get('network', 'forward_ports', fallback='')
 
-    consul_address = config.get('consul', 'address', fallback='127.0.0.1')
+    consul_address = network_address
 
-    vault_address = config.get('vault', 'address', fallback='127.0.0.1')
-
+    vault_address = network_address
     vault_disable_mlock = config.getboolean('vault', 'disable_mlock', fallback=False)  # noqa: E501
 
-    nomad_address = config.get('nomad', 'address', fallback='127.0.0.1')
-
-    nomad_advertise = config.get('nomad', 'advertise', fallback='127.0.0.1')
-
+    nomad_address = network_address
+    nomad_advertise = network_address
+    nomad_interface = network_interface
+    _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
+    nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
     nomad_memory = config.get('nomad', 'memory', fallback=0)
-
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
-
     nomad_delete_data_on_start = config.getboolean(
         'nomad', 'delete_data_on_start', fallback=False)
-
     nomad_drain_on_stop = config.getboolean(
         'nomad', 'drain_on_stop', fallback=True)
 
@@ -594,6 +593,43 @@ def start(ctx):
     # mark that something's up by failing this "start" job
     ctx.invoke(wait)
     log.info("All done.")
+
+
+@cli.command()
+def configure_network():
+    """Configures network according to the ini file [network] settings."""
+
+    create_script = str((PATH.root / 'scripts' / 'create-bridge.sh'))
+    forward_script = str((PATH.root / 'scripts' / 'iptables-dnat.sh'))
+
+    if OPTIONS.network_create_bridge:
+        assert OPTIONS.network_interface
+        assert OPTIONS.network_address
+
+        env = dict(os.environ)
+        env['bridge_name'] = OPTIONS.network_interface
+        env['bridge_address'] = OPTIONS.network_address
+
+        log.info("Creating network bridge...")
+        subprocess.check_call([create_script], env=env)
+    else:
+        log.info("Skipping bridge creation.")
+
+    if OPTIONS.network_forward_ports:
+        assert OPTIONS.network_interface
+        assert OPTIONS.network_address
+
+        env = dict(os.environ)
+        env['bridge_name'] = OPTIONS.network_interface
+        env['bridge_address'] = OPTIONS.network_address
+        env['forward_ports'] = OPTIONS.network_forward_ports
+
+        log.info("Forwarding network ports...")
+        subprocess.check_call([forward_script], env=env)
+    else:
+        log.info("Skipping port forwarding.")
+
+    log.info("Network setup done.")
 
 
 if __name__ == '__main__':

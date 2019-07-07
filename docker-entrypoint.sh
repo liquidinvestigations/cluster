@@ -18,4 +18,6 @@ echo "Changing permissions..."
 chown -R $USERID:$GROUPID ./etc
 chown -R $USERID:$GROUPID ./var
 
+python3 cluster.py configure-network
+
 exec sudo -nHu vagrant python3 ./cluster.py supervisord

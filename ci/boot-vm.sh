@@ -2,9 +2,6 @@
 
 cd /opt/cluster
 
-sudo ./examples/network.sh
-ip a
-
 until docker version; do sleep 1; done
 
 ls -al

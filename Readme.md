@@ -20,18 +20,11 @@ somewhat opinionated.
 Have `Docker` up and running. You can use
 [`get.docker.com`](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-using-the-convenience-script).
 
-The first script, `examples/network.sh`, will create a local network bridge
-called `liquid-bridge` with IP address `10.66.60.1`.
-It will also set up `iptables` rules to forward ports 80 and 443 from your
-outgoing interface to the local bridge IP address.
-
-
 Clone this repository. If using an older version of this repository, `chown`
 everything back from `root:` to your current user. Then:
 
 
 ```bash
-sudo ./examples/network.sh
 cp examples/cluster.ini .
 ./examples/docker.sh
 docker exec cluster ./cluster.py supervisorctl -- tail -f start
@@ -125,7 +118,7 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
     vim cluster.ini
     ```
 
-* Set up the network. You can use our example configuration in `examples/network.sh`.
+* Set up the network: `sudo -E pipenv run ./cluster.py configure-network`
 
 * Run `supervisor` in the background:
 
