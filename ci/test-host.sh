@@ -3,14 +3,10 @@
 id $(whoami)
 cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
 
-echo "setting up network"
-sudo ./examples/network.sh
-
 echo "installing dependencies"
 sudo apt-get update -yqq > /dev/null
 sudo apt-get install -yqq python3-pip python3-venv git curl unzip dnsutils > /dev/null
-pip3 install --user --upgrade pipenv > /dev/null
-export PATH="~/.local/bin:$PATH"
+sudo pip3 install pipenv > /dev/null
 pipenv --version
 pipenv install > /dev/null
 
@@ -21,6 +17,9 @@ sudo setcap cap_ipc_lock=+ep bin/vault
 echo "configuring"
 cp examples/cluster.ini .
 pipenv run ./cluster.py configure
+
+echo "setting up network"
+sudo pipenv run ./cluster.py configure-network
 
 echo "running supervisord"
 pipenv run ./cluster.py supervisord -d
