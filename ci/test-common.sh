@@ -1,7 +1,5 @@
 #!/bin/bash -ex
 
-echo 'Redirect me to /ui/!'
-
 head() {
   curl --fail --silent --show-error -I $1
 }
@@ -11,13 +9,15 @@ get() {
 }
 
 dns() {
-  DNSIP=$(dig +short @10.66.60.1 $1)
-  if [ -z $DNSIP ]; then
+  DNSIP=$(set -x; dig +short @10.66.60.1 $1)
+  if [ -z "$DNSIP" ]; then
     echo "DNS lookup for $1 failed"
     exit 1
   fi
 }
 
+
+echo 'Redirect me to /ui/!'
 
 echo "Checking consul..."
 head 10.66.60.1:8500/
@@ -43,6 +43,10 @@ get 10.66.60.1:9990/prometheus/-/healthy/
 get 10.66.60.1:9990/alertmanager/
 get 10.66.60.1:9990/alertmanager/-/healthy/
 
+# TODO: enable this check after we upgrade grafana to 6.3 (to have it pick up
+# serve_from_sub_path) Alternatively, use the `master` tag.
+#head 10.66.60.1:9990/grafana/
+
 echo "Checking DNS..."
 dns consul.service.consul
 dns nomad.service.consul
@@ -51,6 +55,7 @@ dns fabio.service.consul
 dns github.com
 dns liquiddemo.org
 
-# TODO: enable this check after we upgrade grafana to 6.3 (to have it pick up
-# serve_from_sub_path) Alternatively, use the `master` branch.
-#head 10.66.60.1:9990/grafana/
+echo "Port forwarding should be up for 80 and 443..."
+sudo iptables -t nat -S | grep 80
+sudo iptables -t nat -S | grep 443
+printf "${BASH_SOURCE[0]} DONE!\n\n\n"

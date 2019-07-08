@@ -5,10 +5,10 @@ cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
 
 echo "installing dependencies"
 sudo apt-get update -yqq > /dev/null
-sudo apt-get install -yqq python3-pip python3-venv git curl unzip dnsutils > /dev/null
+sudo apt-get install -yqq python3-pip python3-venv git curl unzip dnsutils iptables > /dev/null
 sudo pip3 install pipenv > /dev/null
 pipenv --version
-pipenv install > /dev/null
+pipenv install 2>&1
 
 echo "installing services"
 pipenv run ./cluster.py install

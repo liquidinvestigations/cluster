@@ -1,5 +1,4 @@
-#!/bin/bash
-set -e
+#!/bin/bash -e
 
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
@@ -21,7 +20,7 @@ fi
 
 # The public address used in the DNAT rule is guessed by:
 public_address=$(ip route get 8.8.8.8 | awk '{ print $7; exit }')
-echo "Forwarding ports $forward_ports from $public_address to $bridge_address"
+echo "Forwarding ports: $forward_ports..."
 
 if [ -z "$public_address" ] \
     || [ -z "$bridge_address" ] \
@@ -45,11 +44,13 @@ for pair in "${ports[@]}"; do
   fi
 
   echo "DNAT $public_address:$public_port --> $bridge_address:$private_port"
-  set -x
   rule="-d $public_address -p tcp --dport $public_port -j DNAT --to-destination $bridge_address:$private_port"
-  iptables -t nat -D PREROUTING $rule || /bin/true
-  iptables -t nat -A PREROUTING $rule
-  set +x
+  (
+    set -x
+    # TODO delete all rules matching source to this
+    iptables -t nat -D PREROUTING $rule || /bin/true
+    iptables -t nat -A PREROUTING $rule
+  )
 done
 
 (
