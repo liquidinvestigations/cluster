@@ -610,7 +610,7 @@ def configure_network():
     """Configures network according to the ini file [network] settings."""
 
     create_script = str((PATH.root / 'scripts' / 'create-bridge.sh'))
-    forward_script = str((PATH.root / 'scripts' / 'iptables-dnat.sh'))
+    forward_script = str((PATH.root / 'scripts' / 'forward-ports.sh'))
 
     if OPTIONS.network_create_bridge:
         env = dict(os.environ)
