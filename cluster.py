@@ -59,14 +59,6 @@ def run(cmd, **kwargs):
     return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
 
 
-def detect_interface():
-    if sys.platform == 'darwin':
-        return run("route get 8.8.8.8 | awk '/interface:/ {print $2}'").strip()
-    elif sys.platform == 'linux' or sys.platform == 'linux2':
-        return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
-    raise RuntimeError(f'Unsupported platform {sys.platform}')
-
-
 config = configparser.ConfigParser()
 config.read(PATH.cluster_ini)
 
@@ -155,6 +147,11 @@ class OPTIONS:
             "cluster.ini: network.address not set"
         assert cls.network_interface, \
             "cluster.ini: network.interface not set"
+        if not sys.platform.startswith('linux'):
+            assert not cls.network_create_bridge, \
+                "cluster.ini: network.create_bridge must be unset on macOS"
+            assert not cls.network_forward_ports, \
+                "cluster.ini: network.forward_ports must be unset on macOS"
 
 
 class JsonApi:
@@ -608,6 +605,9 @@ def start(ctx):
 @cli.command()
 def configure_network():
     """Configures network according to the ini file [network] settings."""
+
+    assert sys.platform.startswith('linux'), \
+        'configure-network is only available on Linux'
 
     create_script = str((PATH.root / 'scripts' / 'create-bridge.sh'))
     forward_script = str((PATH.root / 'scripts' / 'forward-ports.sh'))

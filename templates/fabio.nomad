@@ -7,10 +7,13 @@ job "fabio" {
       driver = "docker"
       config {
         image = "fabiolb/fabio:1.5.11-go1.11.5"
-        network_mode = "host"
         volumes = [
           "local/fabio.properties:/etc/fabio/fabio.properties"
         ]
+        port_map {
+          ui = 9991
+          lb = 9990
+        }
       }
       template {
         destination = "local/fabio.properties"
@@ -20,10 +23,10 @@ job "fabio" {
         registry.consul.checksRequired = all
         registry.consul.tagprefix = fabio-
         registry.consul.register.tags = fabio-/
-        ui.addr = ${NOMAD_ADDR_ui}
+        ui.addr = :9991
         ui.color = green
         registry.consul.register.addr = ${NOMAD_ADDR_ui}
-        proxy.addr = ${NOMAD_ADDR_lb}
+        proxy.addr = :9990
         EOH
       }
 

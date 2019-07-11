@@ -143,12 +143,27 @@ Example usage: [ci/test-host.sh](ci/test-host.sh)
 
 ### Installation on Mac OS
 
+The MacOS setup is highly experimental and there is no pipeline testing it.
+
+Docker for Mac runs containers on a Linux virtual machine. If we bind
+everything on a single address like we do in the Linux setup, then services
+running inside the Docker for Mac VM won't know how to route to services
+running on the host with the same IP address.
+
+To fix this, we're configuring two local bridges:
+
+- `bridge1` with address `10.66.60.1/32` - for the agents (Nomad, Consul and Vault)
+- `bridge2` with address `10.66.60.2/32` - for the services (everything Nomad runs with Docker)
+
+
+The installation is as follows:
+
 * Use Homebrew to install `python3`, `git` and `curl`
 * Clone this repository
 * Install Docker for Mac
 * Run `sudo ./examples/network-mac.sh`
-* Follow the [Installation Guide](#installation-guide)
-  taking care to edit the nomad interface name in `cluster.ini`.
+* Start from `./examples/cluster-mac.ini`
+* Follow the [Installation Guide](#installation-guide) starting from the `supervisord` step.
 
 
 You may encounter some limitations:
