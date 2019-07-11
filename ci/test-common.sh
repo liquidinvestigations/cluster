@@ -55,6 +55,6 @@ dns github.com
 dns liquiddemo.org
 
 echo "Port forwarding should be up for 80 and 443..."
-sudo iptables -t nat -S | grep 80
-sudo iptables -t nat -S | grep 443
+sudo iptables -t nat -S | grep '-A PREROUTING .* -p tcp -m tcp --dport 80 -j DNAT --to-destination 10.66.60.1:80'
+sudo iptables -t nat -S | grep '-A PREROUTING .* -p tcp -m tcp --dport 443 -j DNAT --to-destination 10.66.60.1:443'
 printf "${BASH_SOURCE[0]} DONE!\n\n\n"
