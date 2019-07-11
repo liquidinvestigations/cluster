@@ -42,10 +42,9 @@ get 10.66.60.1:9990/prometheus/
 get 10.66.60.1:9990/prometheus/-/healthy/
 get 10.66.60.1:9990/alertmanager/
 get 10.66.60.1:9990/alertmanager/-/healthy/
-
-# TODO: enable this check after we upgrade grafana to 6.3 (to have it pick up
-# serve_from_sub_path) Alternatively, use the `master` tag.
-#head 10.66.60.1:9990/grafana/
+head 10.66.60.1:9990/grafana/
+get 10.66.60.1:9990/grafana/
+get 10.66.60.1:9990/grafana/api/health/
 
 echo "Checking DNS..."
 dns consul.service.consul
