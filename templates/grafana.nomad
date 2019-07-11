@@ -64,7 +64,7 @@ job "grafana" {
         check {
           name     = "Grafana alive on HTTP"
           type     = "http"
-          path     = "/api/health"
+          path     = "/grafana/api/health"
           interval = "4s"
           timeout  = "2s"
           check_restart {

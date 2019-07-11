@@ -44,7 +44,7 @@ get 10.66.60.1:9990/alertmanager/
 get 10.66.60.1:9990/alertmanager/-/healthy/
 head 10.66.60.1:9990/grafana/
 get 10.66.60.1:9990/grafana/
-get 10.66.60.1:9990/grafana/api/health/
+get 10.66.60.1:9990/grafana/api/health
 
 echo "Checking DNS..."
 dns consul.service.consul
