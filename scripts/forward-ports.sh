@@ -18,11 +18,14 @@ if [ -z "$forward_ports" ]; then
   exit 0
 fi
 
+if [ -z "$forward_address" ]; then
 # The public address used in the DNAT rule is guessed by:
-public_address=$(ip route get 8.8.8.8 | awk '{ print $7; exit }')
+  forward_address=$(ip route get 8.8.8.8 | awk '{ print $7; exit }')
+fi
+
 echo "Forwarding ports: $forward_ports..."
 
-if [ -z "$public_address" ] \
+if [ -z "$forward_address" ] \
     || [ -z "$bridge_address" ] \
     || [ -z "$bridge_name" ] \
     || [ -z "$forward_ports" ]; then
@@ -43,8 +46,8 @@ for pair in "${ports[@]}"; do
     exit 1
   fi
 
-  echo "DNAT $public_address:$public_port --> $bridge_address:$private_port"
-  rule="-d $public_address -p tcp --dport $public_port -j DNAT --to-destination $bridge_address:$private_port"
+  echo "DNAT $forward_address:$public_port --> $bridge_address:$private_port"
+  rule="-d $forward_address -p tcp --dport $public_port -j DNAT --to-destination $bridge_address:$private_port"
   (
     set -x
     # TODO delete all rules matching source to this

@@ -99,6 +99,7 @@ class OPTIONS:
     network_create_bridge = config.getboolean('network', 'create_bridge',
                                               fallback=False)
     network_forward_ports = config.get('network', 'forward_ports', fallback='')
+    network_forward_address = config.get('network', 'forward_address', fallback='')
 
     consul_address = network_address
 
@@ -626,6 +627,7 @@ def configure_network():
         env = dict(os.environ)
         env['bridge_name'] = OPTIONS.network_interface
         env['bridge_address'] = OPTIONS.network_address
+        env['forward_address'] = OPTIONS.network_forward_address
         env['forward_ports'] = OPTIONS.network_forward_ports
 
         log.info("Forwarding network ports...")
