@@ -1,26 +1,26 @@
 #!/bin/bash -ex
 
-# Set up local bridge network
+# Set up a pair of local bridge networks
 #
 #       sudo ./network-mac.sh
-#
+
 # Then edit `cluster.ini` and edit:
-#
-#       [nomad]
-#       interface = liquid-bridge
-#       address = 10.66.60.01
-#       advertise = 10.66.60.01
-#
-#       [vault]
-#       address = 10.66.60.01
-#
-#       [consul]
-#       address = 10.66.60.01
+#       [network]
+#       address = 10.66.60.1
+#       interface = services-bridge
 
-bridge_name=bridge1
-bridge_address=10.66.60.1
+cluster_bridge_name=bridge1
+cluster_bridge_address=10.66.60.1
 
-ifconfig $bridge_name create
-ifconfig $bridge_name $bridge_address/24 up
+services_bridge_name=bridge2
+services_bridge_address=10.66.60.2
+
+ifconfig $cluster_bridge_name destroy || true
+ifconfig $cluster_bridge_name create
+ifconfig $cluster_bridge_name $cluster_bridge_address/32 up
+
+ifconfig $services_bridge_name destroy || true
+ifconfig $services_bridge_name create
+ifconfig $services_bridge_name $services_bridge_address/32 up
 
 echo "Network set up successfully." > /dev/null

@@ -3,16 +3,14 @@
 id $(whoami)
 cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
 
-echo "setting up network"
-sudo ./examples/network.sh
-
-echo "installing dependencies"
-sudo apt-get update -yqq > /dev/null
-sudo apt-get install -yqq python3-pip python3-venv git curl unzip dnsutils > /dev/null
-pip3 install --user --upgrade pipenv > /dev/null
-export PATH="~/.local/bin:$PATH"
+# The VM already has these installed:
+#echo "installing dependencies"
+#sudo apt-get update -yqq
+#sudo apt-get install -yqq python3-pip python3-venv git curl unzip dnsutils iptables
+#apt-get install -yqq git python3 unzip docker.io supervisor python3-venv
+#sudo pip3 install pipenv
 pipenv --version
-pipenv install > /dev/null
+pipenv install 2>&1
 
 echo "installing services"
 pipenv run ./cluster.py install
@@ -21,6 +19,9 @@ sudo setcap cap_ipc_lock=+ep bin/vault
 echo "configuring"
 cp examples/cluster.ini .
 pipenv run ./cluster.py configure
+
+echo "setting up network"
+sudo pipenv run ./cluster.py configure-network
 
 echo "running supervisord"
 pipenv run ./cluster.py supervisord -d

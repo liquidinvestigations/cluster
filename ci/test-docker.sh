@@ -9,9 +9,6 @@ until docker version; do sleep 1; done
 echo "building docker image"
 docker build . --tag liquidinvestigations/cluster
 
-echo "setting up network"
-sudo ./examples/network.sh
-
 echo "running container"
 cp examples/cluster.ini .
 ./examples/docker.sh

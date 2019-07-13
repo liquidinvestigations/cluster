@@ -20,7 +20,7 @@ job "grafana" {
     task "grafana" {
       driver = "docker"
       config {
-        image = "grafana/grafana:6.2.5"
+        image = "grafana/grafana:6.3.0-beta1"
         port_map {
           http = 3000
         }
@@ -64,7 +64,7 @@ job "grafana" {
         check {
           name     = "Grafana alive on HTTP"
           type     = "http"
-          path     = "/api/health"
+          path     = "/grafana/api/health"
           interval = "4s"
           timeout  = "2s"
           check_restart {

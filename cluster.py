@@ -59,14 +59,6 @@ def run(cmd, **kwargs):
     return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
 
 
-def detect_interface():
-    if sys.platform == 'darwin':
-        return run("route get 8.8.8.8 | awk '/interface:/ {print $2}'").strip()
-    elif sys.platform == 'linux' or sys.platform == 'linux2':
-        return run("ip route get 8.8.8.8 | awk '{ print $5; exit }'").strip()
-    raise RuntimeError(f'Unsupported platform {sys.platform}')
-
-
 config = configparser.ConfigParser()
 config.read(PATH.cluster_ini)
 
@@ -102,27 +94,27 @@ def consul_retry_join_section(servers):
 
 
 class OPTIONS:
-    nomad_interface = config.get('nomad', 'interface', fallback=None) or detect_interface()  # noqa: E501
-    _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
-    nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
+    network_address = config.get('network', 'address', fallback=None)
+    network_interface = config.get('network', 'interface', fallback=None)
+    network_create_bridge = config.getboolean('network', 'create_bridge',
+                                              fallback=False)
+    network_forward_ports = config.get('network', 'forward_ports', fallback='')
+    network_forward_address = config.get('network', 'forward_address', fallback='')  # noqa: E501
 
-    consul_address = config.get('consul', 'address', fallback='127.0.0.1')
+    consul_address = network_address
 
-    vault_address = config.get('vault', 'address', fallback='127.0.0.1')
-
+    vault_address = network_address
     vault_disable_mlock = config.getboolean('vault', 'disable_mlock', fallback=False)  # noqa: E501
 
-    nomad_address = config.get('nomad', 'address', fallback='127.0.0.1')
-
-    nomad_advertise = config.get('nomad', 'advertise', fallback='127.0.0.1')
-
+    nomad_address = network_address
+    nomad_advertise = network_address
+    nomad_interface = network_interface
+    _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
+    nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
     nomad_memory = config.get('nomad', 'memory', fallback=0)
-
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
-
     nomad_delete_data_on_start = config.getboolean(
         'nomad', 'delete_data_on_start', fallback=False)
-
     nomad_drain_on_stop = config.getboolean(
         'nomad', 'drain_on_stop', fallback=True)
 
@@ -149,6 +141,18 @@ class OPTIONS:
     wait_max = config.getfloat('deploy', 'wait_max_sec', fallback=240)
     wait_interval = config.getfloat('deploy', 'wait_interval', fallback=3)
     wait_green_count = config.getint('deploy', 'wait_green_count', fallback=3)
+
+    @classmethod
+    def validate(cls):
+        assert cls.network_address, \
+            "cluster.ini: network.address not set"
+        assert cls.network_interface, \
+            "cluster.ini: network.interface not set"
+        if not sys.platform.startswith('linux'):
+            assert not cls.network_create_bridge, \
+                "cluster.ini: network.create_bridge must be unset on macOS"
+            assert not cls.network_forward_ports, \
+                "cluster.ini: network.forward_ports must be unset on macOS"
 
 
 class JsonApi:
@@ -221,6 +225,9 @@ def configure():
     etc. """
 
     log.info("Configuring...")
+
+    OPTIONS.validate()
+
     for dir in [PATH.etc, PATH.var]:
         dir.mkdir(exist_ok=True)
 
@@ -452,7 +459,7 @@ def supervisorctl(args):
                           shell=True)
 
 
-def wait_for_service_health_checks(health_checks):
+def wait_for_service_health_checks(health_checks):  # noqa: C901
     """Waits health checks to become green for green_count times in a row. """
 
     consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
@@ -594,6 +601,41 @@ def start(ctx):
     # mark that something's up by failing this "start" job
     ctx.invoke(wait)
     log.info("All done.")
+
+
+@cli.command()
+def configure_network():
+    """Configures network according to the ini file [network] settings."""
+
+    assert sys.platform.startswith('linux'), \
+        'configure-network is only available on Linux'
+
+    create_script = str((PATH.root / 'scripts' / 'create-bridge.sh'))
+    forward_script = str((PATH.root / 'scripts' / 'forward-ports.sh'))
+
+    if OPTIONS.network_create_bridge:
+        env = dict(os.environ)
+        env['bridge_name'] = OPTIONS.network_interface
+        env['bridge_address'] = OPTIONS.network_address
+
+        log.info("Creating network bridge...")
+        subprocess.check_call([create_script], env=env)
+    else:
+        log.info("Skipping bridge creation.")
+
+    if OPTIONS.network_forward_ports:
+        env = dict(os.environ)
+        env['bridge_name'] = OPTIONS.network_interface
+        env['bridge_address'] = OPTIONS.network_address
+        env['forward_address'] = OPTIONS.network_forward_address
+        env['forward_ports'] = OPTIONS.network_forward_ports
+
+        log.info("Forwarding network ports...")
+        subprocess.check_call([forward_script], env=env)
+    else:
+        log.info("Skipping port forwarding.")
+
+    log.info("Network setup done.")
 
 
 if __name__ == '__main__':
