@@ -258,14 +258,22 @@ We also run some jobs as services:
 - `grafana` -- displays dashboards from Prometheus
 
 
-You can find the definition for these jobs as `templates/*.nomad`. To disable
-starting one of these jobs, set:
+The `./cluster.py run-jobs` command will trigger the deployment of the files in
+`./etc/*.nomad`. This command is automatically run by the `start` command.
+
+To disable starting some of these jobs, set:
 
 ```ini
 [cluster]
 disable = fabio,grafana
 ```
 
+For multi-host configurations one must disable running these jobs on all but one node, with:
+
+```ini
+cluster
+disable = all
+```
 
 ## Multi Host
 

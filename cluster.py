@@ -14,6 +14,7 @@ from time import time, sleep
 import json
 from urllib.request import Request, urlopen
 from urllib.error import URLError
+from urllib.parse import urlencode
 import sys
 import signal
 import shutil
@@ -93,6 +94,9 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
+ALL_JOBS = ['fabio', 'prometheus', 'alertmanager', 'grafana', 'dnsmasq']
+
+
 class OPTIONS:
     network_address = config.get('network', 'address', fallback=None)
     network_interface = config.get('network', 'interface', fallback=None)
@@ -125,10 +129,9 @@ class OPTIONS:
     }
 
     dev = config.getboolean('cluster', 'dev', fallback=False)
-
-    disable = config.get('cluster', 'disable', fallback='').split(',')
     debug = config.getboolean('cluster', 'debug', fallback=False)
 
+    _disable = config.get('cluster', 'disable', fallback='all').strip().split(',')
     nomad_vault_token = read_vault_secrets()['root_token']
 
     bootstrap_expect = config.getint('cluster', 'bootstrap_expect', fallback=1)
@@ -143,6 +146,14 @@ class OPTIONS:
     wait_green_count = config.getint('deploy', 'wait_green_count', fallback=3)
 
     @classmethod
+    def get_jobs(cls):
+        if cls._disable == ['all']:
+            return []
+        elif not cls._disable or cls.__disable == ['none']:
+            return ALL_JOBS
+        return [s for s in ALL_JOBS if s not in cls._disable]
+
+    @classmethod
     def validate(cls):
         assert cls.network_address, \
             "cluster.ini: network.address not set"
@@ -153,6 +164,9 @@ class OPTIONS:
                 "cluster.ini: network.create_bridge must be unset on macOS"
             assert not cls.network_forward_ports, \
                 "cluster.ini: network.forward_ports must be unset on macOS"
+        if cls._disable and cls._disable not in (['all'], ['none']):
+            assert all(s in ALL_JOBS for s in cls._disable), \
+                'unidentified service in "cluster.disable" list'
 
 
 class JsonApi:
@@ -166,8 +180,10 @@ class JsonApi:
                 res_body = json.load(res)
                 return res_body
 
-    def get(self, url):
-        return self.send(Request(f'{self.endpoint}{url}'))
+    def get(self, url, data={}):
+        encoded = urlencode(data).encode('utf-8') if data is not None else None
+        req = Request(f'{self.endpoint}{url}', data=encoded, method='GET')
+        return self.send(req)
 
     def put(self, url, data):
         return self.send(Request(
@@ -341,10 +357,8 @@ def run_jobs():
     env = dict(os.environ)
     env['NOMAD_ADDR'] = 'http://' + OPTIONS.nomad_address + ':4646'
 
-    for nomad_job_file in PATH.etc.glob("*.nomad"):
-        if nomad_job_file.stem in OPTIONS.disable:
-            log.info('skipping job %s', nomad_job_file)
-            continue
+    for job in OPTIONS.get_jobs():
+        nomad_job_file = PATH.etc / f'{job}.nomad'
         log.info('running job %s', nomad_job_file)
         subprocess.check_call(f'{PATH.bin / "nomad"} job run {nomad_job_file}',
                               env=env, shell=True)
@@ -459,10 +473,22 @@ def supervisorctl(args):
                           shell=True)
 
 
-def wait_for_service_health_checks(health_checks):  # noqa: C901
-    """Waits health checks to become green for green_count times in a row. """
-
+def get_checks(service, self_only=False):
     consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
+    if self_only:
+        node_name = consul.get('/agent/self')['Config']['NodeName']
+        return consul.get(f'/health/checks/{service}', data={
+            'filter': 'Node == ' + node_name,
+        })
+    else:
+        return consul.get(f'/health/checks/{service}')
+
+
+def wait_for_checks(health_checks, self_only=False):  # noqa: C901
+    """Waits health checks to become green for green_count times in a row.
+
+    If self_only is True we only look at health checks registered on the
+    current node."""
 
     def get_failed_checks():
         """Generates a list of (service, check, status)
@@ -470,7 +496,7 @@ def wait_for_service_health_checks(health_checks):  # noqa: C901
 
         consul_status = {}
         for service in health_checks:
-            consul_checks = consul.get(f'/health/checks/{service}')
+            consul_checks = get_checks(service, self_only)
             for s in consul_checks:
                 key = service, s['Name']
                 if key in consul_status:
@@ -487,7 +513,10 @@ def wait_for_service_health_checks(health_checks):  # noqa: C901
                     yield service, check, status
 
     services = sorted(health_checks.keys())
-    log.info(f"Waiting for health checks on {services}")
+    log.info("Waiting on %s health checks for %s %s",
+             sum(map(len, health_checks.values())),
+             str(services),
+             '(self only)' if self_only else '')
 
     t0 = time()
     greens = 0
@@ -504,7 +533,7 @@ def wait_for_service_health_checks(health_checks):  # noqa: C901
             greens += 1
 
         if greens >= OPTIONS.wait_green_count:
-            log.info(f"Checks {services} green after {time() - t0:.02f}s")
+            log.info(f"Checks for {services} green after {time() - t0:.02f}s")
             return
 
         # No chance to get enough greens
@@ -563,9 +592,15 @@ def wait():
 
     wait_for_supervisor()
     wait_for_consul()
-    checks = {k: v for k, v in HEALTH_CHECKS.items()
-              if k not in OPTIONS.disable}
-    wait_for_service_health_checks(checks)
+    wait_for_checks({
+        k: v for k, v in HEALTH_CHECKS.items()
+        if k in ['vault', 'nomad', 'nomad-client']
+    }, self_only=True)
+
+    wait_for_checks({
+        k: v for k, v in HEALTH_CHECKS.items()
+        if k in OPTIONS.get_jobs()
+    })
 
 
 @cli.command()
@@ -584,16 +619,16 @@ def start(ctx):
 
     ctx.invoke(supervisorctl, args=["start", "vault"])
     ctx.invoke(supervisorctl, args=["start", "autovault"])
-    wait_for_service_health_checks({'vault': HEALTH_CHECKS['vault']})
+    wait_for_checks({'vault': HEALTH_CHECKS['vault']}, self_only=True)
 
     if OPTIONS.nomad_delete_data_on_start:
         log.info("Deleting old Nomad data...")
         shutil.rmtree(PATH.var / 'nomad', ignore_errors=True)
     ctx.invoke(supervisorctl, args=["start", "nomad"])
-    wait_for_service_health_checks({
+    wait_for_checks({
         'nomad': HEALTH_CHECKS['nomad'],
         'nomad-client': HEALTH_CHECKS['nomad-client'],
-    })
+    }, self_only=True)
     nomad_drain(False)
 
     ctx.invoke(run_jobs)
