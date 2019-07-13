@@ -4,12 +4,6 @@ id $(whoami)
 cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
 
 echo "installing dependencies"
-
-# fix intermittent "Could not get lock /var/lib/dpkg/lock-frontend"
-sudo rm -f /var/lib/dpkg/lock
-sudo rm -f /var/lib/dpkg/lock-frontend
-sudo dpkg --configure -a
-
 sudo apt-get update -yqq
 sudo apt-get install -yqq python3-pip python3-venv git curl unzip dnsutils iptables
 sudo pip3 install pipenv
