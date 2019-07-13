@@ -99,7 +99,7 @@ class OPTIONS:
     network_create_bridge = config.getboolean('network', 'create_bridge',
                                               fallback=False)
     network_forward_ports = config.get('network', 'forward_ports', fallback='')
-    network_forward_address = config.get('network', 'forward_address', fallback='')
+    network_forward_address = config.get('network', 'forward_address', fallback='')  # noqa: E501
 
     consul_address = network_address
 
@@ -459,7 +459,7 @@ def supervisorctl(args):
                           shell=True)
 
 
-def wait_for_service_health_checks(health_checks):
+def wait_for_service_health_checks(health_checks):  # noqa: C901
     """Waits health checks to become green for green_count times in a row. """
 
     consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
