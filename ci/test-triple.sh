@@ -10,13 +10,10 @@ echo "building docker image"
 docker build . --tag liquidinvestigations/cluster
 
 echo "running three containers..."
-docker rm -f test-1 test-2 test-4 || true
-sudo rm -rf /test
 sudo mkdir /test
 sudo chown $(whoami): /test/
 for id in 1 2 4; do
   cp -a . /test/$id
-  git -C /test/$id clean -Xqdf .
   cp /test/$id/ci/configs/triple-$id.ini /test/$id/cluster.ini
   /test/$id/examples/docker.sh --name test-$id
 done
