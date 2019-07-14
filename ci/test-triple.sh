@@ -32,6 +32,9 @@ function get_one_secret_file() {
 }
 until get_one_secret_file; do sleep 5; done
 winner=$(get_one_secret_file)
+
+echo "copy config over to the losers"
+docker stop test-1 test-2 test-4
 for id in 1 2 4; do
   dest="/test/$id/var/vault-secrets.ini"
   if [ "$winner" != "$dest" ]; then
@@ -40,12 +43,12 @@ for id in 1 2 4; do
 done
 
 echo "restart these to pick up the changes"
-docker restart test-1 test-2 test-4
+docker start test-1 test-2 test-4
 
 echo "waiting for service health checks"
 for id in 1 2 4; do
   docker exec test-$id ./cluster.py wait
-one
+done
 
 echo "running common tests for each node"
 for id in 1 2 4; do

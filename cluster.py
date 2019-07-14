@@ -129,11 +129,12 @@ class OPTIONS:
         'nomad': config.get('nomad', 'version', fallback='0.9.3'),
     }
 
-    node_name = config.get('cluster', 'node_name', fallback=socket.gethostname())
+    node_name = config.get('cluster', 'node_name',
+                           fallback=socket.gethostname())
     dev = config.getboolean('cluster', 'dev', fallback=False)
     debug = config.getboolean('cluster', 'debug', fallback=False)
 
-    _disable = config.get('cluster', 'disable', fallback='all').strip().split(',')
+    _disable = config.get('cluster', 'disable', fallback='all').strip().split(',')  # noqa: E501
     nomad_vault_token = read_vault_secrets()['root_token']
 
     bootstrap_expect = config.getint('cluster', 'bootstrap_expect', fallback=1)
@@ -151,7 +152,7 @@ class OPTIONS:
     def get_jobs(cls):
         if cls._disable == ['all']:
             return []
-        elif not cls._disable or cls.__disable == ['none']:
+        elif not cls._disable or cls._disable == ['none']:
             return ALL_JOBS
         return [s for s in ALL_JOBS if s not in cls._disable]
 
@@ -182,9 +183,9 @@ class JsonApi:
                 res_body = json.load(res)
                 return res_body
 
-    def get(self, url, data={}):
-        encoded = urlencode(data).encode('utf-8') if data is not None else None
-        req = Request(f'{self.endpoint}{url}', data=encoded, method='GET')
+    def get(self, url, data=None):
+        params = '?' + urlencode(data) if data else ''
+        req = Request(f'{self.endpoint}{url}{params}')
         return self.send(req)
 
     def put(self, url, data):
@@ -443,6 +444,13 @@ def supervisord(ctx, detach):
         sleep(1)
 
 
+def _supervisorctl(*args):
+    joined_args = " ".join(args)
+    conf = PATH.etc / "supervisord.conf"
+    subprocess.check_call(f'supervisorctl -c {conf} {joined_args}',
+                          shell=True)
+
+
 def supervisor_pid():
     cmd = f'supervisorctl -c {PATH.supervisord_conf} pid'
     return int(subprocess.check_output(cmd, shell=True).decode('latin1'))
@@ -468,11 +476,7 @@ def supervisorctl(args):
     """ Runs a supervisorctl command. """
 
     wait_for_supervisor()
-
-    joined_args = " ".join(args)
-    conf = PATH.etc / "supervisord.conf"
-    subprocess.check_call(f'supervisorctl -c {conf} {joined_args}',
-                          shell=True)
+    _supervisorctl(*args)
 
 
 def get_checks(service, self_only=False):
@@ -480,7 +484,7 @@ def get_checks(service, self_only=False):
     if self_only:
         node_name = consul.get('/agent/self')['Config']['NodeName']
         return consul.get(f'/health/checks/{service}', data={
-            'filter': 'Node == ' + node_name,
+            'filter': f'Node == "{node_name}"'
         })
     else:
         return consul.get(f'/health/checks/{service}')
@@ -576,13 +580,20 @@ def wait_for_consul():
     while time() < t0 + CONSUL_TIMEOUT:
         try:
             leader = consul.get('/status/leader')
-            assert leader
+            assert leader, 'Consul has no leader'
+            node_name = consul.get('/agent/self')['Config']['NodeName']
+            node_health = consul.get('/health/service/consul', data={
+                'filter': f'Node.Node == "{node_name}"'
+            })
+            assert node_health[0]['Checks'][0]['Status'] == 'passing'
             log.info("Consul UP and running with leader %s", leader)
             break
-        except AssertionError:
-            log.warning('Consul has no leader...')
-        except URLError:
-            log.warning('Waiting for Consul...')
+        except TypeError:
+            log.warning('Consul health check not registered')
+        except AssertionError as e:
+            log.warning('Consul not healthy: %s', e)
+        except URLError as e:
+            log.warning('Consul %s', e)
         sleep(2)
     else:
         raise RuntimeError('Consul did not start.')
@@ -605,13 +616,39 @@ def wait():
     })
 
 
+def restart_nomad_until_it_works():
+    nomad = JsonApi(f'http://{OPTIONS.nomad_address}:4646/v1')
+    NOMAD_MAX_RESTARTS = 5
+    NOMAD_LEADERLESS_TIMEOUT = 15
+
+    for i in range(1, NOMAD_MAX_RESTARTS + 1):
+        t0 = time()
+        while time() < t0 + NOMAD_LEADERLESS_TIMEOUT:
+            try:
+                leader = nomad.get('/status/leader')
+                assert leader
+                assert leader != 'No cluster leader'
+                log.info("Nomad UP and running with leader %s", leader)
+                return
+            except AssertionError:
+                log.warning('Nomad has no leader...')
+            except URLError as e:
+                log.warning('Waiting for Nomad... %s', e)
+            sleep(2)
+        log.warning('nomad restart #%s', i)
+        _supervisorctl('restart', 'nomad')
+    else:
+        raise RuntimeError('Nomad did not start.')
+
+
 @cli.command()
 @click.pass_context
 def start(ctx):
     """ Configures and starts all services if they're not already up. """
-    ctx.invoke(supervisorctl,
-               args=["stop", "nomad", "consul", "vault", "autovault"])
-    ctx.invoke(supervisorctl, args=["update"])
+
+    wait_for_supervisor()
+    _supervisorctl("stop", "nomad", "consul", "vault", "autovault")
+    _supervisorctl("update")
 
     # delete consul health checks so they won't get doubled
     log.info("Deleting old Consul health checks...")
@@ -619,14 +656,16 @@ def start(ctx):
     ctx.invoke(supervisorctl, args=["start", "consul"])
     wait_for_consul()
 
-    ctx.invoke(supervisorctl, args=["start", "vault"])
-    ctx.invoke(supervisorctl, args=["start", "autovault"])
+    _supervisorctl("start", "vault")
+    _supervisorctl("start", "autovault")
     wait_for_checks({'vault': HEALTH_CHECKS['vault']}, self_only=True)
 
     if OPTIONS.nomad_delete_data_on_start:
         log.info("Deleting old Nomad data...")
         shutil.rmtree(PATH.var / 'nomad', ignore_errors=True)
-    ctx.invoke(supervisorctl, args=["start", "nomad"])
+
+    _supervisorctl("start", "nomad")
+    restart_nomad_until_it_works()
     wait_for_checks({
         'nomad': HEALTH_CHECKS['nomad'],
         'nomad-client': HEALTH_CHECKS['nomad-client'],
