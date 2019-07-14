@@ -58,6 +58,11 @@ dns fabio.service.consul
 dns github.com
 dns liquiddemo.org
 
+if [ -s "$SKIP_IPTABLES_CHECK" ]; then
+  printf "${BASH_SOURCE[0]} DONE!\n\n"
+  exit 0
+fi
+
 echo "Port forwarding should be up for 80 and 443..."
 sudo iptables -t nat -S | grep -- "-A PREROUTING .* -p tcp -m tcp --dport 80 -j DNAT --to-destination $IP:80"
 sudo iptables -t nat -S | grep -- "-A PREROUTING .* -p tcp -m tcp --dport 443 -j DNAT --to-destination $IP:443"

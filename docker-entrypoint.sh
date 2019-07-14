@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-cd /opt/cluster
+echo "Running in $PWD"
 
 if ! id -u vagrant; then
   echo "Setting up user and groups..."
@@ -15,9 +15,10 @@ else
 fi
 
 echo "Changing permissions..."
-chown -R $USERID:$GROUPID ./etc
+mkdir /tmp/etc
+chown -R $USERID:$GROUPID /tmp/etc
 chown -R $USERID:$GROUPID ./var
 
 python3 cluster.py configure-network
 
-exec sudo -nHu vagrant python3 ./cluster.py supervisord
+exec sudo -nHu vagrant DOCKER_BIN=$DOCKER_BIN python3 ./cluster.py supervisord

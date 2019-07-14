@@ -47,11 +47,8 @@ docker run --detach \
   --env GROUPID=$GROUPID \
   --env DOCKERGROUPID=$DOCKERGROUPID \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume $PWD/var:/opt/cluster/var \
-  --volume $PWD/etc:/opt/cluster/etc \
-  --volume $PWD/templates:/opt/cluster/templates:ro \
-  --volume $PWD/cluster.ini:/opt/cluster/cluster.ini:ro \
-  --volume $PWD/cluster.py:/opt/cluster/cluster.py:ro \
+  --volume "$PWD:$PWD" \
+  --workdir "$PWD" \
   --privileged \
   --net host \
   $IMAGE

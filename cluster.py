@@ -36,7 +36,7 @@ class PATH:
     cluster_py = root / 'cluster.py'
     cluster_ini = root / 'cluster.ini'
 
-    bin = root / 'bin'
+    bin = root / 'bin' if not os.getenv('DOCKER_BIN') else Path(os.environ['DOCKER_BIN'])  # noqa: E501
 
     etc = root / 'etc'
     templates = root / 'templates'
@@ -96,6 +96,7 @@ def consul_retry_join_section(servers):
 
 
 ALL_JOBS = ['fabio', 'prometheus', 'alertmanager', 'grafana', 'dnsmasq']
+SYSTEM_JOBS = ['dnsmasq', 'fabio']
 
 
 class OPTIONS:
@@ -479,7 +480,7 @@ def supervisorctl(args):
     _supervisorctl(*args)
 
 
-def get_checks(service, self_only=False):
+def get_checks(service, self_only):
     consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
     if self_only:
         node_name = consul.get('/agent/self')['Config']['NodeName']
@@ -490,35 +491,38 @@ def get_checks(service, self_only=False):
         return consul.get(f'/health/checks/{service}')
 
 
-def wait_for_checks(health_checks, self_only=False):  # noqa: C901
+def get_failed_checks(health_checks, self_only):
+    """Generates a sequence of (service, check, status)
+    tuples for all failing checks after checking with Consul"""
+
+    consul_status = {}
+    for service in health_checks:
+        consul_checks = get_checks(service, self_only)
+        for s in consul_checks:
+            key = service, s['Name']
+            if key in consul_status:
+                consul_status[key] = 'appears twice'
+                continue
+            consul_status[key] = s['Status']
+
+    for service, checks in health_checks.items():
+        for check in checks:
+            status = consul_status.get((service, check), 'missing')
+            if 'Prometheus' in checks:
+                log.error('prom status: %s', status)
+            if status != 'passing':
+                yield service, check, status
+
+
+def wait_for_checks(health_checks, self_only=False):
     """Waits health checks to become green for green_count times in a row.
 
     If self_only is True we only look at health checks registered on the
     current node."""
 
-    def get_failed_checks():
-        """Generates a list of (service, check, status)
-        for all failing checks after checking with Consul"""
-
-        consul_status = {}
-        for service in health_checks:
-            consul_checks = get_checks(service, self_only)
-            for s in consul_checks:
-                key = service, s['Name']
-                if key in consul_status:
-                    consul_status[key] = 'appears twice'
-                    continue
-                consul_status[key] = s['Status']
-
-        for service, checks in health_checks.items():
-            for check in checks:
-                status = consul_status.get((service, check), 'missing')
-                if 'Prometheus' in checks:
-                    log.error('prom status: %s', status)
-                if status != 'passing':
-                    yield service, check, status
-
     services = sorted(health_checks.keys())
+    if not services:
+        return
     log.info("Waiting on %s health checks for %s %s",
              sum(map(len, health_checks.values())),
              str(services),
@@ -531,7 +535,7 @@ def wait_for_checks(health_checks, self_only=False):  # noqa: C901
     last_spam = t0 - 1000
     while time() < timeout:
         sleep(OPTIONS.wait_interval)
-        failed = sorted(get_failed_checks())
+        failed = sorted(get_failed_checks(health_checks, self_only))
 
         if failed:
             greens = 0
@@ -612,7 +616,7 @@ def wait():
 
     wait_for_checks({
         k: v for k, v in HEALTH_CHECKS.items()
-        if k in OPTIONS.get_jobs()
+        if k in OPTIONS.get_jobs() and k not in SYSTEM_JOBS
     })
 
 
@@ -635,7 +639,7 @@ def restart_nomad_until_it_works():
             except URLError as e:
                 log.warning('Waiting for Nomad... %s', e)
             sleep(2)
-        log.warning('nomad restart #%s', i)
+        log.warning('nomad restart #%s/%s', i, NOMAD_MAX_RESTARTS)
         _supervisorctl('restart', 'nomad')
     else:
         raise RuntimeError('Nomad did not start.')

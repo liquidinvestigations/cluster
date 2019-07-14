@@ -7,7 +7,7 @@ echo "waiting for docker"
 until docker version; do sleep 1; done
 
 echo "building docker image"
-#docker build . --tag liquidinvestigations/cluster
+docker build . --tag liquidinvestigations/cluster
 
 echo "running three containers..."
 docker rm -f test-1 test-2 test-4 || true
@@ -16,6 +16,7 @@ sudo mkdir /test
 sudo chown $(whoami): /test/
 for id in 1 2 4; do
   cp -a . /test/$id
+  git -C /test/$id clean -Xqdf .
   cp /test/$id/ci/configs/triple-$id.ini /test/$id/cluster.ini
   /test/$id/examples/docker.sh --name test-$id
 done
@@ -45,15 +46,20 @@ done
 echo "restart these to pick up the changes"
 docker start test-1 test-2 test-4
 
-echo "waiting for service health checks"
-for id in 1 2 4; do
-  docker exec test-$id ./cluster.py wait
-done
+function wait_and_test() {
+  for id in 1 2 4; do
+    docker exec test-$id ./cluster.py wait
+  done
 
-echo "running common tests for each node"
-for id in 1 2 4; do
-  IP="10.66.60.$id" ./ci/test-common.sh
-done
+  export SKIP_IPTABLES_CHECK=yes
+  for id in 1 2 4; do
+    export IP="10.66.60.$id"
+    ./ci/test-common.sh
+  done
+}
+
+echo "running tests"
+wait_and_test
 
 echo "stopping everything"
 docker stop test-1 test-2 test-4
@@ -62,11 +68,10 @@ if [ -s "$(docker ps -q)" ]; then
     exit 1
 fi
 
-echo "restarting it"
+echo "restarting everything"
 docker start test-1 test-2 test-4
-docker exec test-1 ./cluster.py wait
 
-echo "running common tests (again)"
-./ci/test-common.sh
+echo "running tests (again)"
+wait_and_test
 
 echo "done!"
