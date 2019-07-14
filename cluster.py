@@ -18,6 +18,7 @@ from urllib.parse import urlencode
 import sys
 import signal
 import shutil
+import socket
 
 import click
 from jinja2 import Template
@@ -128,6 +129,7 @@ class OPTIONS:
         'nomad': config.get('nomad', 'version', fallback='0.9.3'),
     }
 
+    node_name = config.get('cluster', 'node_name', fallback=socket.gethostname())
     dev = config.getboolean('cluster', 'dev', fallback=False)
     debug = config.getboolean('cluster', 'debug', fallback=False)
 

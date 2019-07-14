@@ -1,3 +1,5 @@
+node_name = "{{OPTIONS.node_name}}"
+server_name = "{{OPTIONS.node_name}}"
 bind_addr = "{{OPTIONS.consul_address}}"
 client_addr = "{{OPTIONS.consul_address}}"
 addresses {
