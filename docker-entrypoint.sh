@@ -1,6 +1,7 @@
 #!/bin/bash -ex
 
 echo "Running in $PWD"
+ls -alh
 
 if ! id -u vagrant; then
   echo "Setting up user and groups..."
