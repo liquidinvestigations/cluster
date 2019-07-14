@@ -15,8 +15,7 @@ else
 fi
 
 echo "Changing permissions..."
-mkdir /tmp/etc
-chown -R $USERID:$GROUPID /tmp/etc
+chown -R $USERID:$GROUPID ./etc
 chown -R $USERID:$GROUPID ./var
 
 python3 cluster.py configure-network

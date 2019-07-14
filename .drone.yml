@@ -25,6 +25,16 @@ steps:
   - export PROVISION=/opt/cluster/ci/test-docker.sh
   - ./ci/run-vagrant-test.sh
 
+- name: cluster 3 containers
+  image: vmck/vagrant-vmck
+  depends_on:
+  - test on host
+  - test docker container
+  commands:
+  - export VMCK_URL=http://$VMCK_IP:11111
+  - export PROVISION=/opt/cluster/ci/test-triple.sh
+  - ./ci/run-vagrant-test.sh
+
 ---
 kind: pipeline
 name: publish to docker hub

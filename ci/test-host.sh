@@ -37,7 +37,7 @@ echo "running common tests"
 
 echo "stopping everything"
 pipenv run ./cluster.py stop
-if [ -s "$(docker ps -q)" ]; then
+if [ -n "$(docker ps -q)" ]; then
     echo "some docker containers still up!"
     exit 1
 fi

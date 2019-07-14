@@ -17,12 +17,16 @@ job "prometheus" {
 
     task "prometheus" {
       template {
-        source = "{{PATH.etc / 'prometheus_rules.yml'}}"
+        data = <<EOF
+{% include 'prometheus_rules.yml' %}
+        EOF
         destination = "local/prometheus_rules.yml"
       }
 
       template {
-        source = "{{PATH.etc / 'prometheus.yml'}}"
+        data = <<EOF
+{% include 'prometheus.yml' %}
+        EOF
         destination = "local/prometheus.yml"
       }
       driver = "docker"

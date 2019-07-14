@@ -58,7 +58,7 @@ dns fabio.service.consul
 dns github.com
 dns liquiddemo.org
 
-if [ -s "$SKIP_IPTABLES_CHECK" ]; then
+if [ -n "$SKIP_IPTABLES_CHECK" ]; then
   printf "${BASH_SOURCE[0]} DONE!\n\n"
   exit 0
 fi

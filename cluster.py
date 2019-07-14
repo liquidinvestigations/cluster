@@ -21,7 +21,7 @@ import shutil
 import socket
 
 import click
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader
 
 log = logging.getLogger(__name__)
 
@@ -50,10 +50,12 @@ class PATH:
     supervisord_sock = var / 'supervisor' / 'supervisor.sock'
 
 
+jinja_env = Environment(loader=FileSystemLoader(str(PATH.templates)))
+
+
 def render(template_filename, options):
-    with open(template_filename, 'r') as f:
-        template = Template(f.read())
-        return template.render(**options)
+    template = jinja_env.get_template(template_filename)
+    return template.render(**options)
 
 
 def run(cmd, **kwargs):
@@ -254,7 +256,8 @@ def configure():
     for template in PATH.templates.iterdir():
         with open(PATH.etc / template.name, 'w') as dest:
             log.info('rendering %s', str(template))
-            dest.write(render(template, {'OPTIONS': OPTIONS, 'PATH': PATH}))
+            text = render(template.name, {'OPTIONS': OPTIONS, 'PATH': PATH})
+            dest.write(text)
     log.info('Done.')
 
 

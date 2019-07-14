@@ -61,17 +61,9 @@ function wait_and_test() {
 echo "running tests"
 wait_and_test
 
-echo "stopping everything"
-docker stop test-1 test-2 test-4
-if [ -s "$(docker ps -q)" ]; then
-    echo "some docker containers still up!"
-    exit 1
-fi
-
-echo "restarting everything"
+echo "kill and restart"
+docker kill test-1 test-2 test-4
 docker start test-1 test-2 test-4
-
-echo "running tests (again)"
 wait_and_test
 
 echo "done!"
