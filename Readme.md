@@ -66,7 +66,8 @@ configure and wait for Consul, Vault, Nomad and the system services.
 
 ### One Docker Container
 
-Consul, Vault and Nomad can run in one Docker container with host networking mode.
+Consul, Vault and Nomad can run in one Docker container with host networking
+mode with these settings:
 
 
 ```bash
@@ -75,14 +76,22 @@ docker run --detach \
   --restart always \
   --privileged \
   --net host \
-  --user 1066:601 \
+  --env USERID=123 \
+  --env GROUPID=456 \
+  --env DOCKERGROUPID=789 \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume $HERE/cluster.ini:/opt/cluster/cluster.ini:ro \
+  --volume "$PWD:$PWD" \
+  --workdir "$PWD" \
   liquidinvestigations/cluster
 ```
 
-You need to provide `cluster.ini` (there is one in `examples/`) and optionally
-mount docker volumes for `/opt/cluster/etc` and `/opt/cluster/var`.
+You need to provide `cluster.ini` (there is one in `examples/`) and UID/GIDs
+for the user that's running the container. Of course, the user needs to be in
+the `docker` group, and the GID of that group should be set as the env `DOCKERGROUPID`.
+
+The volume path `./var` has to be the same both inside and outside the Docker
+container. This is because both Nomad running inside the container and the
+host dockerd access the data directory using the path inside the container.
 
 
 Example usage: [ci/test-docker.sh](ci/test-docker.sh)
