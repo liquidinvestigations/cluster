@@ -601,13 +601,15 @@ def wait_for_consul():
             node_health = consul.get('/health/service/consul', params={
                 'filter': f'Node.Node == "{node_name}"'
             })
-            assert node_health[0]['Checks'][0]['Status'] == 'passing'
+            assert node_health[0]['Checks'][0]['Status'] == 'passing', \
+                'Consul self node health check is failing'
+
             log.info("Consul UP and running with leader %s", leader)
-            break
-        except TypeError:
-            log.warning('Consul health check not registered')
+            return
+        except IndexError:
+            log.warning('Consul self node health check not registered')
         except AssertionError as e:
-            log.warning('Consul not healthy: %s', e)
+            log.warning(e)
         except URLError as e:
             log.warning('Consul %s', e)
         sleep(OPTIONS.wait_interval)
