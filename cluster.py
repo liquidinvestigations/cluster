@@ -180,7 +180,6 @@ class JsonApi:
         self.endpoint = endpoint
 
     def send(self, req):
-        log.debug('%s %s', req.get_method(), req.get_full_url())
         with urlopen(req) as res:
             if res.status == 200:
                 res_body = json.load(res)
