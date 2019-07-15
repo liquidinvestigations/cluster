@@ -448,15 +448,14 @@ def supervisord(ctx, detach):
         sleep(1)
 
 
-def _supervisorctl(*args):
-    joined_args = " ".join(args)
-    conf = PATH.etc / "supervisord.conf"
-    subprocess.check_call(f'supervisorctl -c {conf} {joined_args}', shell=True)
+def _supervisorctl(*ctl_args):
+    args = ['supervisorctl', '-c', str(PATH.supervisord_conf)] + list(ctl_args)
+    subprocess.check_call(args, shell=False)
 
 
 def supervisor_pid():
-    cmd = f'supervisorctl -c {PATH.supervisord_conf} pid'
-    return int(subprocess.check_output(cmd, shell=True).decode('latin1'))
+    args = ['supervisorctl', '-c', str(PATH.supervisord_conf), 'pid']
+    return int(subprocess.check_output(args, shell=False).decode('latin1'))
 
 
 def wait_for_supervisor():
