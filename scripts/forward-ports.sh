@@ -58,7 +58,12 @@ done
 
 (
   set -x
-  iptables -t nat -A POSTROUTING -o $bridge_name -j MASQUERADE
+  # delete duplicates of this rule that may have appeared
+  rule="-o $bridge_name -j MASQUERADE"
+  while iptables -t nat -D POSTROUTING $rule; do
+    echo removed duplicate rule "POSTROUTING $rule"
+  done
+  iptables -t nat -A POSTROUTING $rule
 )
 
 echo "Firewall rules set up successfully."
