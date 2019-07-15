@@ -594,9 +594,8 @@ HEALTH_CHECKS = {
 
 def wait_for_consul():
     consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
-    CONSUL_TIMEOUT = 15
     t0 = time()
-    while time() < t0 + CONSUL_TIMEOUT:
+    while time() < t0 + OPTIONS.wait_max:
         try:
             leader = consul.get('/status/leader')
             assert leader, 'Consul has no leader'
@@ -613,7 +612,7 @@ def wait_for_consul():
             log.warning('Consul not healthy: %s', e)
         except URLError as e:
             log.warning('Consul %s', e)
-        sleep(2)
+        sleep(OPTIONS.wait_interval)
     else:
         raise RuntimeError('Consul did not start.')
 
