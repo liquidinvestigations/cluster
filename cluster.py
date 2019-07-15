@@ -494,9 +494,15 @@ def get_checks(service, self_only):
         return consul.get(f'/health/checks/{service}')
 
 
-def get_failed_checks(health_checks, self_only):
+def get_failed_checks(health_checks, self_only, allow_duplicates):
     """Generates a sequence of (service, check, status)
     tuples for all failing checks after checking with Consul"""
+
+    def pick_worst(a, b):
+        for s in ['critical', 'warning', 'passing']:
+            if s in [a, b]:
+                return s
+        raise RuntimeError(f'unkown status: "{a}" and "{b}"')
 
     consul_status = {}
     for service in health_checks:
@@ -504,20 +510,24 @@ def get_failed_checks(health_checks, self_only):
         for s in consul_checks:
             key = service, s['Name']
             if key in consul_status:
-                consul_status[key] = 'appears twice'
-                continue
-            consul_status[key] = s['Status']
+                if allow_duplicates:
+                    consul_status[key] = pick_worst(
+                        consul_status[key],
+                        s['Status'],
+                    )
+                else:
+                    consul_status[key] = 'appears twice'
+            else:
+                consul_status[key] = s['Status']
 
     for service, checks in health_checks.items():
         for check in checks:
             status = consul_status.get((service, check), 'missing')
-            if 'Prometheus' in checks:
-                log.error('prom status: %s', status)
             if status != 'passing':
                 yield service, check, status
 
 
-def wait_for_checks(health_checks, self_only=False):
+def wait_for_checks(health_checks, self_only=False, allow_duplicates=False):
     """Waits health checks to become green for green_count times in a row.
 
     If self_only is True we only look at health checks registered on the
@@ -529,7 +539,7 @@ def wait_for_checks(health_checks, self_only=False):
     log.info("Waiting on %s health checks for %s %s",
              sum(map(len, health_checks.values())),
              str(services),
-             '(self only)' if self_only else '')
+             f'(self_only: {self_only}, allow_duplicates: {allow_duplicates})')
 
     t0 = time()
     greens = 0
@@ -538,7 +548,9 @@ def wait_for_checks(health_checks, self_only=False):
     last_spam = t0 - 1000
     while time() < timeout:
         sleep(OPTIONS.wait_interval)
-        failed = sorted(get_failed_checks(health_checks, self_only))
+        failed = sorted(get_failed_checks(health_checks,
+                                          self_only,
+                                          allow_duplicates))
 
         if failed:
             greens = 0
@@ -617,6 +629,10 @@ def wait():
         if k in ['vault', 'nomad', 'nomad-client']
     }, self_only=True)
 
+    wait_for_checks({
+        k: v for k, v in HEALTH_CHECKS.items()
+        if k in OPTIONS.get_jobs() and k in SYSTEM_JOBS
+    }, self_only=True, allow_duplicates=True)
     wait_for_checks({
         k: v for k, v in HEALTH_CHECKS.items()
         if k in OPTIONS.get_jobs() and k not in SYSTEM_JOBS
