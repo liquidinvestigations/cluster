@@ -8,9 +8,9 @@ RUN set -e \
  && apt-get install  -qq -y --no-install-recommends \
     sudo curl unzip libcap2-bin qemu-kvm dnsutils iptables \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
- && mkdir /src
+ && mkdir /app
 
-WORKDIR /src
+WORKDIR /app
 
 ADD cluster.py docker-entrypoint.sh Pipfile Pipfile.lock ./
 RUN pip3 install pipenv \
@@ -18,5 +18,5 @@ RUN pip3 install pipenv \
 RUN ./cluster.py install \
 && setcap cap_ipc_lock=+ep bin/vault
 
-ENV DOCKER_BIN=/src/bin
-ENTRYPOINT ["/src/docker-entrypoint.sh"]
+ENV DOCKER_BIN=/app/bin
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
