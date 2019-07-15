@@ -34,12 +34,12 @@ job "prometheus" {
         image = "prom/prometheus:v2.10.0"
         args = [
           "--web.route-prefix=/prometheus",
-          "--web.external-url=http://{{OPTIONS.consul_address}}:9990/prometheus",
+          "--web.external-url=http://${attr.unique.network.ip-address}:9990/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
          ]
         volumes = [
           "local/prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml",
-          "local/prometheus.yml:/etc/prometheus/prometheus.yml"
+          "local/prometheus.yml:/etc/prometheus/prometheus.yml",
         ]
         port_map {
           http = 9090

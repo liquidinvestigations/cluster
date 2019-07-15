@@ -37,7 +37,7 @@ job "grafana" {
         GF_SECURITY_ADMIN_PASSWORD = "admin"
         GF_SECURITY_DISABLE_GRAVATAR = "true"
 
-        GF_SERVER_ROOT_URL = "http://{{OPTIONS.consul_address}}:9990/grafana"
+        GF_SERVER_ROOT_URL = "http://${attr.unique.network.ip-address}:9990/grafana"
         GF_SERVER_SERVE_FROM_SUB_PATH = "true"
         GF_SERVER_ENABLE_GZIP = "true"
 

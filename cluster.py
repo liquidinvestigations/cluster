@@ -630,7 +630,7 @@ def wait():
     wait_for_checks({
         k: v for k, v in HEALTH_CHECKS.items()
         if k in OPTIONS.get_jobs() and k in SYSTEM_JOBS
-    }, self_only=True, allow_duplicates=True)
+    }, allow_duplicates=True)
     wait_for_checks({
         k: v for k, v in HEALTH_CHECKS.items()
         if k in OPTIONS.get_jobs() and k not in SYSTEM_JOBS

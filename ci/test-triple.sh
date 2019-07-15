@@ -28,7 +28,7 @@ function get_one_secret_file() {
     *) echo "too many vault-secrets.ini files!" >&2; exit 1
   esac
 }
-until get_one_secret_file; do sleep 5; done
+until get_one_secret_file; do sleep 10; done
 winner=$(get_one_secret_file)
 
 echo "copy config over to the losers"
@@ -58,9 +58,13 @@ function wait_and_test() {
 echo "running tests"
 wait_and_test
 
-echo "kill and restart"
-docker kill test-1 test-2 test-4
-docker start test-1 test-2 test-4
+echo "gently restart one by one"
+for id in 1 2 4; do
+  docker restart test-$id
+  docker exec test-$id ./cluster.py wait
+done
+
+echo "running tests (again)"
 wait_and_test
 
 echo "done!"

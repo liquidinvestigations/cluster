@@ -263,8 +263,8 @@ System jobs run on all nodes. We have the following:
 We also run some jobs as services:
 
 - `prometheus` -- collects metrics from Nomad
-- `alertmanager` -- runs alerts for Prometheus
-- `grafana` -- displays dashboards from Prometheus
+- `alertmanager` -- signals alerts from Prometheus
+- `grafana` -- displays dashboards with data from Prometheus
 
 
 The `./cluster.py run-jobs` command will trigger the deployment of the files in
@@ -274,20 +274,13 @@ To start some of these jobs, set:
 
 ```ini
 [cluster]
-run_jobs = fabio,grafana
+run_jobs = fabio,grafana,prometheus,dnsmasq
 ```
 
-On multi-host configurations only one node should run jobs.
-The other nodes should disable them with:
-
-```ini
-cluster
-run_jobs = none
-```
 
 ## Multi Host
 
-First, configure a VPN and connect all your nodes to it. You can use [wireguard][].
+First, configure a VPN and connect all your nodes to it. You can use [wireguard][] if you.
 Use the resulting network interface name and address when configuring
 
 Then, run an instance of this repository on each node be used. A minimal
@@ -304,14 +297,13 @@ bootstrap_expect = 3
 retry_join = 10.66.60.1,10.66.60.2,10.66.60.4
 ```
 
-Only one of the nodes should have `run_jobs` set to the desired job list,
-other nodes should be configured with "none".
+All nodes should have `run_jobs` set to the same list.
 
 Example set of config files: [ci/configs](ci/configs), see `triple-*.ini`.
 **Note**: these configs are using `network.create_bridge = True` because they
 are all running on local bridges on a single machine (for testing). You must
-omit `network.create_bridge` if you configure the network externally (e.g. a
-VPN).
+not set `network.create_bridge` if you configure the network externally
+(e.g. a VPN or LAN).
 
 After launching the services, all but one Vault instance will fail. The one
 left running is the primary instance; you can find it in the Consul UI. To make
