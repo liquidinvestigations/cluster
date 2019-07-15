@@ -10,24 +10,52 @@ export VAGRANT_BOX_UPDATE_CHECK_DISABLE=true
 FILENAME=$(basename -- "$PROVISION")
 STEM=${FILENAME%.*}
 export VMNAME="$DRONE_REPO_NAME-$DRONE_BUILD_NUMBER-$STEM"
-set +x
 
-echo
-echo '-----------------------------------------'
-echo "Starting Vagrant"
+TIMEOUT_MIN=15
+RETRIES=3
 
-vagrant up --no-provision || echo "vagrant up failed, VM might still work"
-echo 'sudo shutdown +15' | vagrant ssh
+function print_section() {
+  set +x
+  echo
+  echo '-----------------------------------------'
+  echo "| $1"
+  echo '-----------------------------------------'
+  set -x
+}
 
+function vagrant_up() {
+  set +e
+  vagrant up --no-provision || echo "vagrant up failed, VM might still work"
+  echo "sudo shutdown +$TIMEOUT_MIN" | vagrant ssh
+  sshret=$?
+  if [ 0 -eq $sshret ]; then
+    return 0
+  else
+    vagrant destroy -f
+    return 1
+  fi
+}
+
+function retry_vagrant_up() {
+  for i in $(seq 1 $RETRIES); do
+    print_section "Starting vagrant... (try #$i/$RETRIES)"
+    if vagrant_up; then
+      return 0
+    fi
+  done
+  echo "Vagrant failed after $RETRIES tries"
+  exit 1
+}
+
+retry_vagrant_up
+
+print_section "Run Script"
 set +e
 vagrant provision
 ret=$?
 set -e
 
-echo
-echo '-----------------------------------------'
-echo "Stats"
-
+print_section "Stats"
 vagrant ssh <<'EOF'
 for cmd in "uname -a" "w" "free -h" "df -h"; do
   echo
@@ -36,8 +64,6 @@ for cmd in "uname -a" "w" "free -h" "df -h"; do
 done
 EOF
 
-echo
-echo '-----------------------------------------'
-echo "Destroying Vagrant"
+print_section "Destroying Vagrant"
 vagrant destroy -f || echo "vagrant destroy failed, but we don't care"
 exit $ret
