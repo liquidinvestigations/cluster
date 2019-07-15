@@ -172,7 +172,7 @@ class OPTIONS:
                 "cluster.ini: network.forward_ports must be unset on macOS"
         if cls._run_jobs and cls._run_jobs not in (['all'], ['none']):
             assert all(s in ALL_JOBS for s in cls._run_jobs), \
-                'unidentified job name in "cluster.run_jobs" list'
+                'Unidentified job name in "cluster.run_jobs" list'
 
 
 class JsonApi:
@@ -186,9 +186,9 @@ class JsonApi:
                 res_body = json.load(res)
                 return res_body
 
-    def get(self, url, data=None):
-        params = '?' + urlencode(data) if data else ''
-        req = Request(f'{self.endpoint}{url}{params}')
+    def get(self, url, params=None):
+        encoded = '?' + urlencode(params) if params else ''
+        req = Request(f'{self.endpoint}{url}{encoded}')
         return self.send(req)
 
     def put(self, url, data):
@@ -451,8 +451,7 @@ def supervisord(ctx, detach):
 def _supervisorctl(*args):
     joined_args = " ".join(args)
     conf = PATH.etc / "supervisord.conf"
-    subprocess.check_call(f'supervisorctl -c {conf} {joined_args}',
-                          shell=True)
+    subprocess.check_call(f'supervisorctl -c {conf} {joined_args}', shell=True)
 
 
 def supervisor_pid():
@@ -487,7 +486,7 @@ def get_checks(service, self_only):
     consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
     if self_only:
         node_name = consul.get('/agent/self')['Config']['NodeName']
-        return consul.get(f'/health/checks/{service}', data={
+        return consul.get(f'/health/checks/{service}', params={
             'filter': f'Node == "{node_name}"'
         })
     else:
@@ -502,7 +501,7 @@ def get_failed_checks(health_checks, self_only, allow_duplicates):
         for s in ['critical', 'warning', 'passing']:
             if s in [a, b]:
                 return s
-        raise RuntimeError(f'unkown status: "{a}" and "{b}"')
+        raise RuntimeError(f'Unknown status: "{a}" and "{b}"')
 
     consul_status = {}
     for service in health_checks:
@@ -600,7 +599,7 @@ def wait_for_consul():
             leader = consul.get('/status/leader')
             assert leader, 'Consul has no leader'
             node_name = consul.get('/agent/self')['Config']['NodeName']
-            node_health = consul.get('/health/service/consul', data={
+            node_health = consul.get('/health/service/consul', params={
                 'filter': f'Node.Node == "{node_name}"'
             })
             assert node_health[0]['Checks'][0]['Status'] == 'passing'
