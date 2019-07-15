@@ -137,7 +137,7 @@ class OPTIONS:
     dev = config.getboolean('cluster', 'dev', fallback=False)
     debug = config.getboolean('cluster', 'debug', fallback=False)
 
-    _disable = config.get('cluster', 'disable', fallback='all').strip().split(',')  # noqa: E501
+    _run_jobs = config.get('cluster', 'run_jobs', fallback='none').strip().split(',')  # noqa: E501
     nomad_vault_token = read_vault_secrets()['root_token']
 
     bootstrap_expect = config.getint('cluster', 'bootstrap_expect', fallback=1)
@@ -153,11 +153,11 @@ class OPTIONS:
 
     @classmethod
     def get_jobs(cls):
-        if cls._disable == ['all']:
-            return []
-        elif not cls._disable or cls._disable == ['none']:
+        if cls._run_jobs == ['all']:
             return ALL_JOBS
-        return [s for s in ALL_JOBS if s not in cls._disable]
+        elif not cls._run_jobs or cls._run_jobs == ['none']:
+            return []
+        return cls._run_jobs
 
     @classmethod
     def validate(cls):
@@ -170,9 +170,9 @@ class OPTIONS:
                 "cluster.ini: network.create_bridge must be unset on macOS"
             assert not cls.network_forward_ports, \
                 "cluster.ini: network.forward_ports must be unset on macOS"
-        if cls._disable and cls._disable not in (['all'], ['none']):
-            assert all(s in ALL_JOBS for s in cls._disable), \
-                'unidentified service in "cluster.disable" list'
+        if cls._run_jobs and cls._run_jobs not in (['all'], ['none']):
+            assert all(s in ALL_JOBS for s in cls._run_jobs), \
+                'unidentified job name in "cluster.run_jobs" list'
 
 
 class JsonApi:

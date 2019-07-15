@@ -261,32 +261,55 @@ We also run some jobs as services:
 The `./cluster.py run-jobs` command will trigger the deployment of the files in
 `./etc/*.nomad`. This command is automatically run by the `start` command.
 
-To disable starting some of these jobs, set:
+To start some of these jobs, set:
 
 ```ini
 [cluster]
-disable = fabio,grafana
+run_jobs = fabio,grafana
 ```
 
-For multi-host configurations one must disable running these jobs on all but one node, with:
+On multi-host configurations only one node should run jobs.
+The other nodes should disable them with:
 
 ```ini
 cluster
-disable = all
+run_jobs = none
 ```
 
 ## Multi Host
 
-Run an instance of each service (or a docker container) on each host to be
-used. Set the following configuration flags on each one:
+First, configure a VPN and connect all your nodes to it. You can use [wireguard][].
+Use the resulting network interface name and address when configuring
+
+Then, run an instance of this repository on each node be used. A minimal
+configuration looks like this:
 
 ```ini
+[network]
+interface = YOUR_VPN_INTERFACE_NAME
+address = YOUR_VPN_IP_ADDRESS
+
 [cluster]
+node_name = something-unique
 bootstrap_expect = 3
 retry_join = 10.66.60.1,10.66.60.2,10.66.60.4
 ```
 
+Only one of the nodes should have `run_jobs` set to the desired job list,
+other nodes should be configured with "none".
+
+Example set of config files: [ci/configs](ci/configs), see `triple-*.ini`.
+**Note**: these configs are using `network.create_bridge = True` because they
+are all running on local bridges on a single machine (for testing). You must
+omit `network.create_bridge` if you configure the network externally (e.g. a
+VPN).
+
 After launching the services, all but one Vault instance will fail. The one
 left running is the primary instance; you can find it in the Consul UI. To make
-them all work, copy the keys from the leader's `var/vault-secrets.ini` file to
-the other nodes.
+them all work:
+
+- stop everything
+- copy `var/vault-secrets.ini` from the primary to the other nodes
+- restart everything
+
+[wireguard]: https://www.wireguard.com/
