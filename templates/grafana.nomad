@@ -1,19 +1,22 @@
-
-
 job "grafana" {
   datacenters = ["dc1"]
   type = "service"
 
   group "grafana" {
+    reschedule {
+      unlimited = true
+      attempts = 0
+      delay = "5s"
+    }
     restart {
-      attempts = 10
-      interval = "5m"
-      delay = "10s"
-      mode = "delay"
+      attempts = 3
+      interval = "18s"
+      delay = "4s"
+      mode = "fail"
     }
 
     ephemeral_disk {
-      size = 300
+      size = 500
       sticky = true
     }
 

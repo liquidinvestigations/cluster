@@ -3,11 +3,16 @@ job "prometheus" {
   type = "service"
 
   group "prometheus" {
+    reschedule {
+      unlimited = true
+      attempts = 0
+      delay = "5s"
+    }
     restart {
-      attempts = 10
-      interval = "5m"
-      delay = "10s"
-      mode = "delay"
+      attempts = 3
+      interval = "18s"
+      delay = "4s"
+      mode = "fail"
     }
 
     ephemeral_disk {
