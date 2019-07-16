@@ -1,6 +1,7 @@
 job "alertmanager" {
   datacenters = ["dc1"]
   type = "service"
+  priority = 90
 
   group "alerting" {
     restart {

@@ -1,6 +1,7 @@
 job "grafana" {
   datacenters = ["dc1"]
   type = "service"
+  priority = 90
 
   group "grafana" {
     reschedule {

@@ -1,6 +1,7 @@
 job "prometheus" {
   datacenters = ["dc1"]
   type = "service"
+  priority = 90
 
   group "prometheus" {
     reschedule {
