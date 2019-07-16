@@ -385,15 +385,23 @@ def autovault(timeout):
     t0 = time()
     while time() - t0 < int(timeout):
         try:
+            vault.get('/sys/health', params={
+                'standbyok': 'true',
+                'sealedcode': '200',
+                'uninitcode': '200',
+
+            })
             status = vault.get('/sys/seal-status')
 
             if not status['sealed']:
+                log.info('Vault not sealed, exiting.')
                 return
 
             break
 
-        except URLError:
-            sleep(.5)
+        except URLError as e:
+            log.warning(e)
+            sleep(2)
 
     if not PATH.vault_secrets.exists():
         resp = vault.put('/sys/init', {
@@ -413,6 +421,7 @@ def autovault(timeout):
 
     secrets = read_vault_secrets()
     vault.put('/sys/unseal', {'key': secrets['keys']})
+    assert not vault.get('/sys/health', params={'standbyok': 'true'})['sealed']
     log.info('Done.')
 
 
@@ -686,7 +695,10 @@ def start(ctx):
         log.info("Deleting old Nomad data...")
         shutil.rmtree(PATH.var / 'nomad', ignore_errors=True)
 
-    _supervisorctl("start", "nomad")
+    try:
+        _supervisorctl("start", "nomad")
+    except subprocess.CalledProcessError as e:
+        log.warning('initial Nomad start failed: %s', e)
     restart_nomad_until_it_works()
     wait_for_checks({
         'nomad': HEALTH_CHECKS['nomad'],
