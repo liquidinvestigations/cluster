@@ -219,7 +219,7 @@ def install():
     log.info("Installing...")
     PATH.bin.mkdir(exist_ok=True)
 
-    with tempfile.TemporaryDirectory() as _tmp:
+    with tempfile.TemporaryDirectory(dir=PATH.var) as _tmp:
         tmp = Path(_tmp)
         sysname = os.uname().sysname.lower()
 
