@@ -58,13 +58,4 @@ function wait_and_test() {
 echo "running tests"
 wait_and_test
 
-echo "gently restart one by one"
-for id in 1 2 4; do
-  docker restart test-$id
-  docker exec test-$id ./cluster.py wait
-done
-
-echo "running tests (again)"
-wait_and_test
-
 echo "done!"
