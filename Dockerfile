@@ -8,7 +8,7 @@ RUN set -e \
  && apt-get install  -qq -y --no-install-recommends \
     sudo curl unzip libcap2-bin qemu-kvm dnsutils iptables \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
- && mkdir /app
+ && mkdir -p /app/var && mkdir -p /app/bin
 
 WORKDIR /app
 

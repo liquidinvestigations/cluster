@@ -37,7 +37,6 @@ if [ -n "$(docker ps -q)" ]; then
 fi
 
 echo "restarting it"
-sleep 10  # allow previous supervisor to die
 pipenv run ./cluster.py supervisord -d
 pipenv run ./cluster.py wait
 

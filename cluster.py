@@ -340,6 +340,8 @@ def _stop():
 
     pid = supervisor_pid()
     log.info(f"Supervisor has PID={pid}")
+    _supervisorctl('stop', 'all')
+
     os.kill(pid, signal.SIGQUIT)
     log.info("SIGQUIT sent to supervisor!")
 
@@ -349,7 +351,8 @@ def _stop():
         try:
             sleep(1)
             supervisor_pid()
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
+            log.debug("Supervisor dead: %s", e)
             log.info("Everything stopped.")
             return
     log.warning(f"Supervisor didn't die in {STOP_TIMEOUT} seconds...")
