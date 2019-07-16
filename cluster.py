@@ -423,7 +423,8 @@ def supervisord(ctx, detach):
     """ Run the supervisor daemon in the foreground with the current user. """
 
     log.info("setting signal handler")
-    signal.signal(signal.SIGTERM, lambda _signum, _frame: _stop())
+    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGQUIT):
+        signal.signal(sig, lambda _signum, _frame: _stop())
 
     ctx.invoke(configure)
     (PATH.var / 'supervisor').mkdir(exist_ok=True)
@@ -434,20 +435,17 @@ def supervisord(ctx, detach):
         args = ['supervisord', '-c', str(PATH.supervisord_conf), '-n']
         sleep(5)
         log.debug('+ %s', ' '.join(args))
+        # Start supervisord in a new process group, so
+        # SIGINT and others won't be propagated to this
+        # process from the parent.
+        os.setsid()
         os.execvp(args[0], args)
 
     wait_for_supervisor()
     if detach:
         return
 
-    # wait for signal and stop if supervisor dies
-    while True:
-        try:
-            supervisor_pid()
-        except subprocess.CalledProcessError:
-            log.info('Supervisor stopped.')
-            return
-        sleep(1)
+    os.wait()
 
 
 def _supervisorctl(*ctl_args):
