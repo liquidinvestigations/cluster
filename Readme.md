@@ -26,7 +26,7 @@ everything back from `root:` to your current user. Then:
 
 ```bash
 cp examples/cluster.ini .
-./examples/docker.sh
+./bin/docker.sh
 docker exec cluster ./cluster.py supervisorctl -- tail -f start
 ```
 
@@ -231,7 +231,7 @@ This flag has no effect on macOS.
 With the one Docker container setup, you can just:
 
 ```bash
-./examples/docker.sh --rm --pull
+./bin/docker.sh --rm --pull
 ```
 
 

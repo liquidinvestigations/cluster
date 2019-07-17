@@ -7,11 +7,11 @@ echo "waiting for docker"
 until docker version; do sleep 1; done
 
 echo "building docker image"
-docker build . --tag liquidinvestigations/cluster
+docker build . --tag test-cluster
 
 echo "running container"
 cp examples/cluster.ini .
-./examples/docker.sh
+./bin/docker.sh --image test-cluster
 
 echo "spam the logs"
 docker logs -f cluster &

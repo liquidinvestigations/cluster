@@ -1,11 +1,11 @@
 #!/bin/bash -e
 
 cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
-IMAGE=liquidinvestigations/cluster
 
 rmdocker=''
 pulldocker=''
 name=cluster
+image=liquidinvestigations/cluster
 while [[ $# -gt 0 ]]; do
   arg=$1
   shift
@@ -13,12 +13,13 @@ while [[ $# -gt 0 ]]; do
     "--rm") rmdocker=1 ;;
     "--pull") pulldocker=1 ;;
     "--name") name=$1; shift ;;
+    "--image") image=$1; shift ;;
     *) echo "Unknown option $arg" >&2; exit 1
   esac
 done
 
 if [ ! -z $pulldocker ]; then
-  docker pull $IMAGE
+  docker pull $image
 fi
 
 if [ ! -z $rmdocker ]; then (
@@ -51,4 +52,4 @@ docker run --detach \
   --workdir "$PWD" \
   --privileged \
   --net host \
-  $IMAGE
+  $image
