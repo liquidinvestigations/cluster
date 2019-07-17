@@ -1,6 +1,7 @@
 job "fabio" {
   datacenters = ["dc1"]
   type = "system"
+  priority = 99
 
   group "fabio" {
     task "fabio" {

@@ -1,1 +1,7 @@
 /cluster.ini
+/var/*
+!/var/.gitignore
+/etc/*
+!/etc/.gitignore
+/bin/*
+!/bin/.gitignore

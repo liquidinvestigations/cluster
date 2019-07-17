@@ -10,7 +10,7 @@ alerting:
       services: ["alertmanager"]
 
 rule_files:
-  - "alert.yml"
+  - "prometheus_rules.yml"
 
 scrape_configs:
   - job_name: "alertmanager"
@@ -30,9 +30,3 @@ scrape_configs:
     metrics_path: /v1/metrics
     params:
       format: ["prometheus"]
-
-  - job_name: "webserver"
-    consul_sd_configs:
-    - server: "{{OPTIONS.consul_address}}:8500"
-      services: ["webserver"]
-    metrics_path: /metrics

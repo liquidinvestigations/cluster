@@ -1,3 +1,4 @@
+name = "{{OPTIONS.node_name}}"
 data_dir = "{{PATH.nomad_var}}"
 leave_on_interrupt = true
 leave_on_terminate = true

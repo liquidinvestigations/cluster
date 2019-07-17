@@ -8,20 +8,15 @@ RUN set -e \
  && apt-get install  -qq -y --no-install-recommends \
     sudo curl unzip libcap2-bin qemu-kvm dnsutils iptables \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
- && mkdir -p /opt/cluster
+ && mkdir -p /app/var && mkdir -p /app/bin
 
-WORKDIR /opt/cluster
+WORKDIR /app
 
-ADD Pipfile Pipfile.lock ./
+ADD cluster.py docker-entrypoint.sh Pipfile Pipfile.lock ./
 RUN pip3 install pipenv \
  && pipenv install --system --deploy --ignore-pipfile
+RUN ./cluster.py install \
+&& setcap cap_ipc_lock=+ep bin/vault
 
-ADD . .
-
-RUN set -e \
- && ./cluster.py install \
- && setcap cap_ipc_lock=+ep bin/vault
-
-VOLUME /opt/cluster/var
-
-ENTRYPOINT ["/opt/cluster/docker-entrypoint.sh"]
+ENV DOCKER_BIN=/app/bin
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

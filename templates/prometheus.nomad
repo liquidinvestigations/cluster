@@ -1,13 +1,19 @@
 job "prometheus" {
   datacenters = ["dc1"]
   type = "service"
+  priority = 90
 
   group "prometheus" {
+    reschedule {
+      unlimited = true
+      attempts = 0
+      delay = "5s"
+    }
     restart {
-      attempts = 10
-      interval = "5m"
-      delay = "10s"
-      mode = "delay"
+      attempts = 3
+      interval = "18s"
+      delay = "4s"
+      mode = "fail"
     }
 
     ephemeral_disk {
@@ -17,12 +23,16 @@ job "prometheus" {
 
     task "prometheus" {
       template {
-        source = "{{PATH.etc / 'prometheus_rules.yml'}}"
+        data = <<EOF
+{% include 'prometheus_rules.yml' %}
+        EOF
         destination = "local/prometheus_rules.yml"
       }
 
       template {
-        source = "{{PATH.etc / 'prometheus.yml'}}"
+        data = <<EOF
+{% include 'prometheus.yml' %}
+        EOF
         destination = "local/prometheus.yml"
       }
       driver = "docker"
@@ -30,12 +40,12 @@ job "prometheus" {
         image = "prom/prometheus:v2.10.0"
         args = [
           "--web.route-prefix=/prometheus",
-          "--web.external-url=http://{{OPTIONS.consul_address}}:9990/prometheus",
+          "--web.external-url=http://${attr.unique.network.ip-address}:9990/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
          ]
         volumes = [
           "local/prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml",
-          "local/prometheus.yml:/etc/prometheus/prometheus.yml"
+          "local/prometheus.yml:/etc/prometheus/prometheus.yml",
         ]
         port_map {
           http = 9090

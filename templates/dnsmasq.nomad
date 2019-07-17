@@ -1,6 +1,7 @@
 job "dnsmasq" {
   datacenters = ["dc1"]
   type = "system"
+  priority = 98
 
   group "dnsmasq" {
     restart {

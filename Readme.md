@@ -66,7 +66,8 @@ configure and wait for Consul, Vault, Nomad and the system services.
 
 ### One Docker Container
 
-Consul, Vault and Nomad can run in one Docker container with host networking mode.
+Consul, Vault and Nomad can run in one Docker container with host networking
+mode with these settings:
 
 
 ```bash
@@ -75,14 +76,22 @@ docker run --detach \
   --restart always \
   --privileged \
   --net host \
-  --user 1066:601 \
+  --env USERID=123 \
+  --env GROUPID=456 \
+  --env DOCKERGROUPID=789 \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume $HERE/cluster.ini:/opt/cluster/cluster.ini:ro \
+  --volume "$PWD:$PWD" \
+  --workdir "$PWD" \
   liquidinvestigations/cluster
 ```
 
-You need to provide `cluster.ini` (there is one in `examples/`) and optionally
-mount docker volumes for `/opt/cluster/etc` and `/opt/cluster/var`.
+You need to provide `cluster.ini` (there is one in `examples/`) and UID/GIDs
+for the user that's running the container. Of course, the user needs to be in
+the `docker` group, and the GID of that group should be set as the env `DOCKERGROUPID`.
+
+The volume path `./var` has to be the same both inside and outside the Docker
+container. This is because both Nomad running inside the container and the
+host dockerd access the data directory using the path inside the container.
 
 
 Example usage: [ci/test-docker.sh](ci/test-docker.sh)
@@ -254,31 +263,54 @@ System jobs run on all nodes. We have the following:
 We also run some jobs as services:
 
 - `prometheus` -- collects metrics from Nomad
-- `alertmanager` -- runs alerts for Prometheus
-- `grafana` -- displays dashboards from Prometheus
+- `alertmanager` -- signals alerts from Prometheus
+- `grafana` -- displays dashboards with data from Prometheus
 
 
-You can find the definition for these jobs as `templates/*.nomad`. To disable
-starting one of these jobs, set:
+The `./cluster.py run-jobs` command will trigger the deployment of the files in
+`./etc/*.nomad`. This command is automatically run by the `start` command.
+
+To start some of these jobs, set:
 
 ```ini
 [cluster]
-disable = fabio,grafana
+run_jobs = fabio,grafana,prometheus,dnsmasq
 ```
 
 
 ## Multi Host
 
-Run an instance of each service (or a docker container) on each host to be
-used. Set the following configuration flags on each one:
+First, configure a VPN and connect all your nodes to it. You can use [wireguard][] if you.
+Use the resulting network interface name and address when configuring
+
+Then, run an instance of this repository on each node be used. A minimal
+configuration looks like this:
 
 ```ini
+[network]
+interface = YOUR_VPN_INTERFACE_NAME
+address = YOUR_VPN_IP_ADDRESS
+
 [cluster]
+node_name = something-unique
 bootstrap_expect = 3
 retry_join = 10.66.60.1,10.66.60.2,10.66.60.4
 ```
 
+All nodes should have `run_jobs` set to the same list.
+
+Example set of config files: [ci/configs](ci/configs), see `triple-*.ini`.
+**Note**: these configs are using `network.create_bridge = True` because they
+are all running on local bridges on a single machine (for testing). You must
+not set `network.create_bridge` if you configure the network externally
+(e.g. a VPN or LAN).
+
 After launching the services, all but one Vault instance will fail. The one
 left running is the primary instance; you can find it in the Consul UI. To make
-them all work, copy the keys from the leader's `var/vault-secrets.ini` file to
-the other nodes.
+them all work:
+
+- stop everything
+- copy `var/vault-secrets.ini` from the primary to the other nodes
+- restart everything
+
+[wireguard]: https://www.wireguard.com/

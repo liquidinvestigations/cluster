@@ -1,19 +1,23 @@
-
-
 job "grafana" {
   datacenters = ["dc1"]
   type = "service"
+  priority = 90
 
   group "grafana" {
+    reschedule {
+      unlimited = true
+      attempts = 0
+      delay = "5s"
+    }
     restart {
-      attempts = 10
-      interval = "5m"
-      delay = "10s"
-      mode = "delay"
+      attempts = 3
+      interval = "18s"
+      delay = "4s"
+      mode = "fail"
     }
 
     ephemeral_disk {
-      size = 300
+      size = 500
       sticky = true
     }
 
@@ -37,7 +41,7 @@ job "grafana" {
         GF_SECURITY_ADMIN_PASSWORD = "admin"
         GF_SECURITY_DISABLE_GRAVATAR = "true"
 
-        GF_SERVER_ROOT_URL = "http://{{OPTIONS.consul_address}}:9990/grafana"
+        GF_SERVER_ROOT_URL = "http://${attr.unique.network.ip-address}:9990/grafana"
         GF_SERVER_SERVE_FROM_SUB_PATH = "true"
         GF_SERVER_ENABLE_GZIP = "true"
 

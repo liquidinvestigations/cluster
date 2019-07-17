@@ -14,12 +14,14 @@ from time import time, sleep
 import json
 from urllib.request import Request, urlopen
 from urllib.error import URLError
+from urllib.parse import urlencode
 import sys
 import signal
 import shutil
+import socket
 
 import click
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +36,7 @@ class PATH:
     cluster_py = root / 'cluster.py'
     cluster_ini = root / 'cluster.ini'
 
-    bin = root / 'bin'
+    bin = root / 'bin' if not os.getenv('DOCKER_BIN') else Path(os.environ['DOCKER_BIN'])  # noqa: E501
 
     etc = root / 'etc'
     templates = root / 'templates'
@@ -48,10 +50,12 @@ class PATH:
     supervisord_sock = var / 'supervisor' / 'supervisor.sock'
 
 
+jinja_env = Environment(loader=FileSystemLoader(str(PATH.templates)))
+
+
 def render(template_filename, options):
-    with open(template_filename, 'r') as f:
-        template = Template(f.read())
-        return template.render(**options)
+    template = jinja_env.get_template(template_filename)
+    return template.render(**options)
 
 
 def run(cmd, **kwargs):
@@ -93,6 +97,10 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
+ALL_JOBS = ['fabio', 'prometheus', 'alertmanager', 'grafana', 'dnsmasq']
+SYSTEM_JOBS = ['dnsmasq', 'fabio']
+
+
 class OPTIONS:
     network_address = config.get('network', 'address', fallback=None)
     network_interface = config.get('network', 'interface', fallback=None)
@@ -124,11 +132,12 @@ class OPTIONS:
         'nomad': config.get('nomad', 'version', fallback='0.9.3'),
     }
 
+    node_name = config.get('cluster', 'node_name',
+                           fallback=socket.gethostname())
     dev = config.getboolean('cluster', 'dev', fallback=False)
-
-    disable = config.get('cluster', 'disable', fallback='').split(',')
     debug = config.getboolean('cluster', 'debug', fallback=False)
 
+    _run_jobs = config.get('cluster', 'run_jobs', fallback='none').strip().split(',')  # noqa: E501
     nomad_vault_token = read_vault_secrets()['root_token']
 
     bootstrap_expect = config.getint('cluster', 'bootstrap_expect', fallback=1)
@@ -138,9 +147,17 @@ class OPTIONS:
     consul_retry_join = consul_retry_join_section(retry_join)
     nomad_client_servers = nomad_client_servers_section(retry_join)
 
-    wait_max = config.getfloat('deploy', 'wait_max_sec', fallback=240)
-    wait_interval = config.getfloat('deploy', 'wait_interval', fallback=3)
-    wait_green_count = config.getint('deploy', 'wait_green_count', fallback=3)
+    wait_max = config.getfloat('deploy', 'wait_max_sec', fallback=333)
+    wait_interval = config.getfloat('deploy', 'wait_interval', fallback=2)
+    wait_green_count = config.getint('deploy', 'wait_green_count', fallback=5)
+
+    @classmethod
+    def get_jobs(cls):
+        if cls._run_jobs == ['all']:
+            return ALL_JOBS
+        elif not cls._run_jobs or cls._run_jobs == ['none']:
+            return []
+        return cls._run_jobs
 
     @classmethod
     def validate(cls):
@@ -153,6 +170,9 @@ class OPTIONS:
                 "cluster.ini: network.create_bridge must be unset on macOS"
             assert not cls.network_forward_ports, \
                 "cluster.ini: network.forward_ports must be unset on macOS"
+        if cls._run_jobs and cls._run_jobs not in (['all'], ['none']):
+            assert all(s in ALL_JOBS for s in cls._run_jobs), \
+                'Unidentified job name in "cluster.run_jobs" list'
 
 
 class JsonApi:
@@ -160,14 +180,15 @@ class JsonApi:
         self.endpoint = endpoint
 
     def send(self, req):
-        log.debug('%s %s', req.get_method(), req.get_full_url())
         with urlopen(req) as res:
             if res.status == 200:
                 res_body = json.load(res)
                 return res_body
 
-    def get(self, url):
-        return self.send(Request(f'{self.endpoint}{url}'))
+    def get(self, url, params=None):
+        encoded = '?' + urlencode(params) if params else ''
+        req = Request(f'{self.endpoint}{url}{encoded}')
+        return self.send(req)
 
     def put(self, url, data):
         return self.send(Request(
@@ -198,7 +219,7 @@ def install():
     log.info("Installing...")
     PATH.bin.mkdir(exist_ok=True)
 
-    with tempfile.TemporaryDirectory() as _tmp:
+    with tempfile.TemporaryDirectory(dir=PATH.var) as _tmp:
         tmp = Path(_tmp)
         sysname = os.uname().sysname.lower()
 
@@ -234,7 +255,8 @@ def configure():
     for template in PATH.templates.iterdir():
         with open(PATH.etc / template.name, 'w') as dest:
             log.info('rendering %s', str(template))
-            dest.write(render(template, {'OPTIONS': OPTIONS, 'PATH': PATH}))
+            text = render(template.name, {'OPTIONS': OPTIONS, 'PATH': PATH})
+            dest.write(text)
     log.info('Done.')
 
 
@@ -318,6 +340,8 @@ def _stop():
 
     pid = supervisor_pid()
     log.info(f"Supervisor has PID={pid}")
+    _supervisorctl('stop', 'all')
+
     os.kill(pid, signal.SIGQUIT)
     log.info("SIGQUIT sent to supervisor!")
 
@@ -327,7 +351,8 @@ def _stop():
         try:
             sleep(1)
             supervisor_pid()
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
+            log.debug("Supervisor dead: %s", e)
             log.info("Everything stopped.")
             return
     log.warning(f"Supervisor didn't die in {STOP_TIMEOUT} seconds...")
@@ -341,10 +366,8 @@ def run_jobs():
     env = dict(os.environ)
     env['NOMAD_ADDR'] = 'http://' + OPTIONS.nomad_address + ':4646'
 
-    for nomad_job_file in PATH.etc.glob("*.nomad"):
-        if nomad_job_file.stem in OPTIONS.disable:
-            log.info('skipping job %s', nomad_job_file)
-            continue
+    for job in OPTIONS.get_jobs():
+        nomad_job_file = PATH.etc / f'{job}.nomad'
         log.info('running job %s', nomad_job_file)
         subprocess.check_call(f'{PATH.bin / "nomad"} job run {nomad_job_file}',
                               env=env, shell=True)
@@ -362,15 +385,23 @@ def autovault(timeout):
     t0 = time()
     while time() - t0 < int(timeout):
         try:
+            vault.get('/sys/health', params={
+                'standbyok': 'true',
+                'sealedcode': '200',
+                'uninitcode': '200',
+
+            })
             status = vault.get('/sys/seal-status')
 
             if not status['sealed']:
+                log.info('Vault not sealed, exiting.')
                 return
 
             break
 
-        except URLError:
-            sleep(.5)
+        except URLError as e:
+            log.warning(e)
+            sleep(2)
 
     if not PATH.vault_secrets.exists():
         resp = vault.put('/sys/init', {
@@ -390,6 +421,7 @@ def autovault(timeout):
 
     secrets = read_vault_secrets()
     vault.put('/sys/unseal', {'key': secrets['keys']})
+    assert not vault.get('/sys/health', params={'standbyok': 'true'})['sealed']
     log.info('Done.')
 
 
@@ -400,7 +432,8 @@ def supervisord(ctx, detach):
     """ Run the supervisor daemon in the foreground with the current user. """
 
     log.info("setting signal handler")
-    signal.signal(signal.SIGTERM, lambda _signum, _frame: _stop())
+    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGQUIT):
+        signal.signal(sig, lambda _signum, _frame: _stop())
 
     ctx.invoke(configure)
     (PATH.var / 'supervisor').mkdir(exist_ok=True)
@@ -411,25 +444,27 @@ def supervisord(ctx, detach):
         args = ['supervisord', '-c', str(PATH.supervisord_conf), '-n']
         sleep(5)
         log.debug('+ %s', ' '.join(args))
+        # Start supervisord in a new process group, so
+        # SIGINT and others won't be propagated to this
+        # process from the parent.
+        os.setsid()
         os.execvp(args[0], args)
 
     wait_for_supervisor()
     if detach:
         return
 
-    # wait for signal and stop if supervisor dies
-    while True:
-        try:
-            supervisor_pid()
-        except subprocess.CalledProcessError:
-            log.info('Supervisor stopped.')
-            return
-        sleep(1)
+    os.wait()
+
+
+def _supervisorctl(*ctl_args):
+    args = ['supervisorctl', '-c', str(PATH.supervisord_conf)] + list(ctl_args)
+    subprocess.check_call(args, shell=False)
 
 
 def supervisor_pid():
-    cmd = f'supervisorctl -c {PATH.supervisord_conf} pid'
-    return int(subprocess.check_output(cmd, shell=True).decode('latin1'))
+    args = ['supervisorctl', '-c', str(PATH.supervisord_conf), 'pid']
+    return int(subprocess.check_output(args, shell=False).decode('latin1'))
 
 
 def wait_for_supervisor():
@@ -452,42 +487,66 @@ def supervisorctl(args):
     """ Runs a supervisorctl command. """
 
     wait_for_supervisor()
-
-    joined_args = " ".join(args)
-    conf = PATH.etc / "supervisord.conf"
-    subprocess.check_call(f'supervisorctl -c {conf} {joined_args}',
-                          shell=True)
+    _supervisorctl(*args)
 
 
-def wait_for_service_health_checks(health_checks):  # noqa: C901
-    """Waits health checks to become green for green_count times in a row. """
-
+def get_checks(service, self_only):
     consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
+    if self_only:
+        node_name = consul.get('/agent/self')['Config']['NodeName']
+        return consul.get(f'/health/checks/{service}', params={
+            'filter': f'Node == "{node_name}"'
+        })
+    else:
+        return consul.get(f'/health/checks/{service}')
 
-    def get_failed_checks():
-        """Generates a list of (service, check, status)
-        for all failing checks after checking with Consul"""
 
-        consul_status = {}
-        for service in health_checks:
-            consul_checks = consul.get(f'/health/checks/{service}')
-            for s in consul_checks:
-                key = service, s['Name']
-                if key in consul_status:
+def get_failed_checks(health_checks, self_only, allow_duplicates):
+    """Generates a sequence of (service, check, status)
+    tuples for all failing checks after checking with Consul"""
+
+    def pick_worst(a, b):
+        for s in ['critical', 'warning', 'passing']:
+            if s in [a, b]:
+                return s
+        raise RuntimeError(f'Unknown status: "{a}" and "{b}"')
+
+    consul_status = {}
+    for service in health_checks:
+        consul_checks = get_checks(service, self_only)
+        for s in consul_checks:
+            key = service, s['Name']
+            if key in consul_status:
+                if allow_duplicates:
+                    consul_status[key] = pick_worst(
+                        consul_status[key],
+                        s['Status'],
+                    )
+                else:
                     consul_status[key] = 'appears twice'
-                    continue
+            else:
                 consul_status[key] = s['Status']
 
-        for service, checks in health_checks.items():
-            for check in checks:
-                status = consul_status.get((service, check), 'missing')
-                if 'Prometheus' in checks:
-                    log.error('prom status: %s', status)
-                if status != 'passing':
-                    yield service, check, status
+    for service, checks in health_checks.items():
+        for check in checks:
+            status = consul_status.get((service, check), 'missing')
+            if status != 'passing':
+                yield service, check, status
+
+
+def wait_for_checks(health_checks, self_only=False, allow_duplicates=False):
+    """Waits health checks to become green for green_count times in a row.
+
+    If self_only is True we only look at health checks registered on the
+    current node."""
 
     services = sorted(health_checks.keys())
-    log.info(f"Waiting for health checks on {services}")
+    if not services:
+        return
+    log.info("Waiting on %s health checks for %s %s",
+             sum(map(len, health_checks.values())),
+             str(services),
+             f'(self_only: {self_only}, allow_duplicates: {allow_duplicates})')
 
     t0 = time()
     greens = 0
@@ -496,7 +555,9 @@ def wait_for_service_health_checks(health_checks):  # noqa: C901
     last_spam = t0 - 1000
     while time() < timeout:
         sleep(OPTIONS.wait_interval)
-        failed = sorted(get_failed_checks())
+        failed = sorted(get_failed_checks(health_checks,
+                                          self_only,
+                                          allow_duplicates))
 
         if failed:
             greens = 0
@@ -504,7 +565,7 @@ def wait_for_service_health_checks(health_checks):  # noqa: C901
             greens += 1
 
         if greens >= OPTIONS.wait_green_count:
-            log.info(f"Checks {services} green after {time() - t0:.02f}s")
+            log.info(f"Checks for {services} green after {time() - t0:.02f}s")
             return
 
         # No chance to get enough greens
@@ -540,19 +601,27 @@ HEALTH_CHECKS = {
 
 def wait_for_consul():
     consul = JsonApi(f'http://{OPTIONS.consul_address}:8500/v1')
-    CONSUL_TIMEOUT = 15
     t0 = time()
-    while time() < t0 + CONSUL_TIMEOUT:
+    while time() < t0 + OPTIONS.wait_max:
         try:
             leader = consul.get('/status/leader')
-            assert leader
+            assert leader, 'Consul has no leader'
+            node_name = consul.get('/agent/self')['Config']['NodeName']
+            node_health = consul.get('/health/service/consul', params={
+                'filter': f'Node.Node == "{node_name}"'
+            })
+            assert node_health[0]['Checks'][0]['Status'] == 'passing', \
+                'Consul self node health check is failing'
+
             log.info("Consul UP and running with leader %s", leader)
-            break
-        except AssertionError:
-            log.warning('Consul has no leader...')
-        except URLError:
-            log.warning('Waiting for Consul...')
-        sleep(2)
+            return
+        except IndexError:
+            log.warning('Consul self node health check not registered')
+        except AssertionError as e:
+            log.warning(e)
+        except URLError as e:
+            log.warning('Consul %s', e)
+        sleep(OPTIONS.wait_interval)
     else:
         raise RuntimeError('Consul did not start.')
 
@@ -563,18 +632,54 @@ def wait():
 
     wait_for_supervisor()
     wait_for_consul()
-    checks = {k: v for k, v in HEALTH_CHECKS.items()
-              if k not in OPTIONS.disable}
-    wait_for_service_health_checks(checks)
+    wait_for_checks({
+        k: v for k, v in HEALTH_CHECKS.items()
+        if k in ['vault', 'nomad', 'nomad-client']
+    }, self_only=True)
+
+    wait_for_checks({
+        k: v for k, v in HEALTH_CHECKS.items()
+        if k in OPTIONS.get_jobs() and k in SYSTEM_JOBS
+    }, allow_duplicates=True)
+    wait_for_checks({
+        k: v for k, v in HEALTH_CHECKS.items()
+        if k in OPTIONS.get_jobs() and k not in SYSTEM_JOBS
+    })
+
+
+def restart_nomad_until_it_works():
+    nomad = JsonApi(f'http://{OPTIONS.nomad_address}:4646/v1')
+    NOMAD_MAX_RESTARTS = 5
+    NOMAD_LEADERLESS_TIMEOUT = 15
+
+    for i in range(1, NOMAD_MAX_RESTARTS + 1):
+        t0 = time()
+        while time() < t0 + NOMAD_LEADERLESS_TIMEOUT:
+            try:
+                leader = nomad.get('/status/leader')
+                assert leader
+                assert leader != 'No cluster leader'
+                log.info("Nomad UP and running with leader %s", leader)
+                return
+            except AssertionError:
+                log.warning('Nomad has no leader...')
+            except URLError as e:
+                log.warning('Waiting for Nomad... %s', e)
+            sleep(2)
+        log.warning('nomad restart #%s/%s', i, NOMAD_MAX_RESTARTS)
+        _supervisorctl('restart', 'nomad')
+    else:
+        raise RuntimeError('Nomad did not start.')
 
 
 @cli.command()
 @click.pass_context
 def start(ctx):
     """ Configures and starts all services if they're not already up. """
-    ctx.invoke(supervisorctl,
-               args=["stop", "nomad", "consul", "vault", "autovault"])
-    ctx.invoke(supervisorctl, args=["update"])
+
+    wait_for_supervisor()
+    _supervisorctl("stop", "nomad", "consul", "vault", "autovault")
+    _supervisorctl("update")
 
     # delete consul health checks so they won't get doubled
     log.info("Deleting old Consul health checks...")
@@ -582,18 +687,23 @@ def start(ctx):
     ctx.invoke(supervisorctl, args=["start", "consul"])
     wait_for_consul()
 
-    ctx.invoke(supervisorctl, args=["start", "vault"])
-    ctx.invoke(supervisorctl, args=["start", "autovault"])
-    wait_for_service_health_checks({'vault': HEALTH_CHECKS['vault']})
+    _supervisorctl("start", "vault")
+    _supervisorctl("start", "autovault")
+    wait_for_checks({'vault': HEALTH_CHECKS['vault']}, self_only=True)
 
     if OPTIONS.nomad_delete_data_on_start:
         log.info("Deleting old Nomad data...")
         shutil.rmtree(PATH.var / 'nomad', ignore_errors=True)
-    ctx.invoke(supervisorctl, args=["start", "nomad"])
-    wait_for_service_health_checks({
+
+    try:
+        _supervisorctl("start", "nomad")
+    except subprocess.CalledProcessError as e:
+        log.warning('initial Nomad start failed: %s', e)
+    restart_nomad_until_it_works()
+    wait_for_checks({
         'nomad': HEALTH_CHECKS['nomad'],
         'nomad-client': HEALTH_CHECKS['nomad-client'],
-    })
+    }, self_only=True)
     nomad_drain(False)
 
     ctx.invoke(run_jobs)
