@@ -43,6 +43,7 @@ DOCKERGROUPID="$(getent group docker | cut -d: -f3)"
 set -x
 docker run --detach \
   --restart always \
+  --init \
   --name $name \
   --env USERID=$USERID \
   --env GROUPID=$GROUPID \
