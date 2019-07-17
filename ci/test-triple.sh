@@ -15,7 +15,7 @@ mkdir $TEST_DIR
 for id in 1 2 4; do
   cp -a . $TEST_DIR/$id
   cp $TEST_DIR/$id/ci/configs/triple-$id.ini $TEST_DIR/$id/cluster.ini
-  $TEST_DIR/$id/examples/docker.sh --name test-$id
+  $TEST_DIR/$id/bin/docker.sh --name test-$id
 done
 
 echo "wait until one of them wins"

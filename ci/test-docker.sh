@@ -11,7 +11,7 @@ docker build . --tag liquidinvestigations/cluster
 
 echo "running container"
 cp examples/cluster.ini .
-./examples/docker.sh
+./bin/docker.sh
 
 echo "spam the logs"
 docker logs -f cluster &
