@@ -14,7 +14,6 @@ somewhat opinionated.
 [Prometheus]: http://prometheus.io/
 [Grafana]: https://grafana.com/
 
-
 ## Quick Start (Linux)
 
 Have `Docker` up and running. You can use
@@ -22,7 +21,6 @@ Have `Docker` up and running. You can use
 
 Clone this repository. If using an older version of this repository, `chown`
 everything back from `root:` to your current user. Then:
-
 
 ```bash
 cp examples/cluster.ini .
@@ -32,19 +30,18 @@ docker exec cluster ./cluster.py supervisorctl -- tail -f start
 
 Wait a minute and visit:
 
-- http://10.66.60.1:8500 - Consul
-- http://10.66.60.1:4646 - Nomad
-- http://10.66.60.1:8200 - Vault
+* <http://10.66.60.1:8500> - Consul
+* <http://10.66.60.1:4646> - Nomad
+* <http://10.66.60.1:8200> - Vault
 
 If `fabio` has been enabled in `cluster.ini`, visit:
 
-- http://10.66.60.1:9990/  (Fabio UI)
-- http://10.66.60.1:9990/prometheus
-- http://10.66.60.1:9990/grafana
-- http://10.66.60.1:9990/alertmanager
+* <http://10.66.60.1:9990/>  (Fabio UI)
+* <http://10.66.60.1:9990/prometheus>
+* <http://10.66.60.1:9990/grafana>
+* <http://10.66.60.1:9990/alertmanager>
 
 In case of panic, `docker stop cluster` will make it all go away.
-
 
 ## Usage
 
@@ -53,22 +50,18 @@ and Vault in the `bin` directory. The Docker image comes with the binaries unpac
 You can override the versions to be downloaded with the `version` config under
 `[nomad]`, `[consul]` and `[vault]`.
 
-
 After installing, the `./cluster.py configure` command uses Jinja2 to render
 all templates from `./templates` to `./etc` according to the `cluster.ini`
 file.
-
 
 The `./cluster.py supervisord` command starts the `supervisor` daemon, which in
 turn will run the `./cluster.py start` command. The `start` command will start,
 configure and wait for Consul, Vault, Nomad and the system services.
 
-
 ### One Docker Container
 
 Consul, Vault and Nomad can run in one Docker container with host networking
 mode with these settings:
-
 
 ```bash
 docker run --detach \
@@ -93,9 +86,7 @@ The volume path `./var` has to be the same both inside and outside the Docker
 container. This is because both Nomad running inside the container and the
 host dockerd access the data directory using the path inside the container.
 
-
 Example usage: [ci/test-docker.sh](ci/test-docker.sh)
-
 
 ### Installation Guide
 
@@ -103,6 +94,7 @@ The services can run as a user-run `supervisor` that has been installed with
 `pipenv install`.
 
 This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pipenv` installed.
+
 * Install dependencies:
 
     ```bash
@@ -163,9 +155,7 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 
 * To run the daemons in the foreground: `./cluster.py runserver <consul|vault|nomad>`
 
-
 Example usage: [ci/test-host.sh](ci/test-host.sh)
-
 
 ### Installation on macOS
 
@@ -178,9 +168,8 @@ to to route to services running on the host with the same IP address.
 
 To fix this, we're configuring two local bridges:
 
-- `bridge1` with address `10.66.60.1/32` - for the agents (Nomad, Consul and Vault)
-- `bridge2` with address `10.66.60.2/32` - for the services (everything Nomad runs with Docker)
-
+* `bridge1` with address `10.66.60.1/32` - for the agents (Nomad, Consul and Vault)
+* `bridge2` with address `10.66.60.2/32` - for the services (everything Nomad runs with Docker)
 
 The installation is as follows:
 
@@ -190,7 +179,6 @@ The installation is as follows:
 * Run `sudo ./examples/network-mac.sh`
 * Set up `cluster.ini` starting from `./examples/cluster-mac.ini`
 * Follow the [Installation Guide](#installation-guide) starting from the `supervisord` step.
-
 
 ## Vault Configuration
 
@@ -206,10 +194,8 @@ initializes the vault, stores the unseal key and root token in
 `var/vault-secrets.ini` with permissions `0600`, and unseals it. On subsequent
 runs, it uses the same key to unseal the vault, so it's safe to run at boot.
 
-
 [initialize]: https://www.vaultproject.io/docs/commands/operator/init.html
 [unseal]: https://www.vaultproject.io/docs/commands/operator/unseal.html
-
 
 ### Disabling mlock
 
@@ -225,7 +211,6 @@ disable_mlock = true
 
 This flag has no effect on macOS.
 
-
 ## Updating
 
 With the one Docker container setup, you can just:
@@ -233,7 +218,6 @@ With the one Docker container setup, you can just:
 ```bash
 ./bin/docker.sh --rm --pull
 ```
-
 
 When updating an existing installation using `./cluster.py install`, you'll
 need to reapply the `mlock` file capabilities for `bin/vault`:
@@ -244,28 +228,25 @@ sudo setcap cap_ipc_lock=+ep bin/vault
 
 After that, run `./cluster.py stop` and restart `cluster.py supervisord`.
 
-
 ## Nomad Jobs
 
 We've included Nomad jobs for the following:
 
 System jobs run on all nodes. We have the following:
 
-- `dnsmasq` -- DNS server on port 53. Forwards requests like `prometheus.service.consul`
+* `dnsmasq` -- DNS server on port 53. Forwards requests like `prometheus.service.consul`
   to the local Consul server, and uses the container's resolv.conf to reply to
   all other requests. This allows all jobs to set the `dns_servers` Docker
   config to the node IP.
-- `fabio` -- HTTP load balancer. Used to forward apps to `:9990/$APP_NAME`. Set
+* `fabio` -- HTTP load balancer. Used to forward apps to `:9990/$APP_NAME`. Set
   a Consul service tag like `fabio-/something` and it will forward traffic from
   `:9990/something` to that service.
 
-
 We also run some jobs as services:
 
-- `prometheus` -- collects metrics from Nomad
-- `alertmanager` -- signals alerts from Prometheus
-- `grafana` -- displays dashboards with data from Prometheus
-
+* `prometheus` -- collects metrics from Nomad
+* `alertmanager` -- signals alerts from Prometheus
+* `grafana` -- displays dashboards with data from Prometheus
 
 The `./cluster.py run-jobs` command will trigger the deployment of the files in
 `./etc/*.nomad`. This command is automatically run by the `start` command.
@@ -276,7 +257,6 @@ To start some of these jobs, set:
 [cluster]
 run_jobs = fabio,grafana,prometheus,dnsmasq
 ```
-
 
 ## Multi Host
 
@@ -309,8 +289,8 @@ After launching the services, all but one Vault instance will fail. The one
 left running is the primary instance; you can find it in the Consul UI. To make
 them all work:
 
-- stop everything
-- copy `var/vault-secrets.ini` from the primary to the other nodes
-- restart everything
+* stop everything
+* copy `var/vault-secrets.ini` from the primary to the other nodes
+* restart everything
 
 [wireguard]: https://www.wireguard.com/
