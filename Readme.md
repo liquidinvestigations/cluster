@@ -43,6 +43,15 @@ If `fabio` has been enabled in `cluster.ini`, visit:
 
 In case of panic, `docker stop cluster` will make it all go away.
 
+### Options using docker.sh
+
+You can use these additional options to modify the docker based startup procedure:
+
+* `--name` container name (default: cluster)
+* `--image` image (default: liquidinvestigations/cluster)
+* `--rm` remove docker container first (default: don't remove container)
+* `--pull` pull image
+
 ## Usage
 
 `./cluster.py install` shells out to `curl` and `unzip` to get binaries for Nomad, Consul
