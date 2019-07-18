@@ -474,8 +474,8 @@ def wait_for_supervisor():
         try:
             supervisor_pid()
             break
-        except subprocess.CalledProcessError as e:
-            log.warning(e)
+        except (OSError, subprocess.CalledProcessError) as e:
+            log.warning('waiting for supervisor: %s', e)
         sleep(2)
     else:
         raise RuntimeError('supervisord did not start')
