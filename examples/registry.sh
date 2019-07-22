@@ -1,7 +1,9 @@
 #!/bin/bash -e
 
-## Run dockerd with the following options:
-# /usr/bin/dockerd -H fd:// --insecure-registry 10.66.60.1:6665 --registry-mirror http://10.66.60.1:6665 --registry-mirror https://registry-1.docker.io
+# Run this script to start a local registry, then install
+# examples/registry-systemd-override.conf to
+# /etc/systemd/system/docker.service.d/override.conf, and restart docker:
+# sudo systemctl daemon-reload && sudo systemctl restart docker
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
