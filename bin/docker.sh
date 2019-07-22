@@ -6,11 +6,13 @@ rmdocker=''
 pulldocker=''
 name=cluster
 image=liquidinvestigations/cluster
+nuke=''
 while [[ $# -gt 0 ]]; do
   arg=$1
   shift
   case "$arg" in
     "--rm") rmdocker=1 ;;
+    "--nuke") nuke=1 ;;
     "--pull") pulldocker=1 ;;
     "--name") name=$1; shift ;;
     "--image") image=$1; shift ;;
@@ -29,6 +31,10 @@ if [ ! -z $rmdocker ]; then (
     docker stop $container
     docker rm $container
   ) fi
+) fi
+
+if [ ! -z $nuke ]; then (
+  sudo rm -rf var/consul var/nomad var/supervisor var/vault-secrets.ini
 ) fi
 
 USERNAME="$(whoami)"
