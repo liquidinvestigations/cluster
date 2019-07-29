@@ -12,7 +12,7 @@ RUN set -e \
  && mkdir -p /app/var /app/etc /app/bin
 
 WORKDIR /app
-ADD cluster.py docker-entrypoint.sh Pipfile Pipfile.lock ./
+ADD cluster.py docker-entrypoint.sh Pipfile Pipfile.lock examples/cluster.ini ./
 
 RUN pipenv install --system --deploy --ignore-pipfile \
  && ./cluster.py install \
