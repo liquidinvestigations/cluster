@@ -12,11 +12,12 @@ RUN set -e \
  && mkdir -p /app/var /app/etc /app/bin
 
 WORKDIR /app
-ADD cluster.py docker-entrypoint.sh Pipfile Pipfile.lock examples/cluster.ini ./
+ADD Pipfile Pipfile.lock ./
+RUN pipenv install --system --deploy --ignore-pipfile
 
-RUN pipenv install --system --deploy --ignore-pipfile \
- && ./cluster.py install \
- && setcap cap_ipc_lock=+ep bin/vault
+COPY . .
+ADD examples/cluster.ini ./
+RUN ./cluster.py install && setcap cap_ipc_lock=+ep bin/vault
 
 ENV DOCKER_BIN=/app/bin
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
