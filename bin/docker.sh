@@ -36,21 +36,13 @@ if ! getent group docker | grep -q $(whoami); then
   echo "The current user $USERNAME is not part of the docker group"
   exit 1
 fi
-USERID="$(id -u $USERNAME)"
-GROUPID="$(id -g $USERNAME)"
-DOCKERGROUPID="$(getent group docker | cut -d: -f3)"
 
 set -x
 docker run --detach \
   --restart always \
   --init \
   --name $name \
-  --env USERID=$USERID \
-  --env GROUPID=$GROUPID \
-  --env DOCKERGROUPID=$DOCKERGROUPID \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume "$PWD:$PWD" \
-  --workdir "$PWD" \
   --privileged \
   --net host \
   $image
