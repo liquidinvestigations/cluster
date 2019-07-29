@@ -32,7 +32,7 @@ if [ ! -z $rmdocker ]; then (
 ) fi
 
 USERNAME="$(whoami)"
-if ! getent group docker | grep -q $(whoami); then
+if ! docker ps; then
   echo "The current user $USERNAME is not part of the docker group"
   exit 1
 fi
