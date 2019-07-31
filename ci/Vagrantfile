@@ -11,8 +11,8 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.synced_folder "..", "/opt/cluster", type: "rsync",
       rsync__exclude: [".vagrant/", ".git/", "__pycache__/"],
-      rsync_args: ["--verbose", "--ignore-from", "../.gitignore",
-                   "--archive", "--delete", "-z", "--copy-links"]
+      rsync__args: ["--verbose", "--exclude-from", "../.gitignore",
+                    "--archive", "--delete", "-z", "--copy-links"]
 
 
   config.vm.provision "shell", inline: "( set +ex; " + ENV['PROVISION'] + ") 2>&1",
