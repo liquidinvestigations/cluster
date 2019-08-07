@@ -7,12 +7,13 @@ daemon = {}
 daemon['registry-mirrors'] = ['https://registry-1.docker.io']
 daemon['insecure-registry'] = []
 
-local_registry = (f'{os.environ.get("REGISTRY_ADDRESS")}'
-                  f':{os.environ.get("REGISTRY_PORT")}')
+registry_address = os.environ.get("REGISTRY_ADDRESS")
+registry_port = os.environ.get("REGISTRY_PORT")
 
-if local_registry.startswith('None') is False:
+if registry_address and registry_port:
+    local_registry = f'{registry_address}:{registry_port}'
     daemon['registry-mirrors'].insert(0, local_registry)
     daemon['insecure-registry'].insert(0, local_registry)
 
 with open('daemon.json', 'w') as f:
-    f.write(json.dumps(daemon))
+    print(json.dumps(daemon, indent=2), file=f)
