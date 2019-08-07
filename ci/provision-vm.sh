@@ -13,6 +13,8 @@ mkdir /opt/cluster
 cd /opt/cluster
 tar xzf /opt/cluster.tar.gz
 cp examples/cluster.ini .
+mv examples/daemon.json /etc/docker/
+systemctl restart docker
 
 chown -R vagrant: .
 
