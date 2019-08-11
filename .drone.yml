@@ -12,7 +12,7 @@ steps:
   depends_on:
   - flake8
   commands:
-  - export VMCK_URL=http://$VMCK_IP:11111
+  - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-host.sh
   - ./ci/run-vagrant-test.sh
 
@@ -21,7 +21,7 @@ steps:
   depends_on:
   - flake8
   commands:
-  - export VMCK_URL=http://$VMCK_IP:11111
+  - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-docker.sh
   - ./ci/run-vagrant-test.sh
 
@@ -31,7 +31,7 @@ steps:
   - test on host
   - test docker container
   commands:
-  - export VMCK_URL=http://$VMCK_IP:11111
+  - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-triple.sh
   - ./ci/run-vagrant-test.sh
 
