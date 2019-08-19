@@ -11,11 +11,13 @@ if ! id -u vagrant; then
   adduser vagrant kvm
   adduser vagrant hostdocker
   adduser vagrant sudo
+  adduser vagrant disk
 else
   echo "User already exists, skipping."
 fi
 
 echo "Changing permissions..."
+chown root:kvm /dev/kvm
 chown -R $USERID:$GROUPID ./etc
 chown -R $USERID:$GROUPID ./var
 
