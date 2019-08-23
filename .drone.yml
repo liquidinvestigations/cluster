@@ -88,7 +88,6 @@ steps:
   - BRANCH=$(echo $DRONE_COMMIT_BRANCH | tr -s '/' '_')
   - python3 examples/registry.py
   - tar czf /tmp/cluster.tar.gz .
-  - rm examples/daemon.json
   - /opt/vmck/contrib/build.py /tmp/cluster-$BRANCH.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
   - tar czvf /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz -C /tmp cluster-$BRANCH.qcow2
   - mv /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz /vmck-images/cluster-$BRANCH.qcow2.tar.gz
