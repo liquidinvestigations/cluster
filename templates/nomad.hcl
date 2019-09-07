@@ -36,6 +36,12 @@ client {
   }
 }
 
+plugin "raw_exec" {
+  config {
+    enabled = true
+  }
+}
+
 consul {
   address = "{{OPTIONS.consul_address}}:8500"
 }
