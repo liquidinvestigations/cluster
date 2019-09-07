@@ -10,6 +10,8 @@ RUN set -e \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /app/var && mkdir -p /app/bin
 
+RUN curl -sSL https://get.docker.com/ | sh
+
 WORKDIR /app
 
 ADD cluster.py docker-entrypoint.sh Pipfile Pipfile.lock ./
