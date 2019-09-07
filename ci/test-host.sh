@@ -3,7 +3,7 @@
 id $(whoami)
 cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
 
-sudo apt-get install -qq python3-pip curl
+sudo apt-get install -qq python3-pip curl docker.io
 sudo pip3 install pipenv
 pipenv --version
 pipenv install 2>&1
