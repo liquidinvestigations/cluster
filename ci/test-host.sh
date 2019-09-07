@@ -3,7 +3,7 @@
 id $(whoami)
 cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
 
-pipenv --version
+pipenv --version || sudo pip install pipenv && pipenv --version
 pipenv install 2>&1
 
 echo "installing services"
