@@ -4,6 +4,10 @@
 require 'etc'
 
 Vagrant.configure("2") do |config|
+  if Vagrant.has_plugin?("vagrant-env")
+    config.env.enable
+  end
+
   config.vm.box = "base"
   config.vm.define ENV['VMNAME']
 
