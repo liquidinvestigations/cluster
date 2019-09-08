@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :vmck do |vmck, override|
     vmck.vmck_url = ENV['VMCK_URL']
-    vmck.image_path = "imgbuild-master.qcow2.tar.gz"
+    vmck.image_path = "imgbuild-cluster.qcow2.tar.gz"
     vmck.memory = 4000
     vmck.cpus = 1
   end
