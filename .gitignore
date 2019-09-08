@@ -1,3 +1,8 @@
 /cluster.ini
 /var/*
+!/var/.gitignore
 /etc/*
+!/etc/.gitignore
+/bin/*
+!/bin/.gitignore
+!/bin/docker.sh
