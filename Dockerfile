@@ -1,4 +1,4 @@
-FROM python:3.7-buster
+FROM python:3.7-stretch
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHONUNBUFFERED true
@@ -6,10 +6,20 @@ ENV PYTHONUNBUFFERED true
 RUN set -e \
  && apt-get update -qq \
  && apt-get install  -qq -y --no-install-recommends \
-    sudo curl unzip libcap2-bin qemu-kvm libvirt-clients \
-    libvirt-daemon-system dnsutils iptables docker.io \
+    sudo curl unzip libcap2-bin qemu-kvm dnsutils iptables \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /app/var && mkdir -p /app/bin
+
+RUN set -e \
+ && apt-get install  -qq -y --no-install-recommends \
+    apt-transport-https  ca-certificates gnupg2 software-properties-common \
+ && curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add - \
+ && add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/debian \
+   $(lsb_release -cs) \
+   stable" \
+ && apt-get update -qq \
+ && apt-get install docker-ce
 
 WORKDIR /app
 
