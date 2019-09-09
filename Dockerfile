@@ -6,7 +6,8 @@ ENV PYTHONUNBUFFERED true
 RUN set -e \
  && apt-get update -qq \
  && apt-get install  -qq -y --no-install-recommends \
-    sudo curl unzip libcap2-bin qemu-kvm dnsutils iptables docker.io \
+    sudo curl unzip libcap2-bin qemu-kvm libvirt-clients \
+    libvirt-daemon-system dnsutils iptables docker.io \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /app/var && mkdir -p /app/bin
 
