@@ -14,7 +14,7 @@ RUN set -e \
    $(lsb_release -cs) \
    stable" \
  && apt-get update -qq \
- && apt-get install docker-ce \
+ && apt-get install -qq -y docker-ce docker-ce-cli containerd.io \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /app/var && mkdir -p /app/bin
 
