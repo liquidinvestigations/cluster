@@ -4,6 +4,10 @@
 require 'etc'
 
 Vagrant.configure("2") do |config|
+  if Vagrant.has_plugin?("vagrant-env")
+    config.env.enable
+  end
+
   config.vm.box = "base"
   config.vm.define ENV['VMNAME']
 
@@ -23,7 +27,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :vmck do |vmck, override|
     vmck.vmck_url = ENV['VMCK_URL']
-    vmck.image_path = "imgbuild-master.qcow2.tar.gz"
+    vmck.image_path = "imgbuild-cluster.qcow2.tar.gz"
     vmck.memory = 2000
     vmck.cpus = 1
     vmck.name = ENV['VMCK_NAME']
