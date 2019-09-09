@@ -5,7 +5,7 @@ ls -alh
 
 if ! id -u vagrant; then
   echo "Setting up user and groups..."
-groupadd -g $GROUPID vagrant
+  groupadd -g $GROUPID vagrant
   groupadd -g $DOCKERGROUPID hostdocker
   useradd -u $USERID -g vagrant --create-home vagrant
   adduser vagrant kvm
