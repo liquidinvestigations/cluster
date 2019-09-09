@@ -14,6 +14,7 @@ steps:
   commands:
   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-host.sh
+  - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
   - ./ci/run-vagrant-test.sh
 
 - name: test docker container
@@ -23,6 +24,7 @@ steps:
   commands:
   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-docker.sh
+  - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
   - ./ci/run-vagrant-test.sh
 
 - name: cluster 3 containers
@@ -33,6 +35,7 @@ steps:
   commands:
   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-triple.sh
+  - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
   - ./ci/run-vagrant-test.sh
 
 ---
