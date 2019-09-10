@@ -7,7 +7,7 @@ if ! id -u vagrant; then
   echo "Setting up user and groups..."
   groupadd -g $GROUPID vagrant
   groupadd -g $DOCKERGROUPID docker
-  useradd -u $USERID -g vagrant -G kvm,docker,sudo,disk --create-home vagrant
+  useradd -u $USERID -g vagrant -G kvm,docker,sudo --create-home vagrant
 else
   echo "User already exists, skipping."
 fi
