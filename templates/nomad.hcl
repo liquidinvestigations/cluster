@@ -27,6 +27,7 @@ client {
   network_interface = "{{OPTIONS.nomad_interface}}"
   memory_total_mb = {{OPTIONS.nomad_memory or '0 # autodetect'}}
   {{OPTIONS.nomad_client_servers}}
+  gc_max_allocs = 300
   meta {
     {{OPTIONS.nomad_meta}}
   }
