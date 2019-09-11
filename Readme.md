@@ -257,6 +257,10 @@ We also run some jobs as services:
 * `alertmanager` -- signals alerts from Prometheus
 * `grafana` -- displays dashboards with data from Prometheus
 
+Finally, we have one periodic job:
+
+* `docker-system-prune` -- runs `docker system prune --all --force --volumes` on a single node every hour, since [periodic system jobs](https://github.com/hashicorp/nomad/issues/1944) are not supported by Nomad.
+
 The `./cluster.py run-jobs` command will trigger the deployment of the files in
 `./etc/*.nomad`. This command is automatically run by the `start` command.
 
