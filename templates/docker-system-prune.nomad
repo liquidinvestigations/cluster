@@ -8,6 +8,10 @@ job "docker-system-prune" {
     prohibit_overlap = true
   }
 
+  spread {
+    attribute = {% raw %}"${attr.unique.hostname}"{% endraw %}
+  }
+
   group "prune" {
     task "prune" {
       driver = "docker"
