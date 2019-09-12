@@ -23,11 +23,12 @@ job "fabio" {
         registry.consul.addr = {{OPTIONS.consul_address}}:8500
         registry.consul.checksRequired = all
         registry.consul.tagprefix = fabio-
-        registry.consul.register.tags = fabio-/
         registry.consul.kvpath = /cluster/fabio
+        registry.consul.register.addr = ${NOMAD_ADDR_ui}
+        registry.consul.register.tags = fabio-/
+        registry.consul.register.name = cluster-fabio
         ui.addr = :9991
         ui.color = green
-        registry.consul.register.addr = ${NOMAD_ADDR_ui}
         proxy.addr = :9990
         EOH
       }
