@@ -53,7 +53,7 @@ get $IP:9990/grafana/api/health
 echo "Checking DNS..."
 dns consul.service.consul
 dns nomad.service.consul
-dns fabio.service.consul
+dns cluster-fabio.service.consul
 
 dns github.com
 dns liquiddemo.org

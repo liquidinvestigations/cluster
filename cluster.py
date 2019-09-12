@@ -97,9 +97,15 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
-ALL_JOBS = ['fabio', 'prometheus', 'alertmanager', 'grafana', 'dnsmasq',
-            'docker-system-prune']
-SYSTEM_JOBS = ['dnsmasq', 'fabio']
+ALL_JOBS = ['cluster-fabio', 'prometheus', 'alertmanager', 'grafana',
+            'dnsmasq', 'docker-system-prune']
+SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio']
+
+
+def translate_job_name(option_name):
+    if option_name == 'fabio':
+        return 'cluster-fabio'
+    return option_name
 
 
 class OPTIONS:
@@ -158,7 +164,7 @@ class OPTIONS:
             return ALL_JOBS
         elif not cls._run_jobs or cls._run_jobs == ['none']:
             return []
-        return cls._run_jobs
+        return list(map(translate_job_name, cls._run_jobs))
 
     @classmethod
     def validate(cls):
@@ -172,7 +178,8 @@ class OPTIONS:
             assert not cls.network_forward_ports, \
                 "cluster.ini: network.forward_ports must be unset on macOS"
         if cls._run_jobs and cls._run_jobs not in (['all'], ['none']):
-            assert all(s in ALL_JOBS for s in cls._run_jobs), \
+            assert all(translate_job_name(s) in ALL_JOBS
+                       for s in cls._run_jobs), \
                 'Unidentified job name in "cluster.run_jobs" list'
 
 
@@ -596,7 +603,7 @@ HEALTH_CHECKS = {
     'vault': ['Vault Sealed Status'],
     'grafana': ['Grafana alive on HTTP'],
     'prometheus': ['Prometheus alive on HTTP'],
-    'fabio': ["Service 'fabio' check"],
+    'cluster-fabio': ["Service 'cluster-fabio' check"],
 }
 
 
