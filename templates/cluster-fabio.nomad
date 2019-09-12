@@ -1,4 +1,4 @@
-job "fabio" {
+job "cluster-fabio" {
   datacenters = ["dc1"]
   type = "system"
   priority = 99

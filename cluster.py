@@ -97,8 +97,8 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
-ALL_JOBS = ['fabio', 'prometheus', 'alertmanager', 'grafana', 'dnsmasq',
-            'docker-system-prune']
+ALL_JOBS = ['cluster-fabio', 'prometheus', 'alertmanager', 'grafana',
+            'dnsmasq', 'docker-system-prune']
 SYSTEM_JOBS = ['dnsmasq', 'fabio']
 
 
@@ -154,11 +154,16 @@ class OPTIONS:
 
     @classmethod
     def get_jobs(cls):
+        def translate(name):
+            if name == 'fabio':
+                return 'cluster-fabio'
+            return name
+
         if cls._run_jobs == ['all']:
             return ALL_JOBS
         elif not cls._run_jobs or cls._run_jobs == ['none']:
             return []
-        return cls._run_jobs
+        return list(map(translate, cls._run_jobs))
 
     @classmethod
     def validate(cls):
@@ -596,7 +601,7 @@ HEALTH_CHECKS = {
     'vault': ['Vault Sealed Status'],
     'grafana': ['Grafana alive on HTTP'],
     'prometheus': ['Prometheus alive on HTTP'],
-    'fabio': ["Service 'fabio' check"],
+    'cluster-fabio': ["Service 'cluster-fabio' check"],
 }
 
 
