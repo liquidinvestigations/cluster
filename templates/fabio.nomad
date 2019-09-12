@@ -24,6 +24,7 @@ job "fabio" {
         registry.consul.checksRequired = all
         registry.consul.tagprefix = fabio-
         registry.consul.register.tags = fabio-/
+        registry.consul.kvpath = /cluster/fabio
         ui.addr = :9991
         ui.color = green
         registry.consul.register.addr = ${NOMAD_ADDR_ui}
