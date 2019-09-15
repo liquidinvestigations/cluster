@@ -49,7 +49,7 @@ job "grafana" {
         port = "http"
         tags = ["fabio-/grafana"]
         check {
-          name     = "http"
+          name     = "Grafana alive on HTTP"
           type     = "http"
           path     = "/grafana/api/health"
           interval = "4s"
