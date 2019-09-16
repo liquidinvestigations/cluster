@@ -2,9 +2,10 @@
 
 This script installs and configures [Consul][], [Vault][] and [Nomad][]. After
 those are up, we're running [dnsmasq][] to forward Consul's DNS, [Prometheus][]
-to collect Nomad stats and [Grafana][] to display them in a nice dashboard.
-It's designed to be easy to use on a fresh Linux machine, therefore it's
-somewhat opinionated.
+to collect Nomad stats, [Loki][] to collect logs, and [Grafana][] to display
+them in a nice dashboard. It also runs a local [Docker registry][] to cache
+images. It's designed to be easy to use on a fresh Linux machine, therefore
+it's somewhat opinionated.
 
 [consul]: https://www.consul.io/
 [vault]: https://www.vaultproject.io/
@@ -13,6 +14,8 @@ somewhat opinionated.
 [dnsmasq]: http://www.thekelleys.org.uk/dnsmasq/doc.html
 [Prometheus]: http://prometheus.io/
 [Grafana]: https://grafana.com/
+[Loki]: https://grafana.com/oss/loki
+[Docker registry]: https://docs.docker.com/registry/deploying/
 
 ## Quick Start (Linux)
 
@@ -255,7 +258,9 @@ We also run some jobs as services:
 
 * `prometheus` -- collects metrics from Nomad
 * `alertmanager` -- signals alerts from Prometheus
-* `grafana` -- displays dashboards with data from Prometheus
+* `grafana` -- displays dashboards with data from Prometheus and Loki
+* `loki` -- collects logs from apps
+* `registry` -- local registry to cache docker images
 
 Finally, we have one periodic job:
 
