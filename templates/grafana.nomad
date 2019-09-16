@@ -4,41 +4,25 @@ job "grafana" {
   priority = 90
 
   group "grafana" {
-    reschedule {
-      unlimited = true
-      attempts = 0
-      delay = "5s"
-    }
     restart {
-      attempts = 3
-      interval = "18s"
-      delay = "4s"
-      mode = "fail"
-    }
-
-    ephemeral_disk {
-      size = 500
-      sticky = true
+      attempts = 10
+      interval = "2m"
+      delay = "10s"
+      mode = "delay"
     }
 
     task "grafana" {
       driver = "docker"
       config {
-        image = "grafana/grafana:6.3.0-beta1"
+        image = "grafana/grafana:6.3.5"
         port_map {
           http = 3000
         }
       }
 
       env {
-        GF_DEFAULT_INSTANCE_NAME = "cluster"
-        GF_LOG_LEVEL = "DEBUG"
-        GF_LOG_MODE = "console"
-
         GF_PATHS_PROVISIONING = "/local/provisioning"
 
-        GF_SECURITY_ADMIN_USER = "admin"
-        GF_SECURITY_ADMIN_PASSWORD = "admin"
         GF_SECURITY_DISABLE_GRAVATAR = "true"
 
         GF_SERVER_ROOT_URL = "http://${attr.unique.network.ip-address}:9990/grafana"
@@ -56,8 +40,7 @@ job "grafana" {
         memory = 250
         network {
           mbits = 10
-          port "http" {
-          }
+          port "http" {}
         }
       }
 
@@ -71,11 +54,6 @@ job "grafana" {
           path     = "/grafana/api/health"
           interval = "4s"
           timeout  = "2s"
-          check_restart {
-            limit = 3
-            grace = "20s"
-            ignore_warnings = false
-          }
         }
       }
     }

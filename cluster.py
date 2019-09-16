@@ -98,8 +98,8 @@ def consul_retry_join_section(servers):
 
 
 ALL_JOBS = ['cluster-fabio', 'prometheus', 'alertmanager', 'grafana',
-            'dnsmasq', 'docker-system-prune']
-SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio']
+            'loki', 'dnsmasq', 'registry', 'docker-system-prune']
+SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio', 'loki']
 
 
 def translate_job_name(option_name):
