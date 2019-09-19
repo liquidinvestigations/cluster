@@ -15,6 +15,7 @@ job "grafana" {
       driver = "docker"
       config {
         image = "grafana/grafana:6.3.5"
+        dns_servers = ["${attr.unique.network.ip-address}"]
         port_map {
           http = 3000
         }
@@ -33,6 +34,43 @@ job "grafana" {
         GF_AUTH_ANONYMOUS_ENABLED = "true"
         GF_AUTH_ANONYMOUS_ORG_NAME = "Main Org."
         GF_AUTH_ANONYMOUS_ORG_ROLE = "Admin"
+      }
+
+      template {
+        destination = "/local/provisioning/datasources/cluster.yaml"
+        data = <<-EOF
+          apiVersion: 1
+          datasources:
+          - {
+            "access": "proxy",
+            "basicAuth": false,
+            "isDefault": false,
+            "jsonData": {
+                "keepCookies": []
+            },
+            "name": "Loki",
+            "readOnly": false,
+            "type": "loki",
+            "url": "http://cluster-fabio.service.consul:9990/loki",
+            "version": 2,
+            "withCredentials": false
+          }
+          - {
+            "access": "proxy",
+            "basicAuth": false,
+            "isDefault": false,
+            "jsonData": {
+                "httpMethod": "GET",
+                "keepCookies": []
+            },
+            "name": "Prometheus",
+            "readOnly": false,
+            "type": "prometheus",
+            "url": "http://cluster-fabio.service.consul:9990/prometheus",
+            "version": 2,
+            "withCredentials": false
+          }
+          EOF
       }
 
       resources {

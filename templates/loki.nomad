@@ -31,12 +31,24 @@ job "loki" {
 
       resources {
         cpu = 200
-        memory = 100
+        memory = 1000
         network {
           mbits = 10
           port "http" {
             static = 3100
           }
+        }
+      }
+
+      service {
+        name = "loki"
+        port = "http"
+        tags = ["fabio-/loki strip=/loki"]
+        check {
+          name     = "tcp"
+          type     = "tcp"
+          interval = "4s"
+          timeout  = "2s"
         }
       }
     }
