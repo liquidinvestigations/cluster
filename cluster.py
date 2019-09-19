@@ -692,6 +692,7 @@ def start(ctx):
     # delete consul health checks so they won't get doubled
     log.info("Deleting old Consul health checks...")
     shutil.rmtree(PATH.var / 'consul' / 'checks', ignore_errors=True)
+    shutil.rmtree(PATH.var / 'consul' / 'services', ignore_errors=True)
     ctx.invoke(supervisorctl, args=["start", "consul"])
     wait_for_consul()
 
