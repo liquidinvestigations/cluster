@@ -603,6 +603,7 @@ HEALTH_CHECKS = {
     'vault': ['Vault Sealed Status'],
     'grafana': ['Grafana alive on HTTP'],
     'prometheus': ['Prometheus alive on HTTP'],
+    'cluster-fabio': ["Service 'cluster-fabio' check"],
 }
 
 
