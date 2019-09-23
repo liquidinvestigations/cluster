@@ -42,7 +42,6 @@ If `fabio` has been enabled in `cluster.ini`, visit:
 * <http://10.66.60.1:9990/>  (Fabio UI)
 * <http://10.66.60.1:9990/prometheus>
 * <http://10.66.60.1:9990/grafana>
-* <http://10.66.60.1:9990/alertmanager>
 
 In case of panic, `docker stop cluster` will make it all go away.
 
@@ -257,7 +256,6 @@ System jobs run on all nodes. We have the following:
 We also run some jobs as services:
 
 * `prometheus` -- collects metrics from Nomad
-* `alertmanager` -- signals alerts from Prometheus
 * `grafana` -- displays dashboards with data from Prometheus and Loki
 * `loki` -- collects logs from apps
 * `registry` -- local registry to cache docker images

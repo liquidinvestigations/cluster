@@ -97,7 +97,7 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
-ALL_JOBS = ['cluster-fabio', 'prometheus', 'alertmanager', 'grafana',
+ALL_JOBS = ['cluster-fabio', 'prometheus', 'grafana',
             'loki', 'dnsmasq', 'registry', 'docker-system-prune']
 SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio', 'loki']
 

@@ -3,21 +3,10 @@ global:
   scrape_interval:     5s
   evaluation_interval: 5s
 
-alerting:
-  alertmanagers:
-  - consul_sd_configs:
-    - server: "{{OPTIONS.consul_address}}:8500"
-      services: ["alertmanager"]
-
 rule_files:
   - "prometheus_rules.yml"
 
 scrape_configs:
-  - job_name: "alertmanager"
-    consul_sd_configs:
-    - server: "{{OPTIONS.consul_address}}:8500"
-      services: ["alertmanager"]
-
   - job_name: "nomad_metrics"
     consul_sd_configs:
     - server: "{{OPTIONS.consul_address}}:8500"
