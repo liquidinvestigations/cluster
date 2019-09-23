@@ -63,8 +63,8 @@ job "cluster-fabio" {
           name     = "http"
           type     = "http"
           path     = "/"
-          interval = "4s"
-          timeout  = "2s"
+          interval = "6s"
+          timeout  = "3s"
         }
       }
     }
