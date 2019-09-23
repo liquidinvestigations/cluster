@@ -134,8 +134,8 @@ class OPTIONS:
         'nomad', 'drain_on_stop', fallback=True)
 
     versions = {
-        'consul': config.get('consul', 'version', fallback='1.5.1'),
-        'vault': config.get('vault', 'version', fallback='1.1.3'),
+        'consul': config.get('consul', 'version', fallback='1.6.1'),
+        'vault': config.get('vault', 'version', fallback='1.2.3'),
         'nomad': config.get('nomad', 'version', fallback='0.9.5'),
     }
 
