@@ -40,12 +40,8 @@ get $IP:4646/
 get $IP:4646/v1/status/leader
 
 echo "Checking services..."
-get $IP:9990/
-get $IP:9990/health
 get $IP:9990/prometheus/
 get $IP:9990/prometheus/-/healthy/
-get $IP:9990/alertmanager/
-get $IP:9990/alertmanager/-/healthy/
 head $IP:9990/grafana/
 get $IP:9990/grafana/
 get $IP:9990/grafana/api/health
@@ -53,7 +49,6 @@ get $IP:9990/grafana/api/health
 echo "Checking DNS..."
 dns consul.service.consul
 dns nomad.service.consul
-dns cluster-fabio.service.consul
 
 dns github.com
 dns liquiddemo.org
