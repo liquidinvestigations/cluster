@@ -27,16 +27,17 @@ steps:
   - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
   - ./ci/run-vagrant-test.sh
 
-- name: cluster 3 containers
-  image: vmck/vagrant-vmck
-  depends_on:
-  - test on host
-  - test docker container
-  commands:
-  - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
-  - export PROVISION=/opt/cluster/ci/test-triple.sh
-  - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
-  - ./ci/run-vagrant-test.sh
+#- name: cluster 3 containers
+#  image: vmck/vagrant-vmck
+#  depends_on:
+#  - test on host
+#  - test docker container
+#  commands:
+#  - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
+#  - export PROVISION=/opt/cluster/ci/test-triple.sh
+#  - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
+#  - export VMCK_MEMORY=6000
+#  - ./ci/run-vagrant-test.sh
 
 ---
 kind: pipeline
