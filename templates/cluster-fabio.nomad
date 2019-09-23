@@ -24,6 +24,8 @@ job "cluster-fabio" {
         registry.consul.checksRequired = all
         registry.consul.tagprefix = fabio-
         registry.consul.kvpath = /cluster/fabio
+        registry.consul.register.enabled = false
+
         ui.addr = :9991
         ui.color = green
         proxy.addr = :9990
@@ -39,6 +41,7 @@ job "cluster-fabio" {
             static = 9990
           }
           port "ui" {
+            static = 9991
           }
         }
       }
@@ -52,12 +55,14 @@ job "cluster-fabio" {
           interval = "4s"
           timeout  = "2s"
         }
+      }
       service {
         name = "cluster-fabio-ui"
         port = "ui"
         check {
           name     = "http"
           type     = "http"
+          path     = "/"
           interval = "4s"
           timeout  = "2s"
         }
