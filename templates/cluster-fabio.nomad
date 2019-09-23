@@ -41,7 +41,6 @@ job "cluster-fabio" {
             static = 9990
           }
           port "ui" {
-            static = 9991
           }
         }
       }
