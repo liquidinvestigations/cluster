@@ -52,6 +52,15 @@ job "cluster-fabio" {
           interval = "4s"
           timeout  = "2s"
         }
+      service {
+        name = "cluster-fabio-ui"
+        port = "ui"
+        check {
+          name     = "http"
+          type     = "http"
+          interval = "4s"
+          timeout  = "2s"
+        }
       }
     }
   }
