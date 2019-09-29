@@ -1,4 +1,4 @@
-job "fabio" {
+job "cluster-fabio" {
   datacenters = ["dc1"]
   type = "system"
   priority = 99
@@ -23,10 +23,11 @@ job "fabio" {
         registry.consul.addr = {{OPTIONS.consul_address}}:8500
         registry.consul.checksRequired = all
         registry.consul.tagprefix = fabio-
-        registry.consul.register.tags = fabio-/
+        registry.consul.kvpath = /cluster/fabio
+        registry.consul.register.enabled = false
+
         ui.addr = :9991
         ui.color = green
-        registry.consul.register.addr = ${NOMAD_ADDR_ui}
         proxy.addr = :9990
         EOH
       }
@@ -41,6 +42,28 @@ job "fabio" {
           }
           port "ui" {
           }
+        }
+      }
+
+      service {
+        name = "cluster-fabio"
+        port = "lb"
+        check {
+          name     = "tcp"
+          type     = "tcp"
+          interval = "4s"
+          timeout  = "2s"
+        }
+      }
+      service {
+        name = "cluster-fabio-ui"
+        port = "ui"
+        check {
+          name     = "http"
+          type     = "http"
+          path     = "/"
+          interval = "6s"
+          timeout  = "3s"
         }
       }
     }

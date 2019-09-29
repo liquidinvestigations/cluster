@@ -4,15 +4,19 @@
 require 'etc'
 
 Vagrant.configure("2") do |config|
+  if Vagrant.has_plugin?("vagrant-env")
+    config.env.enable
+  end
+
   config.vm.box = "base"
   config.vm.define ENV['VMNAME']
 
   # disable implicit mount for /vagrant
   config.vm.synced_folder '.', '/vagrant', disabled: true
   config.vm.synced_folder "..", "/opt/cluster", type: "rsync",
-      rsync__exclude: [".vagrant/", ".git/", "__pycache__/"],
-      rsync_args: ["--verbose", "--ignore-from", "../.gitignore",
-                   "--archive", "--delete", "-z", "--copy-links"]
+      rsync__exclude: [".vagrant/", ".git/", "__pycache__/",
+                       "./cluster.ini", "./var/*", "./etc/*", "./bin/*"],
+      rsync__args: ["--verbose", "--archive", "--delete", "-z", "--copy-links"]
 
 
   config.vm.provision "shell", inline: "( set +ex; " + ENV['PROVISION'] + ") 2>&1",
@@ -23,8 +27,9 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider :vmck do |vmck, override|
     vmck.vmck_url = ENV['VMCK_URL']
-    vmck.image_path = "imgbuild-master.qcow2.tar.gz"
-    vmck.memory = 2000
+    vmck.image_path = "imgbuild-cluster.qcow2.tar.gz"
+    vmck.memory = Integer(ENV['VMCK_MEMORY'] || '2000')
     vmck.cpus = 1
+    vmck.name = ENV['VMCK_NAME']
   end
 end
