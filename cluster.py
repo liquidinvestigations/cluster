@@ -261,6 +261,9 @@ def configure():
         dir.mkdir(exist_ok=True)
 
     for template in PATH.templates.iterdir():
+        if not template.is_file():
+            continue
+
         with open(PATH.etc / template.name, 'w') as dest:
             log.info('rendering %s', str(template))
             text = render(template.name, {'OPTIONS': OPTIONS, 'PATH': PATH})

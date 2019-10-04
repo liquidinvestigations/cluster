@@ -11,3 +11,7 @@ listener "tcp" {
 ui = true
 disable_mlock = {{'true' if OPTIONS.vault_disable_mlock else 'false'}}
 api_addr = "http://{{OPTIONS.vault_address}}:8200"
+telemetry {
+  dogstatsd_addr = "{{OPTIONS.consul_address}}:8125"
+  disable_hostname = false
+}

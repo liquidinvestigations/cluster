@@ -21,6 +21,7 @@ job "telegraf" {
       }
 
       env {
+        IP = "${attr.unique.network.ip-address}"
       }
 
       template {
@@ -50,10 +51,12 @@ job "telegraf" {
           [[inputs.processes]]
           [[inputs.swap]]
           [[inputs.system]]
+          [[inputs.procstat]]
+            pattern = "(consul|vault)"
 
           [[inputs.statsd]]
             protocol = "udp"
-            service_address = ":8125"
+            service_address = "${IP}:8125"
             delete_gauges = true
             delete_counters = true
             delete_sets = true
@@ -71,8 +74,9 @@ job "telegraf" {
           [[inputs.prometheus]]
             urls = ["http://nomad.service.consul:4646/v1/metrics?format=prometheus"]
 
-          [[inputs.prometheus]]
-            urls = ["http://nomad.service.consul:8200/sys/metrics?format=prometheus"]
+          # TODO collect vault metrics: Need Client Token set as header X-Vault-Token
+          #[[inputs.prometheus]]
+          #  urls = ["http://nomad.service.consul:8200/v1/sys/metrics?format=prometheus"]
 
           [[outputs.influxdb]]
             urls = ["http://cluster-fabio.service.consul:9990/influxdb"]
@@ -82,7 +86,7 @@ job "telegraf" {
             retention_policy = "autogen"
 
           [[outputs.health]]
-            service_address = "http://:8123"
+            service_address = "http://${IP}:8123"
           EOF
       }
 
