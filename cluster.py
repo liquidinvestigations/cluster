@@ -97,9 +97,9 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
-ALL_JOBS = ['cluster-fabio', 'prometheus', 'grafana',
+ALL_JOBS = ['cluster-fabio', 'prometheus', 'grafana', 'telegraf', 'influxdb',
             'loki', 'dnsmasq', 'registry', 'docker-system-prune']
-SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio', 'loki']
+SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio', 'loki', 'telegraf']
 
 
 def translate_job_name(option_name):
@@ -602,6 +602,7 @@ HEALTH_CHECKS = {
     'nomad-client': ['Nomad Client HTTP Check'],
     'vault': ['Vault Sealed Status'],
     'grafana': ['Grafana alive on HTTP'],
+    'telegraf': ['tcp'],
     'prometheus': ['Prometheus alive on HTTP'],
     'cluster-fabio': ["tcp"],
 }

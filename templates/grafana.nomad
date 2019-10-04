@@ -4,6 +4,11 @@ job "grafana" {
   priority = 90
 
   group "grafana" {
+    constraint {
+      attribute = "${meta.cluster_volumes}"
+      operator = "is_set"
+    }
+
     restart {
       attempts = 10
       interval = "2m"
@@ -19,9 +24,13 @@ job "grafana" {
         port_map {
           http = 3000
         }
+        volumes = [
+          "${meta.cluster_volumes}/grafana:/data",
+        ]
       }
 
       env {
+        GF_PATHS_DATA = "/data"
         GF_PATHS_PROVISIONING = "/local/provisioning"
 
         GF_SECURITY_DISABLE_GRAVATAR = "true"
@@ -335,6 +344,22 @@ job "grafana" {
             "readOnly": false,
             "type": "prometheus",
             "url": "http://cluster-fabio.service.consul:9990/prometheus",
+            "version": 2,
+            "withCredentials": false
+          }
+          - {
+            "access": "proxy",
+            "basicAuth": false,
+            "isDefault": false,
+            "jsonData": {
+                "httpMethod": "GET",
+                "keepCookies": []
+            },
+            "name": "InfluxDB",
+            "readOnly": false,
+            "database": "telegraf",
+            "type": "influxdb",
+            "url": "http://cluster-fabio.service.consul:9990/influxdb",
             "version": 2,
             "withCredentials": false
           }
