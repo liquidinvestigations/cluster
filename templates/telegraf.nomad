@@ -96,7 +96,7 @@ job "telegraf" {
         network {
           mbits = 1
           port "udp" { static = 8125 }
-          port "http" {}
+          port "http" { static = 8123 }
         }
       }
 
