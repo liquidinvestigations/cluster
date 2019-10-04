@@ -45,6 +45,8 @@ get $IP:9990/prometheus/-/healthy/
 head $IP:9990/grafana/
 get $IP:9990/grafana/
 get $IP:9990/grafana/api/health
+get $IP:9990/influxdb/ping
+get $IP:8123
 
 echo "Checking DNS..."
 dns consul.service.consul

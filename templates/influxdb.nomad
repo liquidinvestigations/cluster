@@ -31,7 +31,7 @@ job "influxdb" {
         memory = 512
         network {
           mbits = 1
-          port "http" { static = 9989 }
+          port "http" {}
         }
       }
 
