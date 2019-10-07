@@ -47,12 +47,15 @@ for pair in "${ports[@]}"; do
   fi
 
   echo "DNAT $forward_address:$public_port --> $bridge_address:$private_port"
-  rule="-d $forward_address -p tcp --dport $public_port -j DNAT --to-destination $bridge_address:$private_port"
+  rule_tcp="-d $forward_address -p tcp --dport $public_port -j DNAT --to-destination $bridge_address:$private_port"
+  rule_udp="-d $forward_address -p udp --dport $public_port -j DNAT --to-destination $bridge_address:$private_port"
   (
     set -x
     # TODO delete all rules matching source to this
-    iptables -t nat -D PREROUTING $rule || /bin/true
-    iptables -t nat -A PREROUTING $rule
+    iptables -t nat -D PREROUTING $rule_tcp || /bin/true
+    iptables -t nat -D PREROUTING $rule_udp || /bin/true
+    iptables -t nat -A PREROUTING $rule_tcp
+    iptables -t nat -A PREROUTING $rule_udp
   )
 done
 
