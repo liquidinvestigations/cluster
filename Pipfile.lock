@@ -65,18 +65,18 @@
         },
         "meld3": {
             "hashes": [
-                "sha256:b28a9bfac342aadb4557aa144bea9f8e6208bfb0596190570d10a892d35ff7dc",
-                "sha256:f7b754a0fde7a4429b2ebe49409db240b5699385a572501bb0d5627d299f9558"
+                "sha256:1efda676264490db2e30bfb81b27a918cc6d9c2de6d609491aa43410b9537eb9",
+                "sha256:a78cdcb6c0342b7ac82d900b584bd918ef72f86b60cdbf04754f840c070eb20c"
             ],
-            "version": "==1.0.2"
+            "version": "==2.0.0"
         },
         "supervisor": {
             "hashes": [
-                "sha256:a3289b9124e59aee1621d43b55cd1634468cb3212d09c5b0114a3183cc080cca",
-                "sha256:f768abc073e8702892718938b8a0ab98ebcb91c2afcb39bf2cb570d3eb51149e"
+                "sha256:43e87c7b572a94acdb586aaebb06844dae1aa02856b984c5a738032abd753fb7",
+                "sha256:9644990d21a1ba03b1a7ac5e9a0c0c62e12822e258f9e98f4a0b128461b3f10a"
             ],
             "index": "pypi",
-            "version": "==4.0.3"
+            "version": "==4.0.4"
         }
     },
     "develop": {}
