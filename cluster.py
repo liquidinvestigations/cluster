@@ -605,7 +605,8 @@ HEALTH_CHECKS = {
     'nomad-client': ['Nomad Client HTTP Check'],
     'vault': ['Vault Sealed Status'],
     'grafana': ['Grafana alive on HTTP'],
-    'telegraf': ['tcp'],
+    'telegraf': ['http'],
+    'influxdb': ['http'],
     'prometheus': ['Prometheus alive on HTTP'],
     'cluster-fabio': ["tcp"],
 }
