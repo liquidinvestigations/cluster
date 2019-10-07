@@ -34,6 +34,7 @@ client {
   options {
     "fingerprint.blacklist" = "env_aws"
     "docker.caps.whitelist" = "NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP, SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
+    "docker.privileged.enabled" = "true"
   }
 }
 
@@ -53,8 +54,8 @@ vault {
 }
 
 telemetry {
-  collection_interval = "1s"
-  disable_hostname = true
+  collection_interval = "10s"
+  disable_hostname = false
   prometheus_metrics = true
   publish_allocation_metrics = true
   publish_node_metrics = true

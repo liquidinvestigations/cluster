@@ -39,8 +39,6 @@ Wait a minute and visit:
 
 If `fabio` has been enabled in `cluster.ini`, visit:
 
-* <http://10.66.60.1:9990/>  (Fabio UI)
-* <http://10.66.60.1:9990/prometheus>
 * <http://10.66.60.1:9990/grafana>
 
 In case of panic, `docker stop cluster` will make it all go away.
@@ -252,9 +250,11 @@ System jobs run on all nodes. We have the following:
 * `fabio` -- HTTP load balancer. Used to forward apps to `:9990/$APP_NAME`. Set
   a Consul service tag like `fabio-/something` and it will forward traffic from
   `:9990/something` to that service.
+* `telegraf` -- collects stats from the system, Consul and Nomad. Requires `influxdb`
 
 We also run some jobs as services:
 
+* `influxdb` -- service that stores data from telegraf
 * `prometheus` -- collects metrics from Nomad
 * `grafana` -- displays dashboards with data from Prometheus and Loki
 * `loki` -- collects logs from apps

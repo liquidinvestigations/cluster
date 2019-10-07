@@ -11,3 +11,7 @@ server = true
 ui = true
 bootstrap_expect = {{OPTIONS.bootstrap_expect}}
 {{OPTIONS.consul_retry_join}}
+telemetry {
+  dogstatsd_addr = "{{OPTIONS.consul_address}}:8125"
+  disable_hostname = false
+}

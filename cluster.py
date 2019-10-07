@@ -97,9 +97,9 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
-ALL_JOBS = ['cluster-fabio', 'prometheus', 'grafana',
+ALL_JOBS = ['cluster-fabio', 'prometheus', 'grafana', 'telegraf', 'influxdb',
             'loki', 'dnsmasq', 'registry', 'docker-system-prune']
-SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio', 'loki']
+SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio', 'loki', 'telegraf']
 
 
 def translate_job_name(option_name):
@@ -261,6 +261,9 @@ def configure():
         dir.mkdir(exist_ok=True)
 
     for template in PATH.templates.iterdir():
+        if not template.is_file():
+            continue
+
         with open(PATH.etc / template.name, 'w') as dest:
             log.info('rendering %s', str(template))
             text = render(template.name, {'OPTIONS': OPTIONS, 'PATH': PATH})
@@ -602,6 +605,8 @@ HEALTH_CHECKS = {
     'nomad-client': ['Nomad Client HTTP Check'],
     'vault': ['Vault Sealed Status'],
     'grafana': ['Grafana alive on HTTP'],
+    'telegraf': ['http'],
+    'influxdb': ['http'],
     'prometheus': ['Prometheus alive on HTTP'],
     'cluster-fabio': ["tcp"],
 }
