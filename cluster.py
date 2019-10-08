@@ -49,6 +49,15 @@ class PATH:
     supervisord_conf = etc / 'supervisord.conf'
     supervisord_sock = var / 'supervisor' / 'supervisor.sock'
 
+    @classmethod
+    def load_dashboard(cls, filename):
+        with open(PATH.root / 'grafana-dashboards' / filename) as f:
+            return f.read()
+
+    @classmethod
+    def get_dashboards(cls):
+        return list(os.listdir(PATH.root / 'grafana-dashboards'))
+
 
 jinja_env = Environment(loader=FileSystemLoader(str(PATH.templates)))
 

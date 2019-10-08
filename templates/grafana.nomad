@@ -4,11 +4,6 @@ job "grafana" {
   priority = 90
 
   group "grafana" {
-    constraint {
-      attribute = "${meta.cluster_volumes}"
-      operator = "is_set"
-    }
-
     restart {
       attempts = 10
       interval = "2m"
@@ -56,19 +51,6 @@ job "grafana" {
             options:
               path: /local/dashboards
           EOF
-      }
-
-      template {
-        destination = "/local/dashboards/nomad.json"
-        data = <<EOF
-{% include 'grafana-dashboards/nomad.json' %}
-EOF
-      }
-      template {
-        destination = "/local/dashboards/home.json"
-        data = <<EOF
-{% include 'grafana-dashboards/home.json' %}
-EOF
       }
 
       template {
@@ -121,8 +103,36 @@ EOF
             "version": 2,
             "withCredentials": false
           }
+          - {
+            "access": "proxy",
+            "basicAuth": false,
+            "isDefault": false,
+            "jsonData": {
+                "interval": "Daily",
+                "timeField": "timestamp",
+                "esVersion": "60",
+            },
+            "name": "Hoover Elasticsearch Metrics",
+            "readOnly": false,
+            "type": "elasticsearch",
+            "database": "[.monitoring-es-6-]YYYY.MM.DD",
+            "url": "http://cluster-fabio.service.consul:8765/_es",
+            "version": 2,
+            "withCredentials": false
+          }
           EOF
       }
+
+      {% for filename in PATH.get_dashboards() %}
+      template {
+        destination = "/local/dashboards/{{ filename }}"
+        left_delimiter = "I_HOPE_THIS"
+        right_delimiter = "WONT_SHOW_UP"
+        data = <<-EOF
+          {{ PATH.load_dashboard(filename) }}
+          EOF
+      }
+      {% endfor %}
 
       resources {
         cpu    = 200
