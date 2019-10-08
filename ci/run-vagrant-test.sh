@@ -53,7 +53,6 @@ print_section "Run Script"
 set +e
 vagrant provision
 ret=$?
-set -e
 
 print_section "Stats"
 vagrant ssh <<'EOF'
