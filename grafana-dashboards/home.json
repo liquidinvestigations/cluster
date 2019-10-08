@@ -1831,6 +1831,6 @@
   },
   "timezone": "browser",
   "title": "Liquid Cluster Stats",
-  "uid": null,
+  "uid": "liquid-cluster",
   "version": 1
 }

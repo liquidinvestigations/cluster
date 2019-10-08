@@ -8285,7 +8285,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Elasticsearch Monitoring based on X-Pack stats",
-  "uid": null,
+  "title": "Hoover Elasticsearch Monitoring",
+  "uid": "hoover-es",
   "version": 2
 }

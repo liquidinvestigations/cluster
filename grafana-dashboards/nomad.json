@@ -241,6 +241,7 @@
       "1d"
     ]
   },
-  "title": "Liquid Prometheus Stats (Old)",
+  "title": "Liquid Prometheus Nomad Stats (Old)",
+  "uid": "prom-nomad",
   "version": 1
 }
