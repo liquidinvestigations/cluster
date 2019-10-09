@@ -16,8 +16,7 @@
   "editable": true,
   "gnetId": 1150,
   "graphTooltip": 0,
-  "id": 5,
-  "iteration": 1570538172167,
+  "iteration": 1570640685788,
   "links": [],
   "panels": [
     {
@@ -1102,6 +1101,7 @@
           ],
           "intervalFactor": 2,
           "measurement": "docker_container_net",
+          "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
@@ -1119,7 +1119,7 @@
               },
               {
                 "params": [
-                  "10s"
+                  "1s"
                 ],
                 "type": "derivative"
               }
@@ -1159,6 +1159,7 @@
           ],
           "intervalFactor": 2,
           "measurement": "docker_container_net",
+          "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
           "resultFormat": "time_series",
@@ -1176,7 +1177,7 @@
               },
               {
                 "params": [
-                  "10s"
+                  "1s"
                 ],
                 "type": "derivative"
               }
@@ -1199,7 +1200,7 @@
       "tooltip": {
         "msResolution": false,
         "shared": true,
-        "sort": 0,
+        "sort": 2,
         "value_type": "individual"
       },
       "transparent": true,
@@ -1213,7 +1214,7 @@
       },
       "yaxes": [
         {
-          "format": "bytes",
+          "format": "Bps",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -1244,8 +1245,8 @@
       {
         "allValue": null,
         "current": {
-          "text": "97046c0745bc",
-          "value": "97046c0745bc"
+          "text": "",
+          "value": ""
         },
         "datasource": "InfluxDB",
         "definition": "",
@@ -1269,9 +1270,8 @@
       {
         "allValue": null,
         "current": {
-          "isNone": true,
-          "text": "None",
-          "value": ""
+          "text": "cluster",
+          "value": "cluster"
         },
         "datasource": "InfluxDB",
         "definition": "",
