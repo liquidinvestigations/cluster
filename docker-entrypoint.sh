@@ -13,7 +13,9 @@ else
 fi
 
 echo "Changing permissions..."
-chown root:kvm /dev/kvm
+if [ -f /dev/kvm ]; then
+  chown root:kvm /dev/kvm
+fi
 chown -R $USERID:$GROUPID ./etc
 chown -R $USERID:$GROUPID ./var
 
