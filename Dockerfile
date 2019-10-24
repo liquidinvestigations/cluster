@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED true
 RUN set -e \
  && apt-get update -qq \
  && apt-get install  -qq -y --no-install-recommends \
-    sudo curl unzip libcap2-bin qemu-kvm dnsutils iptables \
+    sudo curl unzip libcap2-bin qemu-kvm dnsutils iptables netcat \
     apt-transport-https ca-certificates gnupg2 software-properties-common \
  && curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
  && add-apt-repository \
