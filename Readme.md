@@ -1,5 +1,7 @@
 # Cluster - spin up Consul + Vault + Nomad + friends
 
+[![Build Status](https://jenkins.liquiddemo.org/api/badges/liquidinvestigations/cluster/status.svg)](https://jenkins.liquiddemo.org/liquidinvestigations/cluster)
+
 This script installs and configures [Consul][], [Vault][] and [Nomad][]. After
 those are up, we're running [dnsmasq][] to forward Consul's DNS, [Prometheus][]
 to collect Nomad stats, [Loki][] to collect logs, and [Grafana][] to display
