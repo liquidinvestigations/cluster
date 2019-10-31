@@ -19,7 +19,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ ! -z $pulldocker ]; then
-  docker pull $image
+  docker pull --quiet $image
 fi
 
 if [ ! -z $rmdocker ]; then (
