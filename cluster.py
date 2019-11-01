@@ -163,6 +163,9 @@ class OPTIONS:
     consul_retry_join = consul_retry_join_section(retry_join)
     nomad_client_servers = nomad_client_servers_section(retry_join)
 
+    influxdb_memory_limit = config.getint('cluster', 'influxdb_memory_limit', 512)
+    prometheus_memory_limit = config.getint('cluster', 'prometheus_memory_limit', 384)
+
     wait_max = config.getfloat('deploy', 'wait_max_sec', fallback=333)
     wait_interval = config.getfloat('deploy', 'wait_interval', fallback=2)
     wait_green_count = config.getint('deploy', 'wait_green_count', fallback=5)
