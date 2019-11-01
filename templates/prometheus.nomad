@@ -46,6 +46,7 @@ job "prometheus" {
         volumes = [
           "local/prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml",
           "local/prometheus.yml:/etc/prometheus/prometheus.yml",
+          "${meta.cluster_volumes}/prometheus/data:/prometheus/data",
         ]
         port_map {
           http = 9090
