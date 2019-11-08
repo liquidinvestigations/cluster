@@ -16,9 +16,9 @@ job "prometheus" {
     }
 
     restart {
-      attempts = 3
-      interval = "18s"
-      delay = "4s"
+      attempts = 4
+      interval = "48s"
+      delay = "10s"
       mode = "fail"
     }
 
@@ -42,6 +42,7 @@ job "prometheus" {
         destination = "local/prometheus.yml"
       }
       driver = "docker"
+      user = "root"
       config {
         image = "prom/prometheus:v2.10.0"
         args = [
