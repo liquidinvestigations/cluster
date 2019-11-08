@@ -52,7 +52,7 @@ job "prometheus" {
         }
       }
       resources {
-        memory = 200
+        memory = {{OPTIONS.prometheus_memory_limit}}
         network {
           mbits = 10
           port "http" {

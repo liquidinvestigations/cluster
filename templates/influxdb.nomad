@@ -28,7 +28,7 @@ job "influxdb" {
 
       resources {
         cpu    = 120
-        memory = 512
+        memory = {{OPTIONS.influxdb_memory_limit}}
         network {
           mbits = 1
           port "http" {}
