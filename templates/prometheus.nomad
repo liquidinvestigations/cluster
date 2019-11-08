@@ -4,15 +4,21 @@ job "prometheus" {
   priority = 90
 
   group "prometheus" {
+    constraint {
+      attribute = "${meta.cluster_volumes}"
+      operator = "is_set"
+    }
+
     reschedule {
       unlimited = true
       attempts = 0
-      delay = "5s"
+      delay = "40s"
     }
+
     restart {
-      attempts = 3
-      interval = "18s"
-      delay = "4s"
+      attempts = 4
+      interval = "48s"
+      delay = "10s"
       mode = "fail"
     }
 
@@ -36,6 +42,7 @@ job "prometheus" {
         destination = "local/prometheus.yml"
       }
       driver = "docker"
+      user = "root"
       config {
         image = "prom/prometheus:v2.10.0"
         args = [
@@ -46,6 +53,7 @@ job "prometheus" {
         volumes = [
           "local/prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml",
           "local/prometheus.yml:/etc/prometheus/prometheus.yml",
+          "${meta.cluster_volumes}/prometheus:/prometheus",
         ]
         port_map {
           http = 9090
