@@ -753,6 +753,15 @@ def configure_network():
     create_script = str((PATH.root / 'scripts' / 'create-bridge.sh'))
     forward_script = str((PATH.root / 'scripts' / 'forward-ports.sh'))
 
+    # https://www.nomadproject.io/guides/integrations/consul-connect/index.html#cni-plugins
+    for path in [
+        "/proc/sys/net/bridge/bridge-nf-call-arptables",
+        "/proc/sys/net/bridge/bridge-nf-call-ip6tables",
+        "/proc/sys/net/bridge/bridge-nf-call-iptables",
+    ]:
+        with open(path, 'w') as f:
+            f.write('1\n')
+
     if OPTIONS.network_create_bridge:
         env = dict(os.environ)
         env['bridge_name'] = OPTIONS.network_interface

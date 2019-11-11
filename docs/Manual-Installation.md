@@ -22,6 +22,17 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
     sudo setcap cap_ipc_lock=+ep bin/vault  # or disable mlock, see below
     ```
 
+
+* Download CNI Plugins as [instructed by the Nomad docs](https://www.nomadproject.io/guides/integrations/consul-connect/index.html#cni-plugins):
+
+
+    ```bash
+    curl -L -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.1/cni-plugins-linux-amd64-v0.8.1.tgz
+    sudo mkdir -p /opt/cni/bin
+    sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz
+    rm -f cli-plugins.tgz
+    ```
+
 * Create a configuration file called `cluster.ini`:
 
     ```bash

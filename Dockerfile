@@ -18,6 +18,13 @@ RUN set -e \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /app/var && mkdir -p /app/bin
 
+
+# https://www.nomadproject.io/guides/integrations/consul-connect/index.html#cni-plugins
+RUN curl -L -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.1/cni-plugins-linux-amd64-v0.8.1.tgz \
+ && sudo mkdir -p /opt/cni/bin \
+ && sudo tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz \
+ && rm -f /tmp/cni-plugins.tgz
+
 WORKDIR /app
 
 ADD cluster.py docker-entrypoint.sh Pipfile Pipfile.lock ./
