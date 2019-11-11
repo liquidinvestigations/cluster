@@ -26,7 +26,7 @@ if [ ! -z $rmdocker ]; then (
   container=$(docker ps -f name=$name -aq)
   if [ ! -z $container ]; then (
     set -x
-    docker stop $container
+    docker stop $container --time=300
     docker rm $container
   ) fi
 ) fi
