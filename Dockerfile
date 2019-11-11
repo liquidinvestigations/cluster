@@ -27,4 +27,5 @@ RUN ./cluster.py install \
 && setcap cap_ipc_lock=+ep bin/vault
 
 ENV DOCKER_BIN=/app/bin
+ENV PATH="${DOCKER_BIN}:${PATH}"
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

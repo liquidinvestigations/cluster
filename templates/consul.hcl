@@ -15,3 +15,9 @@ telemetry {
   dogstatsd_addr = "{{OPTIONS.consul_address}}:8125"
   disable_hostname = false
 }
+ports {
+  "grpc" = 8502
+}
+connect {
+  enabled = true
+}
