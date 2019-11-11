@@ -30,6 +30,7 @@ client {
   gc_max_allocs = 300
   meta {
     {{OPTIONS.nomad_meta}}
+    "connect.log_level" = "debug"
   }
   options {
     "fingerprint.blacklist" = "env_aws"

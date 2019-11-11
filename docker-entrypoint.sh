@@ -21,4 +21,5 @@ chown -R $USERID:$GROUPID ./var
 
 python3 cluster.py configure-network
 
-exec DOCKER_BIN=$DOCKER_BIN python3 ./cluster.py supervisord
+export USER=vagrant
+python3 ./cluster.py supervisord

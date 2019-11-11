@@ -46,10 +46,10 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
     sudo pipenv run ./cluster.py configure-network
     ```
 
-* Run `supervisor` in the background:
+* Run `supervisor` in the background as root:
 
     ```bash
-    ./cluster.py supervisord -d
+    sudo ./cluster.py supervisord -d
     ```
 
 * Wait for everything to be up and running:

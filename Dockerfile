@@ -18,11 +18,12 @@ RUN set -e \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /app/var && mkdir -p /app/bin
 
+RUN sed -i 's/^%sudo.*$/%sudo ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
 
 # https://www.nomadproject.io/guides/integrations/consul-connect/index.html#cni-plugins
 RUN curl -L -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.1/cni-plugins-linux-amd64-v0.8.1.tgz \
- && sudo mkdir -p /opt/cni/bin \
- && sudo tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz \
+ && mkdir -p /opt/cni/bin \
+ && tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz \
  && rm -f /tmp/cni-plugins.tgz
 
 WORKDIR /app

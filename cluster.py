@@ -10,6 +10,7 @@ from pathlib import Path
 import tempfile
 import subprocess
 import configparser
+import getpass
 from time import time, sleep
 import json
 from urllib.request import Request, urlopen
@@ -469,13 +470,14 @@ def supervisord(ctx, detach):
     pid = os.fork()
     if pid == 0:
         args = ['supervisord', '-c', str(PATH.supervisord_conf), '-n']
+        os.environ['CLUSTER_USER'] = getpass.getuser()
         sleep(5)
         log.debug('+ %s', ' '.join(args))
         # Start supervisord in a new process group, so
         # SIGINT and others won't be propagated to this
         # process from the parent.
         os.setsid()
-        os.execvp(args[0], args)
+        os.execvpe(args[0], args, os.environ)
 
     wait_for_supervisor()
     if detach:
