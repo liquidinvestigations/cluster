@@ -1,5 +1,40 @@
 # Docker Installation
 
+The simplest way to obtain a running system is to use the `bin/docker.sh` script.
+
+This is only supported on Linux.
+
+
+## Options for [bin/docker.sh](bin/docker.sh)
+
+The script runs the Docker image with these parameters:
+
+* `--name` container name (default: cluster)
+* `--image` image (default: liquidinvestigations/cluster)
+* `--pull` pull image
+
+If a container with the same `name` already exists, it will be gracefully shut
+down and removed.
+
+---
+To use a specific image version, run:
+
+```bash
+git fetch
+git checkout vX.Y.Z
+
+# edit cluster.ini
+
+./bin/docker.sh --pull --image liquidinvestigations/cluster:X.Y.Z
+```
+
+Make sure the git repository has checked out the same version tag as the docker image.
+
+See https://github.com/liquidinvestigations/docs/wiki/Maintenance for more details about upgrading the system.
+
+
+## Running the container manually
+
 Consul, Vault and Nomad can run in one Docker container with host networking
 mode with these settings:
 
@@ -28,17 +63,3 @@ host dockerd access the data directory using the path inside the container.
 
 Example usage: [ci/test-docker.sh](ci/test-docker.sh)
 
-## Options using [bin/docker.sh](bin/docker.sh)
-
-You can use these additional options to modify the docker based startup procedure as used in the Quick Start section above:
-
-* `--name` container name (default: cluster)
-* `--image` image (default: liquidinvestigations/cluster)
-* `--rm` remove docker container first (default: don't remove container)
-* `--pull` pull image
-
-To perform an update, run:
-
-```bash
-./bin/docker.sh --rm --pull
-```

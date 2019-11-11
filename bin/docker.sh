@@ -2,7 +2,6 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
-rmdocker=''
 pulldocker=''
 name=cluster
 image=liquidinvestigations/cluster
@@ -10,7 +9,6 @@ while [[ $# -gt 0 ]]; do
   arg=$1
   shift
   case "$arg" in
-    "--rm") rmdocker=1 ;;
     "--pull") pulldocker=1 ;;
     "--name") name=$1; shift ;;
     "--image") image=$1; shift ;;
@@ -22,13 +20,11 @@ if [ ! -z $pulldocker ]; then
   docker pull $image
 fi
 
-if [ ! -z $rmdocker ]; then (
-  container=$(docker ps -f name=$name -aq)
-  if [ ! -z $container ]; then (
-    set -x
-    docker stop $container --time=300
-    docker rm $container
-  ) fi
+container=$(docker ps -f name=$name -aq)
+if [ ! -z $container ]; then (
+  set -x
+  docker stop $container --time=300
+  docker rm $container
 ) fi
 
 USERNAME="$(whoami)"
