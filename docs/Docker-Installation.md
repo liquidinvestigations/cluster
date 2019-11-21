@@ -51,4 +51,6 @@ Use this one-liner to stop the cluster:
 `docker exec cluster ./cluster.py stop; docker stop cluster`
 
 
-The first one orders a Nomad Drain operation if configured to do so. Because the container was started with `--restart always` for system restarts, we have to explicitly remove the container immediately afterwards.
+The first one orders a Nomad Drain operation if configured to do so. Because
+the container was started with `--restart unless-stopped`
+we have to explicitly stop the container immediately afterwards.
