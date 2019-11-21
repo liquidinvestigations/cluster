@@ -23,30 +23,30 @@ cp examples/cluster.ini .
 pipenv run ./cluster.py configure
 
 echo "setting up network"
-sudo -n pipenv run ./cluster.py configure-network
+pipenv run sudo ./cluster.py configure-network
 
 echo "running supervisord"
-sudo -n pipenv run ./cluster.py supervisord -d
+pipenv run sudo ./cluster.py supervisord -d
 
 echo "spam the logs"
-pipenv run ./cluster.py supervisorctl -- tail -f start &
+pipenv run sudo ./cluster.py supervisorctl -- tail -f start &
 
 echo "waiting for service health checks"
-pipenv run ./cluster.py wait
+pipenv run sudo ./cluster.py wait
 
 echo "running common tests"
 ./ci/test-common.sh
 
 echo "stopping everything"
-pipenv run ./cluster.py stop
+pipenv run sudo ./cluster.py stop
 if [ -n "$(docker ps -q)" ]; then
     echo "some docker containers still up!"
     exit 1
 fi
 
 echo "restarting it"
-pipenv run ./cluster.py supervisord -d
-pipenv run ./cluster.py wait
+pipenv run sudo ./cluster.py supervisord -d
+pipenv run sudo ./cluster.py wait
 
 echo "running common tests (again)"
 ./ci/test-common.sh

@@ -369,6 +369,9 @@ def _stop():
 
     pid = supervisor_pid()
     log.info(f"Supervisor has PID={pid}")
+    _supervisorctl('stop', 'nomad')
+    _supervisorctl('stop', 'vault')
+    _supervisorctl('stop', 'consul')
     _supervisorctl('stop', 'all')
 
     os.kill(pid, signal.SIGQUIT)
@@ -472,6 +475,7 @@ def supervisord(ctx, detach):
     if pid == 0:
         args = ['supervisord', '-c', str(PATH.supervisord_conf), '-n']
         os.environ['CLUSTER_USER'] = getpass.getuser()
+        log.info('User is: %s', os.environ['CLUSTER_USER'])
         sleep(5)
         log.debug('+ %s', ' '.join(args))
         # Start supervisord in a new process group, so

@@ -45,19 +45,19 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 * Set up the network:
 
     ```bash
-    sudo pipenv run ./cluster.py configure-network
+    pipenv run sudo ./cluster.py configure-network
     ```
 
 * Run `supervisor` in the background as root:
 
     ```bash
-    sudo ./cluster.py supervisord -d
+    pipenv run sudo ./cluster.py supervisord -d
     ```
 
 * Wait for everything to be up and running:
 
     ```bash
-    ./cluster.py wait
+    pipenv run sudo ./cluster.py wait
     ```
 
   The `./cluster.py wait` command will poll service health checks until
@@ -66,10 +66,10 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 * Control and monitor the daemons. Some examples:
 
     ```bash
-    ./cluster.py supervisorctl -- start   consul
-    ./cluster.py supervisorctl -- stop    nomad
-    ./cluster.py supervisorctl -- restart vault
-    ./cluster.py supervisorctl -- tail -f start
+    pipenv run sudo ./cluster.py supervisorctl -- start   consul
+    pipenv run sudo ./cluster.py supervisorctl -- stop    nomad
+    pipenv run sudo ./cluster.py supervisorctl -- restart vault
+    pipenv run sudo ./cluster.py supervisorctl -- tail -f start
     ```
 
 * Stop everything: `./cluster.py stop`. This will drain the Nomad node if
@@ -90,12 +90,13 @@ need to reapply the `mlock` file capabilities for `bin/vault`:
 sudo setcap cap_ipc_lock=+ep bin/vault
 ```
 
-After that, run `./cluster.py stop` and restart `cluster.py supervisord`.
+After that, run `pipenv run sudo ./cluster.py stop` and restart `cluster.py supervisord`.
 
 
 ### Installation on macOS
 
-The macOS setup is experimental and there is no automated pipeline testing it.
+**Note:** The macOS setup is [outdated and
+incomplete](https://github.com/liquidinvestigations/cluster/issues/105).
 
 Docker for Mac runs containers on a Linux virtual machine and does not support
 host networking. If we bind everything on a single address like we do in the
