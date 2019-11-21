@@ -24,7 +24,8 @@ echo "running common tests"
 ./ci/test-common.sh
 
 echo "stopping everything"
-docker stop -t 120 cluster
+docker exec cluster ./cluster.py stop
+docker stop cluster
 if [ -n "$(docker ps -q)" ]; then
     echo "some docker containers still up!"
     docker ps

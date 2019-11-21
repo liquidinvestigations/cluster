@@ -42,3 +42,13 @@ To perform an update, run:
 ```bash
 ./bin/docker.sh --rm --pull
 ```
+
+
+## Stopping
+
+Use this one-liner to stop the cluster:
+
+`docker exec cluster ./cluster.py stop; docker stop cluster`
+
+
+The first one orders a Nomad Drain operation if configured to do so. Because the container was started with `--restart always` for system restarts, we have to explicitly remove the container immediately afterwards.

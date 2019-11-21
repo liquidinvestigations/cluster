@@ -26,7 +26,8 @@ if [ ! -z $rmdocker ]; then (
   container=$(docker ps -f name=$name -aq)
   if [ ! -z $container ]; then (
     set -x
-    docker stop $container --time=300
+    docker exec cluster ./cluster.py stop
+    docker stop $container
     docker rm $container
   ) fi
 ) fi
@@ -42,7 +43,7 @@ DOCKERGROUPID="$(getent group docker | cut -d: -f3)"
 
 set -x
 docker run --detach \
-  --restart always \
+  --restart unless-stopped \
   --init \
   --name $name \
   --env USERID=$USERID \

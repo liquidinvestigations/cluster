@@ -45,19 +45,19 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 * Set up the network:
 
     ```bash
-    pipenv run sudo ./cluster.py configure-network
+    sudo -E pipenv run ./cluster.py configure-network
     ```
 
 * Run `supervisor` in the background as root:
 
     ```bash
-    pipenv run sudo ./cluster.py supervisord -d
+    sudo -E pipenv run ./cluster.py supervisord -d
     ```
 
 * Wait for everything to be up and running:
 
     ```bash
-    pipenv run sudo ./cluster.py wait
+    sudo -E pipenv run ./cluster.py wait
     ```
 
   The `./cluster.py wait` command will poll service health checks until
@@ -66,10 +66,10 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
 * Control and monitor the daemons. Some examples:
 
     ```bash
-    pipenv run sudo ./cluster.py supervisorctl -- start   consul
-    pipenv run sudo ./cluster.py supervisorctl -- stop    nomad
-    pipenv run sudo ./cluster.py supervisorctl -- restart vault
-    pipenv run sudo ./cluster.py supervisorctl -- tail -f start
+    sudo -E pipenv run ./cluster.py supervisorctl -- start   consul
+    sudo -E pipenv run ./cluster.py supervisorctl -- stop    nomad
+    sudo -E pipenv run ./cluster.py supervisorctl -- restart vault
+    sudo -E pipenv run ./cluster.py supervisorctl -- tail -f start
     ```
 
 * Stop everything: `./cluster.py stop`. This will drain the Nomad node if
@@ -90,7 +90,7 @@ need to reapply the `mlock` file capabilities for `bin/vault`:
 sudo setcap cap_ipc_lock=+ep bin/vault
 ```
 
-After that, run `pipenv run sudo ./cluster.py stop` and restart `cluster.py supervisord`.
+After that, run `sudo -E pipenv run ./cluster.py stop` and restart `cluster.py supervisord`.
 
 
 ### Installation on macOS
