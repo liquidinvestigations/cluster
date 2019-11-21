@@ -33,6 +33,8 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
     rm -f cli-plugins.tgz
     ```
 
+    You might need to start this kernel module: `sudo modprobe br-netfilter`.
+
 * Create a configuration file called `cluster.ini`:
 
     ```bash
