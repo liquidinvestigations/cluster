@@ -324,6 +324,7 @@ def runserver(name):
     env = dict(os.environ)
     if name == 'nomad':
         env['VAULT_TOKEN'] = OPTIONS.nomad_vault_token
+        env['PATH'] = str(PATH.bin) + ':' + env['PATH']
 
     log.debug('+ %s', ' '.join(args))
     os.chdir(PATH.root)
