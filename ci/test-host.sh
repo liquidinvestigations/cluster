@@ -5,7 +5,7 @@ if ! [ -d /opt/cni/bin ]; then
     curl -L -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.1/cni-plugins-linux-amd64-v0.8.1.tgz
     sudo mkdir -p /opt/cni/bin
     sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz
-    rm -f cli-plugins.tgz
+    rm -f cni-plugins.tgz
 fi
 cd /tmp
 sudo modprobe br-netfilter

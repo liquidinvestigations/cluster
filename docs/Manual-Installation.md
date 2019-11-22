@@ -30,7 +30,7 @@ This guide assumes a recent Debian/Ubuntu installation with Python 3.6+ and `pip
     curl -L -o cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.1/cni-plugins-linux-amd64-v0.8.1.tgz
     sudo mkdir -p /opt/cni/bin
     sudo tar -C /opt/cni/bin -xzf cni-plugins.tgz
-    rm -f cli-plugins.tgz
+    rm -f cni-plugins.tgz
     ```
 
     You might need to start this kernel module: `sudo modprobe br-netfilter`.
