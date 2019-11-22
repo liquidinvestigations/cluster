@@ -44,6 +44,16 @@ If `fabio` has been enabled in `cluster.ini`, visit:
 
 In case of panic, `docker stop cluster` will make it all go away.
 
+
+## Running a specific version
+To run a tagged version (e.g. `v0.7.0`) of cluster:
+
+```shell
+git checkout v0.7.0
+./bin/docker.sh --image liquidinvestigations/cluster:0.7.0
+```
+
+
 ## More documentation
 * Installation as a Docker container:
   [docs/Docker-Installation.md](docs/Docker-Installation.md)
