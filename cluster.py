@@ -146,7 +146,7 @@ class OPTIONS:
     versions = {
         'consul': config.get('consul', 'version', fallback='1.6.2'),
         'vault': config.get('vault', 'version', fallback='1.3.0'),
-        'nomad': config.get('nomad', 'version', fallback='0.10.1'),
+        'nomad': config.get('nomad', 'version', fallback='0.10.2-rc1'),
     }
 
     node_name = config.get('cluster', 'node_name',
