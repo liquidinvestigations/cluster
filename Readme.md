@@ -21,7 +21,7 @@ it's somewhat opinionated.
 
 ## Quick start
 
-Have `Docker` up and running. You can use
+Install and have `Docker` up and running. Follow the instructions at
 [`get.docker.com`](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-using-the-convenience-script).
 
 Clone this repository, then:
