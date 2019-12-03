@@ -43,7 +43,7 @@ If `fabio` has been enabled in `cluster.ini`, visit:
 
 * <http://10.66.60.1:9990/grafana>
 
-In case of panic, `docker stop cluster` will make it all go away.
+In case of panic or just to stop it, `docker stop cluster` will make it all go away.
 
 
 ## Running a specific version
