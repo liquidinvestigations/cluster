@@ -27,6 +27,7 @@ Install and have `Docker` up and running. Follow the instructions at
 Clone this repository, then:
 
 ```bash
+cd /opt/cluster
 cp examples/cluster.ini .
 ./bin/docker.sh
 docker exec cluster ./cluster.py supervisorctl -- tail -f start
