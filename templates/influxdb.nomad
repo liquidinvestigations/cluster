@@ -19,6 +19,7 @@ job "influxdb" {
         }
         volumes = [
           "${meta.cluster_volumes}/influxdb:/var/lib/influxdb",
+          "local/telegraf-create-retention.iql:/docker-entrypoint-initdb.d/telegraf-create-retention.iql:ro",
         ]
       }
 
@@ -33,6 +34,13 @@ job "influxdb" {
           mbits = 1
           port "http" {}
         }
+      }
+
+      template {
+        destination = "local/telegraf-create-retention.iql"
+        data = <<-EOH
+        ALTER RETENTION POLICY "autogen" ON "telegraf" DURATION 32d SHARD DURATION 1d DEFAULT
+        EOH
       }
 
       service {

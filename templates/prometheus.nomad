@@ -49,6 +49,7 @@ job "prometheus" {
           "--web.route-prefix=/prometheus",
           "--web.external-url=http://${attr.unique.network.ip-address}:9990/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
+          "--storage.tsdb.retention.time=32d",
          ]
         volumes = [
           "local/prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml",
