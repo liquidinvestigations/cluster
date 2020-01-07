@@ -1608,7 +1608,7 @@
         "y": 24
       },
       "id": 16,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "avg": false,
         "current": false,
@@ -1803,7 +1803,7 @@
       }
     }
   ],
-  "refresh": "10s",
+  "refresh": "30s",
   "schemaVersion": 19,
   "style": "dark",
   "tags": [],
@@ -1815,10 +1815,8 @@
     "to": "now"
   },
   "timepicker": {
-    "nowDelay": "10s",
+    "nowDelay": "30s",
     "refresh_intervals": [
-      "5s",
-      "10s",
       "30s",
       "1m",
       "5m",

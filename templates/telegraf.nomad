@@ -28,8 +28,8 @@ job "telegraf" {
         destination = "local/telegraf.conf"
         data = <<-EOF
           [agent]
-            interval = "20s"
-            flush_interval = "20s"
+            interval = "30s"
+            flush_interval = "30s"
             omit_hostname = false
             debug = false
             quiet = false
