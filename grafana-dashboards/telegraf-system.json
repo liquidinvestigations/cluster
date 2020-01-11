@@ -4710,7 +4710,7 @@
       }
     }
   ],
-  "refresh": "10s",
+  "refresh": "30s",
   "schemaVersion": 19,
   "style": "dark",
   "tags": [

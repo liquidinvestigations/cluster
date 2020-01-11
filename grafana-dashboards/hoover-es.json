@@ -583,7 +583,7 @@
         "y": 5
       },
       "id": 52,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -810,7 +810,7 @@
       },
       "hideTimeOverride": false,
       "id": 55,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -2293,7 +2293,7 @@
         "y": 32
       },
       "id": 67,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -5893,7 +5893,7 @@
         "y": 76
       },
       "id": 102,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -6063,7 +6063,7 @@
         "y": 85
       },
       "id": 89,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -6402,7 +6402,7 @@
         "y": 85
       },
       "id": 90,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -6594,7 +6594,7 @@
         "y": 95
       },
       "id": 93,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -7738,7 +7738,7 @@
         "y": 105
       },
       "id": 98,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
@@ -7983,7 +7983,7 @@
         "y": 105
       },
       "id": 103,
-      "interval": "10s",
+      "interval": "30s",
       "legend": {
         "alignAsTable": true,
         "avg": true,
