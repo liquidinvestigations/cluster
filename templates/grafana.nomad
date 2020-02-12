@@ -63,20 +63,6 @@ job "grafana" {
             "basicAuth": false,
             "isDefault": false,
             "jsonData": {
-                "keepCookies": []
-            },
-            "name": "Loki",
-            "readOnly": false,
-            "type": "loki",
-            "url": "http://cluster-fabio.service.consul:9990/loki",
-            "version": 2,
-            "withCredentials": false
-          }
-          - {
-            "access": "proxy",
-            "basicAuth": false,
-            "isDefault": false,
-            "jsonData": {
                 "httpMethod": "GET",
                 "keepCookies": []
             },
