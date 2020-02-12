@@ -17,8 +17,7 @@ We also run some jobs as services:
 
 * `influxdb` -- service that stores data from telegraf
 * `prometheus` -- collects metrics from Nomad
-* `grafana` -- displays dashboards with data from Prometheus and Loki
-* `loki` -- collects logs from apps
+* `grafana` -- displays dashboards with data from Prometheus and Influxdb
 * `registry` -- local registry to cache docker images
 
 Finally, we have one periodic job:
