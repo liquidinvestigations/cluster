@@ -143,9 +143,9 @@ class OPTIONS:
         'nomad', 'drain_on_stop', fallback=True)
 
     versions = {
-        'consul': config.get('consul', 'version', fallback='1.6.3'),
+        'consul': config.get('consul', 'version', fallback='1.7.0'),
         'vault': config.get('vault', 'version', fallback='1.3.2'),
-        'nomad': config.get('nomad', 'version', fallback='0.10.3'),
+        'nomad': config.get('nomad', 'version', fallback='0.10.4'),
     }
 
     node_name = config.get('cluster', 'node_name',
