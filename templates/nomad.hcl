@@ -60,3 +60,6 @@ telemetry {
   publish_allocation_metrics = true
   publish_node_metrics = true
 }
+
+disable_anonymous_signature = true
+disable_update_check = true

@@ -15,3 +15,6 @@ telemetry {
   dogstatsd_addr = "{{OPTIONS.consul_address}}:8125"
   disable_hostname = false
 }
+
+disable_anonymous_signature = true
+disable_update_check = true
