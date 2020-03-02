@@ -25,6 +25,7 @@ job "influxdb" {
 
       env {
         INFLUXDB_DB = "telegraf"
+        GOMAXPROCS = "4"
       }
 
       resources {
@@ -51,8 +52,8 @@ job "influxdb" {
           name     = "http"
           type     = "http"
           path     = "/ping"
-          interval = "8s"
-          timeout  = "4s"
+          interval = "18s"
+          timeout  = "14s"
         }
       }
     }
