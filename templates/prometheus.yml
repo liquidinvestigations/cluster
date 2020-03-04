@@ -15,7 +15,13 @@ scrape_configs:
     - source_labels: ["__meta_consul_tags"]
       regex: "(.*)http(.*)"
       action: keep
-    scrape_interval: 5s
+    scrape_interval: 33s
     metrics_path: /v1/metrics
     params:
       format: ["prometheus"]
+  - job_name: "snoop_rabbitmq"
+    consul_sd_configs:
+    - server: "{{OPTIONS.consul_address}}:8500"
+      services: ["hoover-rabbitmq-prom"]
+    scrape_interval: 27s
+    metrics_path: /metrics
