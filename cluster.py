@@ -212,6 +212,7 @@ class JsonApi:
     def get(self, url, params=None):
         encoded = '?' + urlencode(params) if params else ''
         req = Request(f'{self.endpoint}{url}{encoded}')
+        log.debug('GET ' + req.get_full_url())
         return self.send(req)
 
     def put(self, url, data):
@@ -327,6 +328,62 @@ def runserver(name):
     log.debug('+ %s', ' '.join(args))
     os.chdir(PATH.root)
     os.execve(args[0], args, env)
+
+
+def first(items, name_plural='items'):
+    assert items, f"No {name_plural} found"
+
+    if len(items) > 1:
+        log.warning(
+            f"Found multiple {name_plural}: %r, choosing the first one",
+            items,
+        )
+
+    return items[0]
+
+
+@cli.command()
+@click.option('--tty', '-t', is_flag=True)
+@click.argument('name', type=str, required=True)
+@click.argument('args', type=str, nargs=-1, required=True)
+def nomad_exec(name, args, tty=False):
+    """Execute command in task container using `nomad job exec`.
+
+    :param name: string in the format JOB:TASK, for example influxdb:influxdb
+    :param args: arguments to the exec function
+    :param tty: if true, instruct docker to allocate a pseudo-TTY
+    """
+
+    nomad = JsonApi(f'http://{OPTIONS.nomad_address}:4646/v1')
+    [job, task] = name.split(':')
+
+    def job_allocations(job):
+        return nomad.get(f'/job/{job}/allocations')
+
+    def allocs():
+        for alloc in job_allocations(job):
+            if task not in alloc['TaskStates']:
+                continue
+            if alloc['ClientStatus'] != 'running':
+                continue
+            yield alloc['ID']
+
+    alloc_id = first(list(allocs()), f'{name} allocs')
+
+    nomad_cmd = ['/app/bin/nomad', 'alloc', 'exec']
+
+    if tty:
+        nomad_cmd += ['-t']
+
+    nomad_cmd += [
+        '-address', 'http://' + OPTIONS.nomad_address + ':4646',
+        '-task', task,
+        alloc_id,
+    ]
+
+    nomad_cmd += list(args)
+    log.debug(f'exec {" ".join(nomad_cmd)}')
+    os.execvp(nomad_cmd[0], nomad_cmd)
 
 
 def nomad_drain(enabled):
@@ -783,7 +840,7 @@ if __name__ == '__main__':
     log.setLevel(level)
     logging.basicConfig(
         level=level,
-        format='%(asctime)s %(levelname)s %(message)s',
+        format='%(asctime)s %(filename)s %(funcName)12s() %(levelname)8s %(message)s',  # noqa: E501
         datefmt='%Y-%m-%d %H:%M:%S',
     )
 

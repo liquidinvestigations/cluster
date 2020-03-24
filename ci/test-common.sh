@@ -55,6 +55,14 @@ dns nomad.service.consul
 dns github.com
 dns liquiddemo.org
 
+
+echo "Checking exec..."
+./cluster.py nomad-exec influxdb:influxdb true
+./cluster.py nomad-exec dnsmasq:dnsmasq true
+./cluster.py nomad-exec telegraf:telegraf true
+./cluster.py nomad-exec grafana:grafana true
+./cluster.py nomad-exec prometheus:prometheus true
+
 if [ -n "$SKIP_IPTABLES_CHECK" ]; then
   printf "${BASH_SOURCE[0]} DONE!\n\n"
   exit 0
