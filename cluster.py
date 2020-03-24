@@ -370,7 +370,7 @@ def nomad_exec(name, args, tty=False):
 
     alloc_id = first(list(allocs()), f'{name} allocs')
 
-    nomad_cmd = ['/app/bin/nomad', 'alloc', 'exec']
+    nomad_cmd = [str(PATH.bin / 'nomad'), 'alloc', 'exec']
 
     if tty:
         nomad_cmd += ['-t']
@@ -382,7 +382,7 @@ def nomad_exec(name, args, tty=False):
     ]
 
     nomad_cmd += list(args)
-    log.debug(f'exec {" ".join(nomad_cmd)}')
+    log.debug(f'exec {nomad_cmd}')
     os.execvp(nomad_cmd[0], nomad_cmd)
 
 

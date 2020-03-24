@@ -57,11 +57,11 @@ dns liquiddemo.org
 
 
 echo "Checking exec..."
-./cluster.py nomad-exec influxdb:influxdb true
-./cluster.py nomad-exec dnsmasq:dnsmasq true
-./cluster.py nomad-exec telegraf:telegraf true
-./cluster.py nomad-exec grafana:grafana true
-./cluster.py nomad-exec prometheus:prometheus true
+$CLUSTER_COMMAND nomad-exec influxdb:influxdb true
+$CLUSTER_COMMAND nomad-exec dnsmasq:dnsmasq true
+$CLUSTER_COMMAND nomad-exec telegraf:telegraf true
+$CLUSTER_COMMAND nomad-exec grafana:grafana true
+$CLUSTER_COMMAND nomad-exec prometheus:prometheus true
 
 if [ -n "$SKIP_IPTABLES_CHECK" ]; then
   printf "${BASH_SOURCE[0]} DONE!\n\n"

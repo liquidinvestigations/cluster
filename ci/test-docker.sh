@@ -12,13 +12,14 @@ docker build . --tag test-cluster
 echo "running container"
 cp examples/cluster.ini .
 ./bin/docker.sh --image test-cluster
+export CLUSTER_COMMAND="docker exec cluster ./cluster.py"
 
 echo "spam the logs"
 docker logs -f cluster &
-docker exec cluster ./cluster.py supervisorctl -- tail -f start &
+$CLUSTER_COMMAND supervisorctl -- tail -f start &
 
 echo "waiting for service health checks"
-docker exec cluster ./cluster.py wait
+$CLUSTER_COMMAND wait
 
 echo "running common tests"
 ./ci/test-common.sh
@@ -32,7 +33,7 @@ fi
 
 echo "restarting it"
 docker start cluster
-docker exec cluster ./cluster.py wait
+$CLUSTER_COMMAND wait
 
 echo "running common tests (again)"
 ./ci/test-common.sh
