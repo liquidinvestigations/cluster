@@ -46,12 +46,20 @@ In case of panic or just to stop it, `docker stop cluster` will make it all go a
 
 
 ## Running a specific version
-To run a tagged version (e.g. `v0.7.0`) of cluster:
+To run a tagged version (e.g. `v0.9.0`) of cluster:
 
 ```shell
-git checkout v0.7.0
-./bin/docker.sh --image liquidinvestigations/cluster:0.7.0
+git checkout v0.9.0
+./bin/docker.sh --image liquidinvestigations/cluster:0.9.0
 ```
+
+
+## Running a command inside a task container
+
+Use `cluster.py nomad-exec JOB:TASK COMMAND...` to execute a command inside a
+container. `stdin` and `stdout` can be used to exchange data.
+The command uses
+[`nomad alloc exec`](https://nomadproject.io/docs/commands/alloc/exec/).
 
 
 ## More documentation
