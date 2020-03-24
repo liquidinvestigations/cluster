@@ -106,6 +106,7 @@ trigger:
   - build-image/*
   event:
   - push
+  - cron
 
 volumes:
 - name: vmck-images
