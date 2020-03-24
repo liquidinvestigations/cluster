@@ -345,7 +345,7 @@ def first(items, name_plural='items'):
 @cli.command()
 @click.option('--tty', '-t', is_flag=True)
 @click.argument('name', type=str, required=True)
-@click.argument('args', type=str, nargs=-1, required=True)
+@click.argument('args', type=click.UNPROCESSED, nargs=-1, required=True)
 def nomad_exec(name, args, tty=False):
     """Execute command in task container using `nomad job exec`.
 
@@ -566,7 +566,7 @@ def wait_for_supervisor():
 
 
 @cli.command()
-@click.argument('args', nargs=-1, type=str)
+@click.argument('args', nargs=-1, type=click.UNPROCESSED)
 def supervisorctl(args):
     """ Runs a supervisorctl command. """
 
