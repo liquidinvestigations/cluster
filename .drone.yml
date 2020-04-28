@@ -8,7 +8,7 @@ steps:
   - flake8
 
 - name: test on host
-  image: vmck/vagrant-vmck
+  image: vmck/vagrant-vmck:0.4.1
   depends_on:
   - flake8
   commands:
@@ -18,7 +18,7 @@ steps:
   - ./ci/run-vagrant-test.sh
 
 - name: test docker container
-  image: vmck/vagrant-vmck
+  image: vmck/vagrant-vmck:0.4.1
   depends_on:
   - flake8
   commands:
@@ -83,7 +83,7 @@ name: build qemu image
 
 steps:
 - name: build qemu image
-  image: vmck/vmck
+  image: vmck/vmck:0.5
   privileged: true
   volumes:
   - name: vmck-images
