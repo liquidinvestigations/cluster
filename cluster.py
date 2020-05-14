@@ -844,4 +844,10 @@ if __name__ == '__main__':
         datefmt='%Y-%m-%d %H:%M:%S',
     )
 
-    cli()
+    # Avoid a return value of 1, since that coincides with
+    # tar's error code when input files have changed during archiving.
+    try:
+        cli()
+    except Exception as e:
+        log.exception(e)
+        sys.exit(66)

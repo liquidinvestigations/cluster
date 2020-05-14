@@ -4,7 +4,7 @@ job "docker-system-prune" {
   priority = 99
 
   periodic {
-    cron  = "@hourly"
+    cron  = "@monthly"
     prohibit_overlap = true
   }
 
