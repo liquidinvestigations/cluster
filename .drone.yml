@@ -91,7 +91,7 @@ steps:
   commands:
   - BRANCH=$(echo $DRONE_COMMIT_BRANCH | tr -s '/' '_')
   - tar czf /tmp/cluster.tar.gz .
-  - /opt/vmck/contrib/build.py /tmp/cluster-$BRANCH.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
+  - ./ci/build-image.py /tmp/cluster-$BRANCH.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
   - tar czvf /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz -C /tmp cluster-$BRANCH.qcow2
   - mv /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz /vmck-images/cluster-$BRANCH.qcow2.tar.gz
 
