@@ -19,6 +19,7 @@ import sys
 import signal
 import shutil
 import socket
+from collections import defaultdict
 
 import click
 from jinja2 import Environment, FileSystemLoader
@@ -666,18 +667,24 @@ def wait_for_checks(health_checks, self_only=False, allow_duplicates=False):
     raise RuntimeError(msg)
 
 
-HEALTH_CHECKS = {
-    'nomad': ['Nomad Server RPC Check',
-              'Nomad Server HTTP Check',
-              'Nomad Server Serf Check'],
-    'nomad-client': ['Nomad Client HTTP Check'],
-    'vault': ['Vault Sealed Status'],
-    'grafana': ['Grafana alive on HTTP'],
-    'telegraf': ['http'],
-    'influxdb': ['http'],
-    'prometheus': ['Prometheus alive on HTTP'],
-    'cluster-fabio': ["tcp"],
-}
+HEALTH_CHECKS = defaultdict(list)
+for k, v in ({
+            'nomad': ['Nomad Server RPC Check',
+                      'Nomad Server HTTP Check',
+                      'Nomad Server Serf Check'],
+            'nomad-client': ['Nomad Client HTTP Check'],
+            'vault': ['Vault Sealed Status'],
+            'grafana': ['Grafana alive on HTTP'],
+            'telegraf': ['http'],
+            'influxdb': ['http'],
+            'prometheus': ['Prometheus alive on HTTP'],
+            'cluster-fabio': ["tcp"],
+        }).items():
+    HEALTH_CHECKS[k] = v
+if OPTIONS.client_only:
+    for k in list(HEALTH_CHECKS.keys()):
+        if k not in ['nomad-client', 'vault', 'cluster-fabio']:
+            del HEALTH_CHECKS[k]
 
 
 def wait_for_consul():
