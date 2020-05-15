@@ -26,8 +26,10 @@ echo "running common tests"
 
 echo "stopping everything"
 docker stop cluster
+sleep 3
 if [ -n "$(docker ps -q)" ]; then
     echo "some docker containers still up!"
+    docker ps
     exit 1
 fi
 

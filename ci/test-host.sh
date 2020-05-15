@@ -32,8 +32,10 @@ echo "running common tests"
 
 echo "stopping everything"
 $CLUSTER_COMMAND stop
+sleep 3
 if [ -n "$(docker ps -q)" ]; then
     echo "some docker containers still up!"
+    docker ps
     exit 1
 fi
 
