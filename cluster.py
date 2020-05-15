@@ -25,9 +25,6 @@ from jinja2 import Environment, FileSystemLoader
 
 log = logging.getLogger(__name__)
 
-config = configparser.ConfigParser()
-config.read('cluster.ini')
-
 
 class PATH:
     executable = sys.executable
@@ -85,18 +82,16 @@ def read_vault_secrets():
     }
 
 
-def nomad_retry_join_section(servers):
+def nomad_server_join_section(servers):
     if not servers:
         return ''
     quoted = [f'"{ip}:4648"' for ip in servers]
-    return f'server_join {{ retry_join = [{", ".join(quoted)}] }}'
-
-
-def nomad_client_servers_section(servers):
-    if not servers:
-        return ''
-    quoted = [f'"{ip}:4647"' for ip in servers]
-    return f'servers = [{", ".join(quoted)}]'
+    return f'''
+    server_join {{
+        retry_join = [{", ".join(quoted)}]
+        retry_interval = "6s"
+        retry_max = 66
+    }}'''
 
 
 def consul_retry_join_section(servers):
@@ -152,16 +147,16 @@ class OPTIONS:
                            fallback=socket.gethostname())
     dev = config.getboolean('cluster', 'dev', fallback=False)
     debug = config.getboolean('cluster', 'debug', fallback=False)
+    client_only = config.getboolean('cluster', 'client', fallback=False)
 
-    _run_jobs = config.get('cluster', 'run_jobs', fallback='none').strip().split(',')  # noqa: E501
+    _run_jobs = config.get('cluster', 'run_jobs', fallback='none').strip().split(',') if not client_only else []  # noqa: E501
     nomad_vault_token = read_vault_secrets()['root_token']
 
     bootstrap_expect = config.getint('cluster', 'bootstrap_expect', fallback=1)
     _retry_join = config.get('cluster', 'retry_join', fallback='')
     retry_join = _retry_join.split(',') if _retry_join else []
-    nomad_retry_join = nomad_retry_join_section(retry_join)
+    nomad_server_join = nomad_server_join_section(retry_join)
     consul_retry_join = consul_retry_join_section(retry_join)
-    nomad_client_servers = nomad_client_servers_section(retry_join)
 
     influxdb_memory_limit = config.getint('cluster',
                                           'influxdb_memory_limit',
@@ -696,8 +691,10 @@ def wait_for_consul():
             node_health = consul.get('/health/service/consul', params={
                 'filter': f'Node.Node == "{node_name}"'
             })
-            assert node_health[0]['Checks'][0]['Status'] == 'passing', \
-                'Consul self node health check is failing'
+
+            if not OPTIONS.client_only:
+                assert node_health[0]['Checks'][0]['Status'] == 'passing', \
+                    'Consul self node health check is failing'
 
             log.info("Consul UP and running with leader %s", leader)
             return

@@ -15,18 +15,24 @@ advertise {
   serf = "{{OPTIONS.nomad_advertise}}"
 }
 
+{% if not OPTIONS.client_only %}
 server {
   enabled = true
   bootstrap_expect = {{OPTIONS.bootstrap_expect}}
   job_gc_threshold = "{{OPTIONS.nomad_zombie_time}}"
-  {{OPTIONS.nomad_retry_join}}
+  {{OPTIONS.nomad_server_join}}
 }
+{% else %}
+server {
+  enabled = false
+}
+{% endif %}
 
 client {
   enabled = true
   network_interface = "{{OPTIONS.nomad_interface}}"
   memory_total_mb = {{OPTIONS.nomad_memory or '0 # autodetect'}}
-  {{OPTIONS.nomad_client_servers}}
+  {{OPTIONS.nomad_server_join}}
   gc_max_allocs = 300
   meta {
     {{OPTIONS.nomad_meta}}
