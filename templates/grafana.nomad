@@ -102,7 +102,7 @@ job "grafana" {
             "readOnly": false,
             "type": "elasticsearch",
             "database": "[.monitoring-es-6-]YYYY.MM.DD",
-            "url": "http://cluster-fabio.service.consul:8765/_es",
+            "url": "http://cluster-fabio.service.consul:9990/_es",
             "version": 2,
             "withCredentials": false
           }

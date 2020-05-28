@@ -7,7 +7,7 @@ echo "waiting for docker"
 until docker version; do sleep 1; done
 
 echo "building docker image"
-docker build . --tag liquidinvestigations/cluster
+docker build . --tag cluster-test
 
 echo "running three containers..."
 TEST_DIR=$(readlink -f ~/triple-test)
@@ -15,7 +15,7 @@ mkdir $TEST_DIR
 for id in 1 2 4; do
   cp -a . $TEST_DIR/$id
   cp $TEST_DIR/$id/ci/configs/triple-$id.ini $TEST_DIR/$id/cluster.ini
-  $TEST_DIR/$id/bin/docker.sh --name test-$id
+  $TEST_DIR/$id/bin/docker.sh --name test-$id --image cluster-test
 done
 
 echo "wait until one of them wins"
