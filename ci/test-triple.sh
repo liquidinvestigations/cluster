@@ -51,6 +51,7 @@ function wait_and_test() {
   export SKIP_IPTABLES_CHECK=yes
   for id in 1 2 4; do
     export IP="10.66.60.$id"
+    export CLUSTER_COMMAND="docker exec test-$id ./cluster.py"
     ./ci/test-common.sh
   done
 }
