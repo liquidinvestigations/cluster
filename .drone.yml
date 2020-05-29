@@ -1,6 +1,9 @@
 kind: pipeline
 name: test
 
+concurrency:
+  limit: 2
+
 steps:
 - name: flake8
   image: alpine/flake8:3.7.7
@@ -30,10 +33,9 @@ steps:
   - ./ci/run-vagrant-test.sh
 
 - name: cluster 3 containers
-  image: vmck/vagrant-vmck
+  image: vmck/vagrant-vmck:0.4.1
   depends_on:
-  - test on host
-  - test docker container
+  - flake8
   commands:
   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-triple.sh
