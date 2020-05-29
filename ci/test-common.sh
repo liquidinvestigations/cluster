@@ -57,11 +57,15 @@ dns liquiddemo.org
 
 
 echo "Checking exec..."
-$CLUSTER_COMMAND nomad-exec influxdb:influxdb true
-$CLUSTER_COMMAND nomad-exec dnsmasq:dnsmasq true
-$CLUSTER_COMMAND nomad-exec telegraf:telegraf true
-$CLUSTER_COMMAND nomad-exec grafana:grafana true
-$CLUSTER_COMMAND nomad-exec prometheus:prometheus true
+function nomad-exec {
+  # exec it twice because it might occasionally fail
+  $CLUSTER_COMMAND nomad-exec $1 true || $CLUSTER_COMMAND nomad-exec $1 true
+}
+nomad-exec influxdb:influxdb
+nomad-exec dnsmasq:dnsmasq
+nomad-exec telegraf:telegraf
+nomad-exec grafana:grafana
+nomad-exec prometheus:prometheus
 
 if [ -n "$SKIP_IPTABLES_CHECK" ]; then
   printf "${BASH_SOURCE[0]} DONE!\n\n"
