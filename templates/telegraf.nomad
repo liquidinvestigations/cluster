@@ -7,7 +7,7 @@ job "telegraf" {
     task "telegraf" {
       driver = "docker"
       config {
-        image = "telegraf:1.12-alpine"
+        image = "telegraf:1.14-alpine"
         dns_servers = ["${attr.unique.network.ip-address}"]
         port_map {
           statsd = 8125
@@ -107,8 +107,8 @@ job "telegraf" {
           name     = "http"
           type     = "http"
           path     = "/"
-          interval = "8s"
-          timeout  = "4s"
+          interval = "18s"
+          timeout  = "14s"
         }
       }
     }

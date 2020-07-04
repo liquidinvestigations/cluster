@@ -44,17 +44,17 @@ job "prometheus" {
       driver = "docker"
       user = "root"
       config {
-        image = "prom/prometheus:v2.10.0"
+        image = "prom/prometheus:v2.19.2"
         args = [
           "--web.route-prefix=/prometheus",
           "--web.external-url=http://${attr.unique.network.ip-address}:9990/prometheus",
           "--config.file=/etc/prometheus/prometheus.yml",
-          "--storage.tsdb.retention.time=32d",
+          "--storage.tsdb.retention.time=20d",
          ]
         volumes = [
-          "local/prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml",
-          "local/prometheus.yml:/etc/prometheus/prometheus.yml",
-          "${meta.cluster_volumes}/prometheus:/prometheus",
+          "local/prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml:ro",
+          "local/prometheus.yml:/etc/prometheus/prometheus.yml:ro",
+          "${meta.cluster_volumes}/prometheus/2.19.2:/prometheus",
         ]
         port_map {
           http = 9090
@@ -76,8 +76,8 @@ job "prometheus" {
           name     = "Prometheus alive on HTTP"
           type     = "http"
           path     = "/prometheus/-/healthy"
-          interval = "4s"
-          timeout  = "2s"
+          interval = "14s"
+          timeout  = "12s"
         }
       }
     }

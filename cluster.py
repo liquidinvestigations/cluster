@@ -58,6 +58,7 @@ class PATH:
 
 
 jinja_env = Environment(loader=FileSystemLoader(str(PATH.templates)))
+jinja_env.globals['int'] = int
 
 
 def render(template_filename, options):
@@ -139,9 +140,9 @@ class OPTIONS:
         'nomad', 'drain_on_stop', fallback=True)
 
     versions = {
-        'consul': config.get('consul', 'version', fallback='1.7.3'),
-        'vault': config.get('vault', 'version', fallback='1.4.1'),
-        'nomad': config.get('nomad', 'version', fallback='0.11.2'),
+        'consul': config.get('consul', 'version', fallback='1.8.0'),
+        'vault': config.get('vault', 'version', fallback='1.4.3'),
+        'nomad': config.get('nomad', 'version', fallback='0.11.3'),
     }
 
     node_name = config.get('cluster', 'node_name',

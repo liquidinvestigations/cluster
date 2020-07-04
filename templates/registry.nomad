@@ -16,7 +16,7 @@ job "registry" {
         image = "registry:2"
         volumes = [
           "local/registry-config.yml:/etc/docker/registry/config.yml:ro",
-          "${meta.cluster_volumes}/registry:/var/lib/registry",
+          "${meta.cluster_volumes}/registry/2/:/var/lib/registry",
         ]
         port_map {
           http = 5000
@@ -67,8 +67,8 @@ job "registry" {
           name = "http"
           type = "http"
           path = "/"
-          interval = "4s"
-          timeout  = "2s"
+          interval = "14s"
+          timeout  = "12s"
         }
       }
     }
