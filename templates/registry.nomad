@@ -67,8 +67,8 @@ job "registry" {
           name = "http"
           type = "http"
           path = "/"
-          interval = "4s"
-          timeout  = "2s"
+          interval = "14s"
+          timeout  = "12s"
         }
       }
     }

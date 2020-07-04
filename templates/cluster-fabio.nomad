@@ -7,7 +7,7 @@ job "cluster-fabio" {
     task "fabio" {
       driver = "docker"
       config {
-        image = "fabiolb/fabio:1.5.11-go1.11.5"
+        image = "fabiolb/fabio:1.5.13-go1.13.4"
         volumes = [
           "local/fabio.properties:/etc/fabio/fabio.properties"
         ]
@@ -51,8 +51,8 @@ job "cluster-fabio" {
         check {
           name     = "tcp"
           type     = "tcp"
-          interval = "4s"
-          timeout  = "2s"
+          interval = "14s"
+          timeout  = "12s"
         }
       }
       service {
@@ -62,8 +62,8 @@ job "cluster-fabio" {
           name     = "http"
           type     = "http"
           path     = "/"
-          interval = "6s"
-          timeout  = "3s"
+          interval = "16s"
+          timeout  = "13s"
         }
       }
     }

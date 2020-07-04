@@ -14,7 +14,7 @@ job "grafana" {
     task "grafana" {
       driver = "docker"
       config {
-        image = "grafana/grafana:6.3.5"
+        image = "grafana/grafana:7.0.5"
         dns_servers = ["${attr.unique.network.ip-address}"]
         port_map {
           http = 3000
@@ -122,7 +122,7 @@ job "grafana" {
 
       resources {
         cpu    = 200
-        memory = 250
+        memory = 400
         network {
           mbits = 10
           port "http" {}
@@ -137,8 +137,8 @@ job "grafana" {
           name     = "Grafana alive on HTTP"
           type     = "http"
           path     = "/grafana/api/health"
-          interval = "4s"
-          timeout  = "2s"
+          interval = "14s"
+          timeout  = "12s"
         }
       }
     }
