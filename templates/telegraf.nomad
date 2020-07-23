@@ -18,6 +18,7 @@ job "telegraf" {
         volumes = ["/var/run/docker.sock:/var/run/docker.sock"]
         network_mode = "host"
         privileged = true
+        memory_hard_limit = 500
       }
 
       env {

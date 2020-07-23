@@ -20,6 +20,17 @@ server {
   enabled = true
   bootstrap_expect = {{OPTIONS.bootstrap_expect}}
   job_gc_threshold = "{{OPTIONS.nomad_zombie_time}}"
+
+  default_scheduler_config {
+    scheduler_algorithm = "spread"
+
+    preemption_config {
+      batch_scheduler_enabled   = true
+      system_scheduler_enabled  = true
+      service_scheduler_enabled = true
+    }
+  }
+
   {{OPTIONS.nomad_server_join}}
 }
 {% else %}
@@ -41,7 +52,9 @@ client {
     "fingerprint.blacklist" = "env_aws"
     "docker.caps.whitelist" = "NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP, SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
     "docker.privileged.enabled" = "true"
+    "docker.volumes.enabled" = "true"
   }
+
 }
 
 plugin "raw_exec" {

@@ -19,6 +19,7 @@ job "grafana" {
         port_map {
           http = 3000
         }
+        memory_hard_limit = 3000
       }
 
       env {

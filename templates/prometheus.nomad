@@ -59,6 +59,7 @@ job "prometheus" {
         port_map {
           http = 9090
         }
+        memory_hard_limit = {{OPTIONS.prometheus_memory_limit * 4}}
       }
       resources {
         memory = {{OPTIONS.prometheus_memory_limit}}

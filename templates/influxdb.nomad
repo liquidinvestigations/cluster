@@ -21,6 +21,7 @@ job "influxdb" {
           "${meta.cluster_volumes}/influxdb/1.8-tsi1:/var/lib/influxdb",
           "local/telegraf-create-retention.iql:/docker-entrypoint-initdb.d/telegraf-create-retention.iql:ro",
         ]
+        memory_hard_limit = {{OPTIONS.influxdb_memory_limit * 4}}
       }
 
       env {
