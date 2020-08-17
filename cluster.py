@@ -222,7 +222,12 @@ class JsonApi:
 
 
 def download(url, path):
-    run(f'curl -Ls "{url}" -o "{path}"')
+    log.debug(f'+ downloading from {url} to {path}')
+    with urlopen(url) as res:
+        if res.status != 200:
+            return
+        with open(path, 'wb') as f:
+            f.write(res.read())
 
 
 def unzip(zip_path, **kwargs):
