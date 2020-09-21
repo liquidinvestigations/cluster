@@ -168,7 +168,7 @@ class OPTIONS:
                                             fallback=384)
 
     wait_max = config.getfloat('deploy', 'wait_max_sec', fallback=333)
-    wait_interval = config.getfloat('deploy', 'wait_interval', fallback=2)
+    wait_interval = config.getfloat('deploy', 'wait_interval', fallback=3)
     wait_green_count = config.getint('deploy', 'wait_green_count', fallback=5)
 
     @classmethod
@@ -629,16 +629,18 @@ def wait_for_checks(health_checks, self_only=False, allow_duplicates=False):
     services = sorted(health_checks.keys())
     if not services:
         return
-    log.info("Waiting on %s health checks for %s %s",
+
+    t0 = time()
+    timeout = t0 + OPTIONS.wait_max + \
+        OPTIONS.wait_interval * OPTIONS.wait_green_count
+    log.info("Waiting %ss on %s health checks for %s %s",
+             timeout - t0,
              sum(map(len, health_checks.values())),
              str(services),
              f'(self_only: {self_only}, allow_duplicates: {allow_duplicates})')
 
-    t0 = time()
     greens = 0
-    timeout = t0 + OPTIONS.wait_max + \
-        OPTIONS.wait_interval * OPTIONS.wait_green_count
-    last_spam = t0 - 1000
+    last_spam = t0 + 1
     while time() < timeout:
         sleep(OPTIONS.wait_interval)
         failed = sorted(get_failed_checks(health_checks,
