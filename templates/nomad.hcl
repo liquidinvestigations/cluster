@@ -47,14 +47,17 @@ client {
   gc_max_allocs = 300
   meta {
     {{OPTIONS.nomad_meta}}
+    "connect.log_level" = "debug"
+
   }
   options {
     "fingerprint.blacklist" = "env_aws"
-    "docker.caps.whitelist" = "NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP, SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
+    "docker.caps.whitelist" = "NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
     "docker.privileged.enabled" = "true"
     "docker.volumes.enabled" = "true"
   }
 
+  alloc_dir = "/nomad-allocs"
 }
 
 plugin "raw_exec" {

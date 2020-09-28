@@ -31,26 +31,18 @@ if [ ! -z $rmdocker ]; then (
   ) fi
 ) fi
 
-USERNAME="$(whoami)"
-if ! getent group docker | grep -q $(whoami); then
-  echo "The current user $USERNAME is not part of the docker group"
-  exit 1
-fi
-USERID="$(id -u $USERNAME)"
-GROUPID="$(id -g $USERNAME)"
-DOCKERGROUPID="$(getent group docker | cut -d: -f3)"
-
 set -x
 docker run --detach \
   --restart always \
   --init \
   --name $name \
-  --env USERID=$USERID \
-  --env GROUPID=$GROUPID \
-  --env DOCKERGROUPID=$DOCKERGROUPID \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume "$PWD:$PWD" \
+  --volume nomad-allocs:/nomad-allocs \
+  --mount type=bind,src=/var/run/docker,dst=/var/run/docker,bind-propagation=shared \
+  --mount type=bind,src="$PWD",dst="$PWD",bind-propagation=rshared \
   --workdir "$PWD" \
   --privileged \
+  --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --cap-add=NET_RAW \
   --net host \
   $image
+

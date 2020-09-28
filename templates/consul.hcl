@@ -24,3 +24,5 @@ telemetry {
 }
 disable_anonymous_signature = true
 disable_update_check = true
+ports { grpc = 8502 }
+connect { enabled = true }
