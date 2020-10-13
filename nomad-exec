@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
+export PIPENV_VENV_IN_PROJECT=1
+
+exec pipenv run ./cluster.py nomad-exec "$@"

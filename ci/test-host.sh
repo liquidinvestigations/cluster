@@ -3,35 +3,27 @@
 id $(whoami)
 cd "$( dirname "$( dirname "${BASH_SOURCE[0]}" )" )"
 
-pipenv --version
-pipenv install 2>&1
-export CLUSTER_COMMAND="pipenv run ./cluster.py"
+export DEBIAN_FRONTEND=noninteractive
+sudo apt-get update -qq
+sudo apt-get -yqq install sudo git unzip python3-pip python3-venv supervisor curl wget iptables
 
-echo "installing services"
-$CLUSTER_COMMAND install
-sudo setcap cap_ipc_lock=+ep bin/vault
-
-echo "configuring"
+echo "installing"
 cp examples/cluster.ini .
-$CLUSTER_COMMAND configure
 
-echo "setting up network"
-sudo $CLUSTER_COMMAND configure-network
-
-echo "running supervisord"
-$CLUSTER_COMMAND supervisord -d
+sudo ./install
+sudo systemctl restart supervisor
 
 echo "spam the logs"
-$CLUSTER_COMMAND supervisorctl -- tail -f start &
+sudo ./ctl tail -f start &
 
 echo "waiting for service health checks"
-$CLUSTER_COMMAND wait
+sudo ./cluster wait
 
 echo "running common tests"
 ./ci/test-common.sh
 
 echo "stopping everything"
-$CLUSTER_COMMAND stop
+sudo ./stop
 sleep 3
 if [ -n "$(docker ps -q)" ]; then
     echo "some docker containers still up!"
@@ -40,8 +32,8 @@ if [ -n "$(docker ps -q)" ]; then
 fi
 
 echo "restarting it"
-$CLUSTER_COMMAND supervisord -d
-$CLUSTER_COMMAND wait
+sudo ./restart
+sudo ./cluster wait
 
 echo "running common tests (again)"
 ./ci/test-common.sh

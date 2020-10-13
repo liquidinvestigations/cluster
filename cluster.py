@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 """
 Manage a Consul + Vault + Nomad cluster.
 """
@@ -16,7 +17,6 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError
 from urllib.parse import urlencode
 import sys
-import signal
 import shutil
 import socket
 from collections import defaultdict
@@ -33,6 +33,7 @@ class PATH:
 
     cluster_py = root / 'cluster.py'
     cluster_ini = root / 'cluster.ini'
+    script = root / 'cluster'
 
     bin = root / 'bin' if not os.getenv('DOCKER_BIN') else Path(os.environ['DOCKER_BIN'])  # noqa: E501
 
@@ -43,9 +44,6 @@ class PATH:
     consul_var = var / 'consul'
     nomad_var = var / 'nomad'
     vault_secrets = var / 'vault-secrets.ini'
-
-    supervisord_conf = etc / 'supervisord.conf'
-    supervisord_sock = var / 'supervisor' / 'supervisor.sock'
 
     @classmethod
     def load_dashboard(cls, filename):
@@ -115,6 +113,9 @@ def translate_job_name(option_name):
 
 
 class OPTIONS:
+    supervisor_daemon_conf = config.get('supervisor', 'daemon_conf')
+    supervisor_liquid_conf = config.get('supervisor', 'liquid_conf')
+
     network_address = config.get('network', 'address', fallback=None)
     network_interface = config.get('network', 'interface', fallback=None)
     network_create_bridge = config.getboolean('network', 'create_bridge',
@@ -243,6 +244,17 @@ def cli():
 def install():
     """ Install Consul, Vault and Nomad. """
 
+    assert Path(OPTIONS.supervisor_daemon_conf).is_file()
+    assert Path(OPTIONS.supervisor_liquid_conf).parent.is_dir()
+
+    configure()
+    subprocess.check_call([
+        'ln',
+        '-sf',
+        str(PATH.etc / 'supervisor.conf'),
+        OPTIONS.supervisor_liquid_conf,
+    ])
+
     log.info("Installing...")
     PATH.bin.mkdir(exist_ok=True)
 
@@ -259,6 +271,7 @@ def install():
             (tmp / name).rename(PATH.bin / name)
     for name in ['consul', 'vault', 'nomad']:
         log.info(run(f'{PATH.bin}/{name} --version'))
+
     log.info('Done.')
 
 
@@ -267,7 +280,6 @@ def _writefile(path, content):
         f.write(content)
 
 
-@cli.command()
 def configure():
     """ Generate configuration files by rendering templates from templates into
     etc. """
@@ -287,6 +299,8 @@ def configure():
             log.info('rendering %s', str(template))
             text = render(template.name, {'OPTIONS': OPTIONS, 'PATH': PATH})
             dest.write(text)
+
+    configure_network()
     log.info('Done.')
 
 
@@ -324,6 +338,7 @@ def runserver(name):
     args = [str(a) for a in services[name]()]
 
     env = dict(os.environ)
+    env['PATH'] = str(PATH.bin) + ':' + env['PATH']
     if name == 'nomad':
         env['VAULT_TOKEN'] = OPTIONS.nomad_vault_token
 
@@ -410,12 +425,6 @@ def nomad_drain(enabled):
 @cli.command()
 def stop():
     """Drains Nomad jobs and stops all supervisor services."""
-    _stop()
-
-
-def _stop():
-    """Implements draining Nomad jobs and stopping supervisor with SIGQUIT."""
-
     log.info("Stopping cluster...")
     if OPTIONS.nomad_drain_on_stop:
         try:
@@ -424,24 +433,7 @@ def _stop():
             log.warning(e)
             log.warning("Nomad drain failed, it's probably dead.")
 
-    pid = supervisor_pid()
-    log.info(f"Supervisor has PID={pid}")
-    _supervisorctl('stop', 'all')
-
-    os.kill(pid, signal.SIGQUIT)
-    log.info("SIGQUIT sent to supervisor!")
-
-    STOP_TIMEOUT = 15
-    t0 = time()
-    while time() < t0 + STOP_TIMEOUT:
-        try:
-            sleep(1)
-            supervisor_pid()
-        except subprocess.CalledProcessError as e:
-            log.debug("Supervisor dead: %s", e)
-            log.info("Everything stopped.")
-            return
-    log.warning(f"Supervisor didn't die in {STOP_TIMEOUT} seconds...")
+    _supervisorctl('stop', 'start', 'nomad', 'consul', 'vault', 'autovault')
 
 
 @cli.command()
@@ -511,68 +503,16 @@ def autovault(timeout):
     log.info('Done.')
 
 
-@cli.command()
-@click.pass_context
-@click.option('-d', '--detach', is_flag=True)
-def supervisord(ctx, detach):
-    """ Run the supervisor daemon in the foreground with the current user. """
-
-    log.info("setting signal handler")
-    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGQUIT):
-        signal.signal(sig, lambda _signum, _frame: _stop())
-
-    ctx.invoke(configure)
-    (PATH.var / 'supervisor').mkdir(exist_ok=True)
-
-    log.info("Starting supervisord...")
-    pid = os.fork()
-    if pid == 0:
-        args = ['supervisord', '-c', str(PATH.supervisord_conf), '-n']
-        sleep(5)
-        log.debug('+ %s', ' '.join(args))
-        # Start supervisord in a new process group, so
-        # SIGINT and others won't be propagated to this
-        # process from the parent.
-        os.setsid()
-        os.execvp(args[0], args)
-
-    wait_for_supervisor()
-    if detach:
-        return
-
-    os.wait()
-
-
 def _supervisorctl(*ctl_args):
-    args = ['supervisorctl', '-c', str(PATH.supervisord_conf)] + list(ctl_args)
+    args = ['supervisorctl', '-c',
+            OPTIONS.supervisor_daemon_conf] + list(ctl_args)
     subprocess.check_call(args, shell=False)
-
-
-def supervisor_pid():
-    args = ['supervisorctl', '-c', str(PATH.supervisord_conf), 'pid']
-    return int(subprocess.check_output(args, shell=False).decode('latin1'))
-
-
-def wait_for_supervisor():
-    SUPERVISOR_TIMEOUT = 15
-    t0 = time()
-    while time() < t0 + SUPERVISOR_TIMEOUT:
-        try:
-            supervisor_pid()
-            break
-        except (OSError, subprocess.CalledProcessError) as e:
-            log.warning('waiting for supervisor: %s', e)
-        sleep(2)
-    else:
-        raise RuntimeError('supervisord did not start')
 
 
 @cli.command()
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 def supervisorctl(args):
     """ Runs a supervisorctl command. """
-
-    wait_for_supervisor()
     _supervisorctl(*args)
 
 
@@ -728,7 +668,6 @@ def wait_for_consul():
 def wait():
     """ Wait for all services to be up and running. """
 
-    wait_for_supervisor()
     wait_for_consul()
     wait_for_checks({
         k: v for k, v in HEALTH_CHECKS.items()
@@ -748,7 +687,7 @@ def wait():
 def restart_nomad_until_it_works():
     nomad = JsonApi(f'http://{OPTIONS.nomad_address}:4646/v1')
     NOMAD_MAX_RESTARTS = 5
-    NOMAD_LEADERLESS_TIMEOUT = 15
+    NOMAD_LEADERLESS_TIMEOUT = 45
 
     for i in range(1, NOMAD_MAX_RESTARTS + 1):
         t0 = time()
@@ -775,7 +714,8 @@ def restart_nomad_until_it_works():
 def start(ctx):
     """ Configures and starts all services if they're not already up. """
 
-    wait_for_supervisor()
+    configure()
+
     _supervisorctl("stop", "nomad", "consul", "vault", "autovault")
     _supervisorctl("update")
 
@@ -812,12 +752,11 @@ def start(ctx):
     log.info("All done.")
 
 
-@cli.command()
 def configure_network():
     """Configures network according to the ini file [network] settings."""
 
-    assert sys.platform.startswith('linux'), \
-        'configure-network is only available on Linux'
+    # assert sys.platform.startswith('linux'), \
+    #     'configure-network is only available on Linux'
 
     create_script = str((PATH.root / 'scripts' / 'create-bridge.sh'))
     forward_script = str((PATH.root / 'scripts' / 'forward-ports.sh'))

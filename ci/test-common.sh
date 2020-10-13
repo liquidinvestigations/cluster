@@ -59,7 +59,7 @@ dns liquiddemo.org
 echo "Checking exec..."
 function nomad-exec {
   # exec it twice because it might occasionally fail
-  $CLUSTER_COMMAND nomad-exec $1 true || $CLUSTER_COMMAND nomad-exec $1 true
+  ./nomad-exec $1 true || ./nomad-exec $1 true
 }
 nomad-exec influxdb:influxdb
 nomad-exec dnsmasq:dnsmasq

@@ -1,0 +1,31 @@
+#!/bin/bash -ex
+
+if [ "$EUID" -ne 0 ]; then
+    set -x
+    echo "Please run as root"
+    exit 1
+fi
+
+
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
+if [[ ! -f cluster.ini ]]; then
+    set -x
+    echo "Please write cluster.ini"
+    exit 1
+fi
+
+export PIPENV_VENV_IN_PROJECT=1
+pipenv install
+
+./cluster install
+
+rm -rf /opt/cni/bin || true
+# https://www.nomadproject.io/guides/integrations/consul-connect/index.html#cni-plugins
+curl -L -o /tmp/cni-plugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.6/cni-plugins-linux-amd64-v0.8.6.tgz \
+ && mkdir -p /opt/cni/bin \
+ && tar -C /opt/cni/bin -xzf /tmp/cni-plugins.tgz \
+ && rm -f /tmp/cni-plugins.tgz
+
+set +x
+echo "Installation done!"

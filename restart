@@ -1,0 +1,11 @@
+#!/bin/bash -ex
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
+echo "Stopping everything..."
+( ./cluster stop || ./cluster stop || true )
+
+echo "Restarting everything..."
+./ctl restart start
+
+echo "waiting..."
+./cluster wait
