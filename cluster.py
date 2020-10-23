@@ -691,7 +691,7 @@ for k, v in ({
     HEALTH_CHECKS[k] = v
 if OPTIONS.client_only:
     for k in list(HEALTH_CHECKS.keys()):
-        if k not in ['nomad-client', 'vault', 'cluster-fabio']:
+        if k not in ['nomad-client', 'cluster-fabio']:
             del HEALTH_CHECKS[k]
 
 
