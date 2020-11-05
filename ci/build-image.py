@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 log.setLevel(log_level)
 
 CACHE = Path.home() / '.cache/vmck-build'
-DISK_SIZE = '35G'
+DISK_SIZE = '36G'
 
 BIONIC_URL = (
     'https://cloud-images.ubuntu.com/bionic/current/'
