@@ -13,8 +13,9 @@ else
 fi
 
 echo "Changing permissions..."
-if [ -f /dev/kvm ]; then
-  chown root:kvm /dev/kvm
+if [ -c /dev/kvm ]; then
+  chown vagrant:kvm /dev/kvm || true
+  chmod ug+rwx /dev/kvm || true
 fi
 chown -R $USERID:$GROUPID ./etc
 chown -R $USERID:$GROUPID ./var
