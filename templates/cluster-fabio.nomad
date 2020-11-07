@@ -12,8 +12,15 @@ job "cluster-fabio" {
           "local/fabio.properties:/etc/fabio/fabio.properties"
         ]
         port_map {
-          ui = 9991
+          ui = 8000
           lb = 9990
+          extra1 = 9991
+          extra2 = 9992
+          extra3 = 9993
+          extra4 = 9994
+          extra5 = 9995
+          extra6 = 9996
+          extra7 = 9997
         }
       }
       template {
@@ -26,7 +33,7 @@ job "cluster-fabio" {
         registry.consul.kvpath = /cluster/fabio
         registry.consul.register.enabled = false
 
-        ui.addr = :9991
+        ui.addr = :8000
         ui.color = green
         proxy.addr = :9990
         EOH
@@ -37,9 +44,14 @@ job "cluster-fabio" {
         memory = 128
         network {
           mbits = 20
-          port "lb" {
-            static = 9990
-          }
+          port "lb" { static = 9990 }
+          port "extra1" { static = 9991 }
+          port "extra2" { static = 9992 }
+          port "extra3" { static = 9993 }
+          port "extra4" { static = 9994 }
+          port "extra5" { static = 9995 }
+          port "extra6" { static = 9996 }
+          port "extra7" { static = 9997 }
           port "ui" {
           }
         }
