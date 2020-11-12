@@ -3,7 +3,7 @@
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -yqq git unzip supervisor docker.io python3-pip python3-venv
-pip3 install pipenv
+pip3 install --system pipenv
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/es.conf
 sysctl --system
 adduser vagrant docker
