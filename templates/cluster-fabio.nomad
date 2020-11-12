@@ -43,7 +43,7 @@ job "cluster-fabio" {
         cpu    = 200
         memory = 128
         network {
-          mbits = 20
+          mbits = 10
           port "lb" { static = 9990 }
           port "extra1" { static = 9991 }
           port "extra2" { static = 9992 }
@@ -52,8 +52,7 @@ job "cluster-fabio" {
           port "extra5" { static = 9995 }
           port "extra6" { static = 9996 }
           port "extra7" { static = 9997 }
-          port "ui" {
-          }
+          port "ui" {}
         }
       }
 
@@ -63,10 +62,11 @@ job "cluster-fabio" {
         check {
           name     = "tcp"
           type     = "tcp"
-          interval = "14s"
+          interval = "15s"
           timeout  = "12s"
         }
       }
+
       service {
         name = "cluster-fabio-ui"
         port = "ui"
@@ -74,7 +74,7 @@ job "cluster-fabio" {
           name     = "http"
           type     = "http"
           path     = "/"
-          interval = "16s"
+          interval = "35s"
           timeout  = "13s"
         }
       }

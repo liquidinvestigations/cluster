@@ -62,7 +62,7 @@ job "influxdb" {
           name     = "http"
           type     = "http"
           path     = "/ping"
-          interval = "21s"
+          interval = "31s"
           timeout  = "14s"
         }
       }

@@ -55,7 +55,7 @@ job "registry" {
         network {
           mbits = 10
           port "http" {
-            static = 9991
+            static = 9999
           }
         }
       }
@@ -63,11 +63,12 @@ job "registry" {
       service {
         name = "registry"
         port = "http"
+        tags = ["fabio-/registry strip=/registry"]
         check {
           name = "http"
           type = "http"
           path = "/"
-          interval = "14s"
+          interval = "24s"
           timeout  = "12s"
         }
       }
