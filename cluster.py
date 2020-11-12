@@ -315,6 +315,7 @@ def runserver(name):
     """ Run server [name] in foreground. """
 
     log.info("Running %s server...", name)
+    sleep(1)
     services = {
         'consul': consul_args,
         'vault': vault_args,
@@ -748,7 +749,7 @@ def wait():
 def restart_nomad_until_it_works():
     nomad = JsonApi(f'http://{OPTIONS.nomad_address}:4646/v1')
     NOMAD_MAX_RESTARTS = 5
-    NOMAD_LEADERLESS_TIMEOUT = 15
+    NOMAD_LEADERLESS_TIMEOUT = 45
 
     for i in range(1, NOMAD_MAX_RESTARTS + 1):
         t0 = time()
@@ -763,7 +764,7 @@ def restart_nomad_until_it_works():
                 log.warning('Nomad has no leader...')
             except URLError as e:
                 log.warning('Waiting for Nomad... %s', e)
-            sleep(2)
+            sleep(3)
         log.warning('nomad restart #%s/%s', i, NOMAD_MAX_RESTARTS)
         _supervisorctl('restart', 'nomad')
     else:
