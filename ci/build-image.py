@@ -41,7 +41,7 @@ runcmd:
   - "systemctl disable apt-daily.service"
   - "systemctl disable apt-daily.timer"
   - "touch /home/vagrant/.hushlogin"
-  - "/tmp/script_*.sh"
+  - "set -ex && /tmp/script_*.sh"
   - "apt-get clean"
   - "cat /dev/zero > /ZERO || rm /ZERO"
   - "poweroff"
