@@ -62,6 +62,7 @@ steps:
 - name: docker push branch ${DRONE_COMMIT_BRANCH}
   image: plugins/docker
   settings:
+    force_tag: true
     repo: liquidinvestigations/cluster
     tags: ${DRONE_COMMIT_BRANCH}
     username:
@@ -75,6 +76,7 @@ steps:
 - name: docker push autotag + latest
   image: plugins/docker
   settings:
+    force_tag: true
     repo: liquidinvestigations/cluster
     auto_tag: true
     username:
