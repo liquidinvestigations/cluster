@@ -13,7 +13,7 @@ chown vagrant: /opt
 mkdir /opt/cluster
 cd /opt/cluster
 tar xzf /opt/cluster.tar.gz
-cp ci/vm-cluster.ini .
+cp ci/vm-cluster.ini cluster.ini
 
 chown -R vagrant: .
 
