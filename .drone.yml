@@ -36,6 +36,9 @@ steps:
   when:
     event:
     - push
+    - cron
+  depends_on:
+    - clone
 
 - name: docker push autotag + latest
   image: plugins/docker
@@ -47,6 +50,8 @@ steps:
       from_secret: docker_username
     password:
       from_secret: docker_password
+  depends_on:
+    - clone
 
 ---
 kind: pipeline
@@ -59,15 +64,10 @@ concurrency:
   limit: 2
 
 steps:
-- name: dummy
-  image: alpine/flake8:3.7.7
-  commands:
-  - true
-
 - name: test on host
   image: vmck/vagrant-vmck:0.4.1
   depends_on:
-  - dummy
+  - clone
   commands:
   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-host.sh
@@ -78,7 +78,7 @@ steps:
 - name: test docker container
   image: vmck/vagrant-vmck:0.4.1
   depends_on:
-  - dummy
+  - clone
   commands:
   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-docker.sh
@@ -89,7 +89,7 @@ steps:
 - name: cluster 3 containers
   image: vmck/vagrant-vmck:0.4.1
   depends_on:
-  - dummy
+  - clone
   commands:
   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
   - export PROVISION=/opt/cluster/ci/test-triple.sh
