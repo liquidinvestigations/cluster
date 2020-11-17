@@ -141,8 +141,8 @@ class OPTIONS:
 
     versions = {
         'consul': config.get('consul', 'version', fallback='1.8.5'),
-        'vault': config.get('vault', 'version', fallback='1.5.5'),
-        'nomad': config.get('nomad', 'version', fallback='0.12.7'),
+        'vault': config.get('vault', 'version', fallback='1.6.0'),
+        'nomad': config.get('nomad', 'version', fallback='0.12.8'),
     }
 
     node_name = config.get('cluster', 'node_name',
@@ -222,7 +222,7 @@ class JsonApi:
 
 
 def download(url, path):
-    log.debug(f'+ downloading from {url} to {path}')
+    log.info(f'+ downloading from {url} to {path}')
     with urlopen(url) as res:
         if res.status != 200:
             return
@@ -258,7 +258,7 @@ def install():
             unzip(zip_path, cwd=tmp)
             (tmp / name).rename(PATH.bin / name)
     for name in ['consul', 'vault', 'nomad']:
-        log.info(run(f'{PATH.bin}/{name} --version'))
+        log.info(run(f'{PATH.bin}/{name} --version').strip())
     log.info('Done.')
 
 
