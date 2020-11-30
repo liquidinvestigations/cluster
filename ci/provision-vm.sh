@@ -17,7 +17,7 @@ cp ci/vm-cluster.ini cluster.ini
 
 chown -R vagrant: .
 
-docker pull liquidinvestigations/cluster
+docker pull liquidinvestigations/cluster:master
 cat > /etc/supervisor/conf.d/boot-vm.conf <<EOF
 [program:boot-vm]
 user = vagrant

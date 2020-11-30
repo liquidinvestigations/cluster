@@ -102,6 +102,9 @@ steps:
 kind: pipeline
 name: build qemu image
 
+node:
+  liquid_volumes: /opt/volumes
+
 steps:
 - name: build qemu image
   image: vmck/vmck:0.5
