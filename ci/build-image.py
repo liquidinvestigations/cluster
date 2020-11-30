@@ -85,17 +85,17 @@ def build(tmp, output, scripts, files_to_copy):
             for n, script in enumerate(scripts):
                 with script.open('rb') as s:
                     script_b64 = b64encode(s.read()).decode('latin1')
-                f.write(f'  - encoding: b64\n')
+                f.write('  - encoding: b64\n')
                 f.write(f'    content: {script_b64}\n')
                 f.write(f'    path: /tmp/script_{n}.sh\n')
-                f.write(f'    permissions: "0755"\n')
+                f.write('    permissions: "0755"\n')
             for host_path, guest_path in files_to_copy:
                 with host_path.open('rb') as s:
                     file_b64 = b64encode(s.read()).decode('latin1')
-                f.write(f'  - encoding: b64\n')
+                f.write('  - encoding: b64\n')
                 f.write(f'    content: {file_b64}\n')
                 f.write(f'    path: {str(guest_path)}\n')
-                f.write(f'    permissions: "0644"\n')
+                f.write('    permissions: "0644"\n')
 
     sh(f'cloud-localds {shq(cloud_init_img)} {shq(cloud_init_yml)}')
 

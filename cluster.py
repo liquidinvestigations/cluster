@@ -209,7 +209,6 @@ class JsonApi:
     def get(self, url, params=None):
         encoded = '?' + urlencode(params) if params else ''
         req = Request(f'{self.endpoint}{url}{encoded}')
-        log.debug('GET ' + req.get_full_url())
         return self.send(req)
 
     def put(self, url, data):
@@ -328,7 +327,7 @@ def runserver(name):
     if name == 'nomad':
         env['VAULT_TOKEN'] = OPTIONS.nomad_vault_token
 
-    log.debug('+ %s', ' '.join(args))
+    log.info('+ %s', ' '.join(args))
     os.chdir(PATH.root)
     os.execve(args[0], args, env)
 
@@ -438,8 +437,7 @@ def _stop():
         try:
             sleep(1)
             supervisor_pid()
-        except subprocess.CalledProcessError as e:
-            log.debug("Supervisor dead: %s", e)
+        except subprocess.CalledProcessError:
             log.info("Everything stopped.")
             return
     log.warning(f"Supervisor didn't die in {STOP_TIMEOUT} seconds...")
@@ -669,7 +667,6 @@ def wait_for_checks(health_checks, self_only=False, allow_duplicates=False):
                 failed_text += f'\n - {service}: check "{check}" is {status}'
             if failed:
                 failed_text += '\n'
-            log.debug(f'greens: {greens}, failed: {len(failed)}{failed_text}')
             last_spam = time()
 
     msg = f'Checks are failing after {time() - t0:.02f}s: \n - {failed_text}'
@@ -678,17 +675,19 @@ def wait_for_checks(health_checks, self_only=False, allow_duplicates=False):
 
 HEALTH_CHECKS = defaultdict(list)
 for k, v in ({
-            'nomad': ['Nomad Server RPC Check',
-                      'Nomad Server HTTP Check',
-                      'Nomad Server Serf Check'],
-            'nomad-client': ['Nomad Client HTTP Check'],
-            'vault': ['Vault Sealed Status'],
-            'grafana': ['Grafana alive on HTTP'],
-            'telegraf': ['http'],
-            'influxdb': ['http'],
-            'prometheus': ['Prometheus alive on HTTP'],
-            'cluster-fabio': ["tcp"],
-        }).items():
+    'nomad': [
+        'Nomad Server RPC Check',
+        'Nomad Server HTTP Check',
+        'Nomad Server Serf Check',
+    ],
+    'nomad-client': ['Nomad Client HTTP Check'],
+    'vault': ['Vault Sealed Status'],
+    'grafana': ['Grafana alive on HTTP'],
+    'telegraf': ['http'],
+    'influxdb': ['http'],
+    'prometheus': ['Prometheus alive on HTTP'],
+    'cluster-fabio': ["tcp"],
+}).items():
     HEALTH_CHECKS[k] = v
 if OPTIONS.client_only:
     for k in list(HEALTH_CHECKS.keys()):

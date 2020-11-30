@@ -2,3 +2,4 @@
 /etc
 /var
 /cluster.ini
+/.venv
