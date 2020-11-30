@@ -19,8 +19,9 @@ docker run --detach \
 ```
 
 You need to provide `cluster.ini` (there is one in `examples/`) and UID/GIDs
-for the user that's running the container. Of course, the user needs to be in
-the `docker` group, and the GID of that group should be set as the env `DOCKERGROUPID`.
+for the user that's running the container. Of course, the user (which should 
+be different from root) needs to be in the `docker` group, and the GID of that 
+group should be set as the env `DOCKERGROUPID`.
 
 The volume path `./var` has to be the same both inside and outside the Docker
 container. This is because both Nomad running inside the container and the
