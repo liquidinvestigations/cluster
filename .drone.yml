@@ -61,7 +61,7 @@ depends_on:
 - publish to docker hub
 
 concurrency:
-  limit: 2
+  limit: 1
 
 steps:
 - name: test on host

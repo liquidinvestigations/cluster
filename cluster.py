@@ -5,6 +5,7 @@ Manage a Consul + Vault + Nomad cluster.
 """
 
 import os
+import multiprocessing
 import logging
 from pathlib import Path
 import tempfile
@@ -138,6 +139,9 @@ class OPTIONS:
         'nomad', 'delete_data_on_start', fallback=False)
     nomad_drain_on_stop = config.getboolean(
         'nomad', 'drain_on_stop', fallback=True)
+    nomad_schedulers = min(
+        config.getint('nomad', 'nomad_schedulers', fallback=2),
+        multiprocessing.cpu_count())
 
     versions = {
         'consul': config.get('consul', 'version', fallback='1.9.0'),
@@ -283,10 +287,10 @@ def configure():
             continue
 
         with open(PATH.etc / template.name, 'w') as dest:
-            log.info('rendering %s', str(template))
+            log.debug('rendering %s', str(template))
             text = render(template.name, {'OPTIONS': OPTIONS, 'PATH': PATH})
             dest.write(text)
-    log.info('Done.')
+    log.info('Configuration done.')
 
 
 def consul_args():
@@ -560,7 +564,7 @@ def wait_for_supervisor():
             supervisor_pid()
             break
         except (OSError, subprocess.CalledProcessError) as e:
-            log.warning('waiting for supervisor: %s', e)
+            log.debug('waiting for supervisor: %s', e)
         sleep(2)
     else:
         raise RuntimeError('supervisord did not start')
@@ -632,11 +636,11 @@ def wait_for_checks(health_checks, self_only=False, allow_duplicates=False):
     t0 = time()
     timeout = t0 + OPTIONS.wait_max + \
         OPTIONS.wait_interval * OPTIONS.wait_green_count
-    log.info("Waiting %ss on %s health checks for %s %s",
-             timeout - t0,
-             sum(map(len, health_checks.values())),
-             str(services),
-             f'(self_only: {self_only}, allow_duplicates: {allow_duplicates})')
+    log.debug("Waiting %ss on %s health checks for %s %s",
+              timeout - t0,
+              sum(map(len, health_checks.values())),
+              str(services),
+              f'(self_only: {self_only}, duplicates: {allow_duplicates})')
 
     greens = 0
     last_spam = t0 + 1
@@ -714,11 +718,11 @@ def wait_for_consul():
             log.info("Consul UP and running with leader %s", leader)
             return
         except IndexError:
-            log.warning('Consul self node health check not registered')
+            log.debug('Consul self node health check not registered')
         except AssertionError as e:
-            log.warning(e)
+            log.debug(e)
         except URLError as e:
-            log.warning('Consul %s', e)
+            log.debug('Consul %s', e)
         sleep(OPTIONS.wait_interval)
     else:
         raise RuntimeError('Consul did not start.')

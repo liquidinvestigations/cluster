@@ -22,6 +22,7 @@ server {
   job_gc_threshold = "{{OPTIONS.nomad_zombie_time}}"
   heartbeat_grace = "35s"
   min_heartbeat_ttl =  "40s"
+  num_schedulers = {{OPTIONS.nomad_schedulers}}
 
   default_scheduler_config {
     scheduler_algorithm = "spread"

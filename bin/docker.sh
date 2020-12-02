@@ -4,6 +4,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
 rmdocker=''
 pulldocker=''
+nowait=''
 name=cluster
 image=liquidinvestigations/cluster
 while [[ $# -gt 0 ]]; do
@@ -12,6 +13,7 @@ while [[ $# -gt 0 ]]; do
   case "$arg" in
     "--rm") rmdocker=1 ;;
     "--pull") pulldocker=1 ;;
+    "--nowait") nowait=1 ;;
     "--name") name=$1; shift ;;
     "--image") image=$1; shift ;;
     *) echo "Unknown option $arg" >&2; exit 1
@@ -54,3 +56,7 @@ docker run --detach \
   --privileged \
   --net host \
   $image
+
+if [ -z $nowait ]; then
+  docker exec $name ./cluster.py wait
+fi

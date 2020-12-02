@@ -11,7 +11,7 @@ docker build . --tag test-cluster
 
 echo "running container"
 cp examples/cluster.ini .
-./bin/docker.sh --image test-cluster
+./bin/docker.sh --image test-cluster --nowait
 export CLUSTER_COMMAND="docker exec cluster ./cluster.py"
 
 echo "spam the logs"
@@ -25,7 +25,7 @@ echo "running common tests"
 ./ci/test-common.sh
 
 echo "stopping everything"
-docker stop cluster
+docker stop -t 300 cluster
 sleep 3
 if [ -n "$(docker ps -q)" ]; then
     echo "some docker containers still up!"
