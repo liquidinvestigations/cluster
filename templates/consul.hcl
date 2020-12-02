@@ -24,3 +24,10 @@ telemetry {
 }
 disable_anonymous_signature = true
 disable_update_check = true
+
+limits {
+  https_handshake_timeout = "45s"
+  http_max_conns_per_client = 300
+  rpc_handshake_timeout = "45s"
+  rpc_max_conns_per_client = 300
+}

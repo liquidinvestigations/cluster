@@ -20,6 +20,8 @@ server {
   enabled = true
   bootstrap_expect = {{OPTIONS.bootstrap_expect}}
   job_gc_threshold = "{{OPTIONS.nomad_zombie_time}}"
+  heartbeat_grace = "35s"
+  min_heartbeat_ttl =  "40s"
 
   default_scheduler_config {
     scheduler_algorithm = "spread"
@@ -45,9 +47,15 @@ client {
   memory_total_mb = {{OPTIONS.nomad_memory or '0 # autodetect'}}
   {{OPTIONS.nomad_server_join}}
   gc_max_allocs = 300
-  meta {
-    {{OPTIONS.nomad_meta}}
+  max_kill_timeout = "300s"
+
+  # reserved for nomad, consul, OS
+  reserved {
+    cpu = 400
+    memory = 400
+    disk = 400
   }
+
   options {
     "fingerprint.blacklist" = "env_aws"
     "docker.caps.whitelist" = "NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP, SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
@@ -55,6 +63,9 @@ client {
     "docker.volumes.enabled" = "true"
   }
 
+  meta {
+    {{OPTIONS.nomad_meta}}
+  }
 }
 
 plugin "raw_exec" {
@@ -82,3 +93,10 @@ telemetry {
 
 disable_anonymous_signature = true
 disable_update_check = true
+
+limits {
+  https_handshake_timeout = "45s"
+  http_max_conns_per_client = 300
+  rpc_handshake_timeout = "45s"
+  rpc_max_conns_per_client = 300
+}
