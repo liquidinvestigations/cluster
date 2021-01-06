@@ -35,7 +35,7 @@ job "cluster-fabio" {
 
         ui.addr = :8000
         ui.color = green
-        proxy.addr = :9990
+        proxy.addr = {% for i in range(1, 7)%}:999{{i}};proto=tcp,{% endfor %}:9990;proto=http
         EOH
       }
 
