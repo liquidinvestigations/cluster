@@ -47,3 +47,4 @@ echo "running common tests (again)"
 ./ci/test-common.sh
 
 echo "done!"
+$CLUSTER_COMMAND stop

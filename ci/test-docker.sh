@@ -41,3 +41,4 @@ echo "running common tests (again)"
 ./ci/test-common.sh
 
 echo "done!"
+docker stop -t 300 cluster

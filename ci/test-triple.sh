@@ -60,3 +60,6 @@ echo "running tests"
 wait_and_test
 
 echo "done!"
+
+docker stop test-1 test-2 test-4
+docker kill test-1 test-2 test-4
