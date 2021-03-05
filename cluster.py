@@ -373,8 +373,15 @@ def nomad_exec(name, args, tty=False):
             if alloc['ClientStatus'] != 'running':
                 continue
             yield alloc['ID']
-
-    alloc_id = first(list(allocs()), f'{name} allocs')
+    try:
+        alloc_id = first(list(allocs()), f'{name} allocs')
+    except AssertionError:
+        jobs = nomad.get('/jobs')
+        log.warning(f'Job "{job}" is not available.')
+        print('Available jobs:')
+        for job in jobs:
+            print(job.get('Name'))
+        return
 
     nomad_cmd = [str(PATH.bin / 'nomad'), 'alloc', 'exec']
 
