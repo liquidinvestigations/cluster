@@ -23,6 +23,8 @@ it's somewhat opinionated.
 Install and have `Docker` up and running. Follow the instructions at
 [`get.docker.com`](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-using-the-convenience-script).
 
+In case you are using a firewall you may need to allow connections to the IP-adress the liquid bundle is running on. For ufw this can be done with `sudo ufw allow to 10.66.60.1`.
+
 Clone this repository, then:
 
 ```bash
@@ -31,6 +33,7 @@ cp examples/cluster.ini .
 ./bin/docker.sh
 docker exec cluster ./cluster.py supervisorctl -- tail -f start
 ```
+
 
 Wait a minute and visit:
 
@@ -60,6 +63,9 @@ Use `cluster.py nomad-exec JOB:TASK COMMAND...` to execute a command inside a
 container. `stdin` and `stdout` can be used to exchange data.
 The command uses
 [`nomad alloc exec`](https://nomadproject.io/docs/commands/alloc/exec/).
+
+## Installing node ##
+As a next step you can install `node`, by following these [instructions](https://github.com/liquidinvestigations/node#installation) .
 
 
 ## More documentation
