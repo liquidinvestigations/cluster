@@ -368,11 +368,9 @@ def nomad_exec(name, args, tty=False):
 
     def allocs():
         for alloc in job_allocations(job):
-            if not alloc.get('TaskStates'):
-                continue
             if task not in alloc['TaskStates']:
                 continue
-            if alloc.get('ClientStatus') != 'running':
+            if alloc['ClientStatus'] != 'running':
                 continue
             yield alloc['ID']
 
