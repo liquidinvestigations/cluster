@@ -368,7 +368,7 @@ def nomad_exec(name, args, tty=False):
 
     def allocs():
         for alloc in job_allocations(job):
-            if task not in alloc['TaskStates']:
+            if task not in alloc.get('TaskStates', []):
                 continue
             if alloc['ClientStatus'] != 'running':
                 continue
