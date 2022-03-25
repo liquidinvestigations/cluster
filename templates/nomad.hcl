@@ -59,9 +59,9 @@ client {
 
   options {
     "fingerprint.blacklist" = "env_aws"
-    "docker.caps.whitelist" = "NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP, SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
-    "docker.privileged.enabled" = "true"
-    "docker.volumes.enabled" = "true"
+    # "docker.caps.whitelist" = "NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP, SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
+    # "docker.privileged.enabled" = "true"
+    # "docker.volumes.enabled" = "true"
   }
 
   meta {
@@ -75,6 +75,17 @@ plugin "raw_exec" {
   }
 }
 
+plugin "docker" {
+  config {
+    allow_privileged = true
+    pull_activity_timeout = "30m"
+    volumes {
+      enabled = true
+    }
+    allow_caps = ["net_admin", "chown", "dac_override", "fsetid", "fowner", "mknod", "net_raw", "setgid", "setuid", "setfcap", " setpcap", "net_bind_service", "sys_chroot", "kill", "audit_write"]
+  }
+}
+
 consul {
   address = "{{OPTIONS.consul_address}}:8500"
 }
@@ -85,7 +96,7 @@ vault {
 }
 
 telemetry {
-  collection_interval = "10s"
+  collection_interval = "30s"
   disable_hostname = false
   prometheus_metrics = true
   publish_allocation_metrics = true

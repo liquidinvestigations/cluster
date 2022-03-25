@@ -104,7 +104,8 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
-ALL_JOBS = ['cluster-fabio', 'prometheus', 'grafana', 'telegraf', 'influxdb',
+ALL_JOBS = ['cluster-fabio', 'prometheus', 'grafana', 'telegraf',
+            # 'influxdb',
             'dnsmasq', 'registry', 'docker-system-prune']
 SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio', 'telegraf']
 
@@ -688,7 +689,7 @@ for k, v in ({
     'vault': ['Vault Sealed Status'],
     'grafana': ['Grafana alive on HTTP'],
     'telegraf': ['http'],
-    'influxdb': ['http'],
+    # 'influxdb': ['http'],
     'prometheus': ['Prometheus alive on HTTP'],
     'cluster-fabio': ["tcp"],
 }).items():
