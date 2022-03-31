@@ -79,6 +79,11 @@ plugin "docker" {
   config {
     allow_privileged = true
     pull_activity_timeout = "30m"
+    gc {
+      image = true
+      image_delay = "120m"
+      container = true
+    }
     volumes {
       enabled = true
     }
