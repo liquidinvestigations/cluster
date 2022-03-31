@@ -87,7 +87,7 @@ plugin "docker" {
     volumes {
       enabled = true
     }
-    allow_caps = ["net_admin", "chown", "dac_override", "fsetid", "fowner", "mknod", "net_raw", "setgid", "setuid", "setfcap", " setpcap", "net_bind_service", "sys_chroot", "kill", "audit_write"]
+    allow_caps = ["sys_admin", "net_admin", "chown", "dac_override", "fsetid", "fowner", "mknod", "net_raw", "setgid", "setuid", "setfcap", " setpcap", "net_bind_service", "sys_chroot", "kill", "audit_write"]
   }
 }
 
