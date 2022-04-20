@@ -4,6 +4,21 @@ job "cluster-fabio" {
   priority = 99
 
   group "fabio" {
+    restart {
+      attempts = 5
+      delay    = "20s"
+      interval = "2m"
+      mode     = "fail"
+    }
+
+    reschedule {
+      attempts       = 0
+      delay          = "15s"
+      delay_function = "exponential"
+      max_delay      = "10m"
+      unlimited      = true
+    }
+
     task "fabio" {
       driver = "docker"
       config {
@@ -62,8 +77,8 @@ job "cluster-fabio" {
         check {
           name     = "tcp"
           type     = "tcp"
-          interval = "15s"
-          timeout  = "12s"
+          interval = "35s"
+          timeout  = "32s"
         }
       }
 
@@ -75,7 +90,7 @@ job "cluster-fabio" {
           type     = "http"
           path     = "/"
           interval = "35s"
-          timeout  = "13s"
+          timeout  = "33s"
         }
       }
     }
