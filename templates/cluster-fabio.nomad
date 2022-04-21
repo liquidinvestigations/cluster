@@ -11,13 +11,17 @@ job "cluster-fabio" {
       mode     = "fail"
     }
 
-    reschedule {
-      attempts       = 0
-      delay          = "15s"
-      delay_function = "exponential"
-      max_delay      = "10m"
-      unlimited      = true
-    }
+    # Error submitting job: Unexpected response code: 500 (1 error occurred:
+    # 	* Task group fabio validation failed: 1 error occurred:
+    # 	* System jobs should not have a reschedule policy
+    #
+    # reschedule {
+    #   attempts       = 0
+    #   delay          = "15s"
+    #   delay_function = "exponential"
+    #   max_delay      = "10m"
+    #   unlimited      = true
+    # }
 
     task "fabio" {
       driver = "docker"
