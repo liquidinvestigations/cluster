@@ -41,6 +41,7 @@ job "cluster-fabio" {
           extra6 = 9996
           extra7 = 9997
         }
+        memory_hard_limit = 3000
       }
       template {
         destination = "local/fabio.properties"
@@ -60,7 +61,7 @@ job "cluster-fabio" {
 
       resources {
         cpu    = 200
-        memory = 128
+        memory = 256
         network {
           mbits = 10
           port "lb" { static = 9990 }
