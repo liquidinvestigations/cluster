@@ -93,6 +93,7 @@ set -x
 docker run --detach \
   --restart always \
   --init \
+  --ulimit core=0 \
   --name $name \
   --env USERID=$USERID \
   --env GROUPID=$GROUPID \
