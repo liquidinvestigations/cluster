@@ -34,7 +34,7 @@ if ! (
   echo "Cannot verify 'nohang' configuration."
   echo "Please install examples/nohang.conf to /etc/nohang/nohang.conf and restart the service:"
   echo
-  echo "      sudo cp '$PWD/examples/nohang.conf /etc/nohang/nohang.conf"
+  echo "      sudo cp '$PWD/examples/nohang.conf' /etc/nohang/nohang.conf"
   echo "      sudo systemctl restart nohang"
   echo
   exit 1
