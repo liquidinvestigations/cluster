@@ -29,6 +29,12 @@ Clone this repository, then:
 
 ```bash
 cd /opt/cluster
+
+sudo apt install -y nohang  # on CentOS, you can use use "yum"
+sudo cp ./examples/nohang.conf /etc/nohang/nohang.conf
+sudo systemctl enable nohang.service
+sudo systemctl start nohang.service
+
 cp examples/cluster.ini .
 ./bin/docker.sh
 docker exec cluster ./cluster.py supervisorctl -- tail -f start
