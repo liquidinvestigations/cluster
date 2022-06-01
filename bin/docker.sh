@@ -3,7 +3,7 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
 # check if nohang installed; if it's not, then prompt all commands
-if ! ( /usr/sbin/nohang --check --config /etc/nohang/nohang.conf > /dev/null ); then
+if ! ( /usr/sbin/nohang --check --config /etc/nohang/nohang.conf &> /dev/null ); then
   echo "'nohang' service not installed. Please install and enable it with the provided config file."
   echo """
 Commands for CentOS:
@@ -41,7 +41,7 @@ if ! (
 fi
 
 # check nohang program is running
-if ! ( ps aux | grep -v grep | grep nohang | grep /usr/sbin/nohang ); then
+if ! ( ps aux | grep -v grep | grep nohang | grep /usr/sbin/nohang -q ); then
   echo "'nohang' not running, but configuration is correct. Please restart the 'nohang' service!"
   echo
   echo "          sudo systemctl restart nohang"

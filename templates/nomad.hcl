@@ -45,7 +45,7 @@ server {
 client {
   enabled = true
   network_interface = "{{OPTIONS.nomad_interface}}"
-  memory_total_mb = {{OPTIONS.nomad_memory or '0 # autodetect'}}
+  memory_total_mb = {{OPTIONS.nomad_memory}}
   {{OPTIONS.nomad_server_join}}
   gc_max_allocs = 300
   max_kill_timeout = "300s"

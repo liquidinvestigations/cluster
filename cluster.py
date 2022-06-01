@@ -116,6 +116,15 @@ def translate_job_name(option_name):
     return option_name
 
 
+def _get_memory_mb(memory_percent):
+    mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+    mem_mb = mem_bytes / (1024.**2)
+    mem_mb = int(mem_mb * memory_percent / 100 / 100) * 100
+    log.info('configuring nomad memory: %s MB', mem_mb)
+    assert mem_mb > 1000, 'memory too low <1000MB'
+    return mem_mb
+
+
 class OPTIONS:
     network_address = config.get('network', 'address', fallback=None)
     network_interface = config.get('network', 'interface', fallback=None)
@@ -134,7 +143,8 @@ class OPTIONS:
     nomad_interface = network_interface
     _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
     nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
-    nomad_memory = config.get('nomad', 'memory', fallback=0)
+    nomad_memory_percent = config.get('nomad', 'memory_percent', fallback=60)
+    nomad_memory = _get_memory_mb(nomad_memory_percent)
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
     nomad_delete_data_on_start = config.getboolean(
         'nomad', 'delete_data_on_start', fallback=False)
@@ -824,8 +834,12 @@ def configure_network():
     assert sys.platform.startswith('linux'), \
         'configure-network is only available on Linux'
 
+    configure_sysctl_parameters_script = \
+        str((PATH.root / 'scripts' / 'configure-sysctl.sh'))
     create_script = str((PATH.root / 'scripts' / 'create-bridge.sh'))
     forward_script = str((PATH.root / 'scripts' / 'forward-ports.sh'))
+
+    subprocess.check_call([configure_sysctl_parameters_script])
 
     if OPTIONS.network_create_bridge:
         env = dict(os.environ)
