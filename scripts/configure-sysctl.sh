@@ -2,33 +2,33 @@
 
 # from https://min.io/resources/docs/MinIO-Throughput-Benchmarks-on-HDD-24-Node.pdf
 # maximum number of open files/file descriptors
-sysctl fs.file-max=4194303
+sysctl fs.file-max=25967776
 # use as little swap space as possible
 sysctl vm.swappiness=1
 # prioritize application RAM against disk/swap cache
 sysctl vm.vfs_cache_pressure=10
 # minimum free memory
-sysctl vm.min_free_kbytes=1000000
+sysctl vm.min_free_kbytes=200000
 # maximum receive socket buffer (bytes)
-sysctl net.core.rmem_max=268435456
+sysctl net.core.rmem_max=8388608
 # maximum send buffer socket buffer (bytes)
-sysctl net.core.wmem_max=268435456
+sysctl net.core.wmem_max=8388608
 # default receive buffer socket size (bytes)
-sysctl net.core.rmem_default=67108864
+sysctl net.core.rmem_default=4194304
 # default send buffer socket size (bytes)
-sysctl net.core.wmem_default=67108864
+sysctl net.core.wmem_default=4194304
 # maximum number of packets in one poll cycle
 sysctl net.core.netdev_budget=1200
 # maximum ancillary buffer size per socket
-sysctl net.core.optmem_max=134217728
+sysctl net.core.optmem_max=8388608
 # maximum number of incoming connections
 sysctl net.core.somaxconn=65535
 # maximum number of packets queued
 sysctl net.core.netdev_max_backlog=250000
 # maximum read buffer space
-sysctl net.ipv4.tcp_rmem="67108864 134217728 268435456"
+sysctl net.ipv4.tcp_rmem="4194304 8388608 16777216"
 # maximum write buffer space
-sysctl net.ipv4.tcp_wmem="67108864 134217728 268435456"
+sysctl net.ipv4.tcp_wmem="4194304 8388608 16777216"
 # enable low latency mode
 sysctl net.ipv4.tcp_low_latency=1
 
