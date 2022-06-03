@@ -6,14 +6,23 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 if ! ( /usr/sbin/nohang --check --config /etc/nohang/nohang.conf &> /dev/null ); then
   echo "'nohang' service not installed. Please install and enable it with the provided config file."
   echo """
-Commands for CentOS:
+Commands for CentOS 7/8:
 
     sudo yum install nohang
     sudo cp ./examples/nohang.conf /etc/nohang/nohang.conf
     sudo systemctl enable nohang.service
     sudo systemctl start nohang.service
 
-Commands for Debian/Ubuntu:
+Commands for Ubuntu 20:
+
+    sudo add-apt-repository ppa:oibaf/test
+    sudo apt install update
+    sudo apt install nohang
+    sudo cp ./examples/nohang.conf /etc/nohang/nohang.conf
+    sudo systemctl enable nohang.service
+    sudo systemctl start nohang.service
+
+Commands for Debian 11/Ubuntu 21+:
 
     sudo apt install nohang
     sudo cp ./examples/nohang.conf /etc/nohang/nohang.conf
@@ -31,7 +40,7 @@ if ! (
   && /usr/sbin/nohang --check --config /etc/nohang/nohang.conf | grep hard_threshold_min_swap | grep -q '30 %'
 ) ; then
   echo
-  echo "Cannot verify 'nohang' configuration."
+  echo "Cannot verify 'nohang' configuration at /etc/nohang/nohang.conf"
   echo "Please install examples/nohang.conf to /etc/nohang/nohang.conf and restart the service:"
   echo
   echo "      sudo cp '$PWD/examples/nohang.conf' /etc/nohang/nohang.conf"
