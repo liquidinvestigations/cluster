@@ -166,7 +166,6 @@ class OPTIONS:
     debug = config.getboolean('cluster', 'debug', fallback=False)
     client_only = config.getboolean('cluster', 'client', fallback=False)
 
-    _run_jobs = config.get('cluster', 'run_jobs', fallback='none').strip().split(',') if not client_only else []  # noqa: E501
     nomad_vault_token = read_vault_secrets()['root_token']
 
     bootstrap_expect = config.getint('cluster', 'bootstrap_expect', fallback=1)
@@ -187,14 +186,6 @@ class OPTIONS:
     wait_green_count = config.getint('deploy', 'wait_green_count', fallback=3)
 
     @classmethod
-    def get_jobs(cls):
-        if cls._run_jobs == ['all']:
-            return ALL_JOBS
-        elif not cls._run_jobs or cls._run_jobs == ['none']:
-            return []
-        return list(map(translate_job_name, cls._run_jobs))
-
-    @classmethod
     def validate(cls):
         assert cls.network_address, \
             "cluster.ini: network.address not set"
@@ -205,10 +196,6 @@ class OPTIONS:
                 "cluster.ini: network.create_bridge must be unset on macOS"
             assert not cls.network_forward_ports, \
                 "cluster.ini: network.forward_ports must be unset on macOS"
-        if cls._run_jobs and cls._run_jobs not in (['all'], ['none']):
-            assert all(translate_job_name(s) in ALL_JOBS
-                       for s in cls._run_jobs), \
-                'Unidentified job name in "cluster.run_jobs" list'
 
 
 class JsonApi:
@@ -456,22 +443,6 @@ def _stop():
             log.info("Everything stopped.")
             return
     log.warning(f"Supervisor didn't die in {STOP_TIMEOUT} seconds...")
-
-
-@cli.command()
-def run_jobs():
-    """ Install all *.nomad jobs under etc/ """
-
-    log.info("Running nomad jobs...")
-    env = dict(os.environ)
-    env['NOMAD_ADDR'] = 'http://' + OPTIONS.nomad_address + ':4646'
-
-    for job in OPTIONS.get_jobs():
-        nomad_job_file = PATH.etc / f'{job}.nomad'
-        log.info('running job %s', nomad_job_file)
-        subprocess.check_call(f'{PATH.bin / "nomad"} job run {nomad_job_file}',
-                              env=env, shell=True)
-    log.info("Done.")
 
 
 @cli.command()
@@ -819,8 +790,6 @@ def start(ctx):
         'nomad-client': HEALTH_CHECKS['nomad-client'],
     }, self_only=True)
     nomad_drain(False)
-
-    ctx.invoke(run_jobs)
 
     # mark that something's up by failing this "start" job
     ctx.invoke(wait)
