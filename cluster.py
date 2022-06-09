@@ -48,15 +48,6 @@ class PATH:
     supervisord_conf = etc / 'supervisord.conf'
     supervisord_sock = var / 'supervisor' / 'supervisor.sock'
 
-    @classmethod
-    def load_dashboard(cls, filename):
-        with open(PATH.root / 'grafana-dashboards' / filename) as f:
-            return f.read()
-
-    @classmethod
-    def get_dashboards(cls):
-        return list(os.listdir(PATH.root / 'grafana-dashboards'))
-
 
 jinja_env = Environment(loader=FileSystemLoader(str(PATH.templates)))
 jinja_env.globals['int'] = int
@@ -104,12 +95,6 @@ def consul_retry_join_section(servers):
     return f'retry_join = [{", ".join(quoted)}]'
 
 
-ALL_JOBS = ['cluster-fabio', 'prometheus', 'grafana', 'telegraf',
-            # 'influxdb',
-            'dnsmasq', 'registry', 'docker-system-prune']
-SYSTEM_JOBS = ['dnsmasq', 'cluster-fabio', 'telegraf']
-
-
 def translate_job_name(option_name):
     if option_name == 'fabio':
         return 'cluster-fabio'
@@ -143,7 +128,7 @@ class OPTIONS:
     nomad_interface = network_interface
     _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
     nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
-    nomad_memory_percent = config.get('nomad', 'memory_percent', fallback=60)
+    nomad_memory_percent = config.get('nomad', 'memory_percent', fallback=70)
     nomad_memory = _get_memory_mb(nomad_memory_percent)
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
     nomad_delete_data_on_start = config.getboolean(
@@ -720,15 +705,6 @@ def wait():
         k: v for k, v in HEALTH_CHECKS.items()
         if k in ['vault', 'nomad', 'nomad-client']
     }, self_only=True)
-
-    wait_for_checks({
-        k: v for k, v in HEALTH_CHECKS.items()
-        if k in OPTIONS.get_jobs() and k in SYSTEM_JOBS
-    }, allow_duplicates=True)
-    wait_for_checks({
-        k: v for k, v in HEALTH_CHECKS.items()
-        if k in OPTIONS.get_jobs() and k not in SYSTEM_JOBS
-    })
 
 
 def restart_nomad_until_it_works():
