@@ -26,8 +26,8 @@ disable_anonymous_signature = true
 disable_update_check = true
 
 limits {
-  https_handshake_timeout = "45s"
-  http_max_conns_per_client = 300
-  rpc_handshake_timeout = "45s"
-  rpc_max_conns_per_client = 300
+  https_handshake_timeout = "15s"
+  http_max_conns_per_client = 900
+  rpc_handshake_timeout = "15s"
+  rpc_max_conns_per_client = 900
 }
