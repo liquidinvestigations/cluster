@@ -50,7 +50,8 @@ if ! (
 fi
 
 # check nohang program is running
-if ! ( ps aux | grep -v grep | grep nohang | grep /usr/sbin/nohang -q ); then
+if ! ( ps aux | grep -v grep | grep nohang | grep /usr/sbin/nohang -q || 
+	ps aux | grep -v grep | grep nohang | grep /usr/bin/nohang -q); then
   echo "'nohang' not running, but configuration is correct. Please restart the 'nohang' service!"
   echo
   echo "          sudo systemctl restart nohang"
