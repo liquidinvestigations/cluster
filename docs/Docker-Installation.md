@@ -37,7 +37,7 @@ You can use these additional options to modify the docker based startup procedur
 * `--image` image (default: liquidinvestigations/cluster)
 * `--rm` remove docker container first (default: don't remove container)
 * `--pull` pull image
-
+* `--no-nohang` ignore nohang dependency requirement
 To perform an update, run:
 
 ```bash
