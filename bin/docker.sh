@@ -116,6 +116,8 @@ docker run --detach \
   --workdir "$PWD" \
   --privileged \
   --net host \
+  --cap-add=NET_ADMIN \
+  --cap-add=NET_RAW \
   $image
 
 if [ -z $nowait ]; then

@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+IPTABLES_COMMENT="liquid investigations forward ports"
+
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit
@@ -54,8 +56,8 @@ for pair in "${ports[@]}"; do
     # TODO delete all rules matching source to this
     iptables -t nat -D PREROUTING $rule_tcp || /bin/true
     iptables -t nat -D PREROUTING $rule_udp || /bin/true
-    iptables -t nat -A PREROUTING $rule_tcp
-    iptables -t nat -A PREROUTING $rule_udp
+    iptables -t nat -A PREROUTING $rule_tcp -m comment --comment "$IPTABLES_COMMENT"
+    iptables -t nat -A PREROUTING $rule_udp -m comment --comment "$IPTABLES_COMMENT"
   )
 done
 

@@ -117,6 +117,10 @@ class OPTIONS:
                                               fallback=False)
     network_forward_ports = config.get('network', 'forward_ports', fallback='')
     network_forward_address = config.get('network', 'forward_address', fallback='')  # noqa: E501
+    network_firewall_allow_ips = config.get('network', 'firewall_allow_ips', fallback='') or (network_address + '/24,127.0.0.1/8')  # noqa: E501
+    network_firewall_ports = ",".join([x.split(':')[1] for x in network_forward_ports.split(',')])
+    network_docker_network_name = config.get('network', 'docker_network_name', fallback="liquid-docker-network")  # noqa: E501
+    network_docker_network_subnet = config.get('network', 'docker_network_subnet', fallback="172.27.0.0/16")  # noqa: E501
 
     consul_address = network_address
 
@@ -784,6 +788,8 @@ def configure_network():
         str((PATH.root / 'scripts' / 'configure-sysctl.sh'))
     create_script = str((PATH.root / 'scripts' / 'create-bridge.sh'))
     forward_script = str((PATH.root / 'scripts' / 'forward-ports.sh'))
+    firewall_script = str((PATH.root / 'scripts' / 'firewall.sh'))
+    clean_firewall_script = str((PATH.root / 'scripts' / 'clean-firewall.sh'))
 
     subprocess.check_call([configure_sysctl_parameters_script])
 
@@ -797,6 +803,9 @@ def configure_network():
     else:
         log.info("Skipping bridge creation.")
 
+    log.info("Cleaning firewall rules...")
+    subprocess.check_call([clean_firewall_script])
+
     if OPTIONS.network_forward_ports:
         env = dict(os.environ)
         env['bridge_name'] = OPTIONS.network_interface
@@ -808,6 +817,20 @@ def configure_network():
         subprocess.check_call([forward_script], env=env)
     else:
         log.info("Skipping port forwarding.")
+
+    log.info("Firewall settings:")
+    log.info("ALLOWED IPS = " + OPTIONS.network_firewall_allow_ips)
+    log.info("ALLOWED PORTS = " + OPTIONS.network_firewall_ports)
+    log.info('DOCKER NETWORK NAME = ' + OPTIONS.network_docker_network_name)
+    log.info('DOCKER NETOWRK SUBNET = ' + OPTIONS.network_docker_network_subnet)
+    env = dict(os.environ)
+    env['address'] = OPTIONS.network_address
+    env['allowed_ips'] = OPTIONS.network_firewall_allow_ips
+    env['allowed_ports'] = OPTIONS.network_firewall_ports
+    env['docker_network_name'] = OPTIONS.network_docker_network_name
+    env['docker_network_subnet'] = OPTIONS.network_docker_network_subnet
+    log.info("Running firewall script...")
+    subprocess.check_call([firewall_script], env=env)
 
     log.info("Network setup done.")
 
