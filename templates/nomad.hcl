@@ -1,3 +1,4 @@
+# log_level = "debug"
 name = "{{OPTIONS.node_name}}"
 data_dir = "{{PATH.nomad_var}}"
 leave_on_interrupt = true
@@ -53,13 +54,13 @@ client {
   # reserved for nomad, consul, OS
   reserved {
     cpu = 400
-    memory = 400
-    disk = 400
+    memory = 4000
+    disk = 4000
   }
 
   options {
     "fingerprint.blacklist" = "env_aws"
-    # "docker.caps.whitelist" = "NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP, SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
+    # "docker.caps.whitelist" = "SYS_ADMIN,NET_ADMIN,CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE"
     # "docker.privileged.enabled" = "true"
     # "docker.volumes.enabled" = "true"
   }
