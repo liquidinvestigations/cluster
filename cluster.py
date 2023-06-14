@@ -141,9 +141,9 @@ class OPTIONS:
         multiprocessing.cpu_count())
 
     versions = {
-        'consul': config.get('consul', 'version', fallback='1.9.0'),
-        'vault': config.get('vault', 'version', fallback='1.6.0'),
-        'nomad': config.get('nomad', 'version', fallback='0.12.9'),
+        'consul': config.get('consul', 'version', fallback='1.15.3'),
+        'vault': config.get('vault', 'version', fallback='1.13.3'),
+        'nomad': config.get('nomad', 'version', fallback='1.5.6'),
     }
 
     node_name = config.get('cluster', 'node_name',
