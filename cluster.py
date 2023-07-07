@@ -129,7 +129,7 @@ class OPTIONS:
     _nomad_meta = {key: config.get('nomad_meta', key) for key in config['nomad_meta']} if 'nomad_meta' in config else {}  # noqa: E501
     nomad_meta = "\n".join(f'{key} = "{value}"' for key, value in _nomad_meta.items())  # noqa: E501
     nomad_memory_percent = config.getint('nomad', 'memory_percent',
-                                         fallback=75)
+                                         fallback=85)
     nomad_memory = _get_memory_mb(nomad_memory_percent)
     nomad_zombie_time = config.get('nomad', 'zombie_time', fallback='4h')
     nomad_delete_data_on_start = config.getboolean(
