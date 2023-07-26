@@ -121,7 +121,7 @@ class OPTIONS:
     consul_address = network_address
 
     vault_address = network_address
-    vault_disable_mlock = config.getboolean('vault', 'disable_mlock', fallback=False)  # noqa: E501
+    vault_disable_mlock = config.getboolean('vault', 'disable_mlock', fallback=True)  # noqa: E501
 
     nomad_address = network_address
     nomad_advertise = network_address
