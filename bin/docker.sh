@@ -2,6 +2,11 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
+if [ "$EUID" -eq 0 ]; then
+  echo "ERROR: do NOT run script as the root user." >&2
+  exit 1
+fi
+
 rmdocker=''
 pulldocker=''
 nowait=''
