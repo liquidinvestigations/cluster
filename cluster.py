@@ -451,8 +451,8 @@ def autovault(timeout):
                 'uninitcode': '200',
 
             })
-            status = vault.get('/sys/seal-status')
-            # we got a status
+            vault.get('/sys/seal-status')
+            # we got a status, continue
             break
 
         except URLError as e:
