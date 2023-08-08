@@ -59,7 +59,7 @@ def render(template_filename, options):
 
 
 def run(cmd, **kwargs):
-    log.debug('+ %s', cmd)
+    log.info('+ %s', cmd)
     return subprocess.check_output(cmd, shell=True, **kwargs).decode('latin1')
 
 
@@ -317,6 +317,7 @@ def runserver(name):
 
     log.info('+ %s', ' '.join(args))
     os.chdir(PATH.root)
+    _supervisorctl("restart", "autovault")
     os.execve(args[0], args, env)
 
 
@@ -439,6 +440,8 @@ def autovault(timeout):
     vault = JsonApi(f'http://{OPTIONS.vault_address}:8200/v1')
 
     log.info('Unsealing vault...')
+    # rate limit the restarts from supervisor
+    sleep(1.1)
     t0 = time()
     while time() - t0 < int(timeout):
         try:
@@ -449,17 +452,14 @@ def autovault(timeout):
 
             })
             status = vault.get('/sys/seal-status')
-
-            if not status['sealed']:
-                log.info('Vault not sealed, exiting.')
-                return
-
+            # we got a status
             break
 
         except URLError as e:
             log.warning(e)
             sleep(2)
 
+    # create, overwrite vault secrets file
     if not PATH.vault_secrets.exists():
         resp = vault.put('/sys/init', {
             'secret_shares': 1,
@@ -475,6 +475,13 @@ def autovault(timeout):
             secrets_ini.write('[vault]\n')
             secrets_ini.write(f'keys = {",".join(resp["keys"])}\n')
             secrets_ini.write(f'root_token = {resp["root_token"]}\n')
+    assert PATH.vault_secrets.exists(), 'no vault secrets file created!'
+    userid = os.getenv('USERID', '0') + ':' + os.getenv('GROUPID', '0')
+    chown_cmd = f'chown {userid} {PATH.vault_secrets}'
+    try:
+        log.info('chown successful: %s', str(run(chown_cmd)))
+    except Exception as e:
+        log.info('cannot chown the password file: %s', str(e))
 
     secrets = read_vault_secrets()
     vault.put('/sys/unseal', {'key': secrets['keys']})
@@ -750,7 +757,6 @@ def start(ctx):
     wait_for_consul()
 
     _supervisorctl("start", "vault")
-    _supervisorctl("start", "autovault")
     wait_for_checks({'vault': HEALTH_CHECKS['vault']}, self_only=True)
 
     if OPTIONS.nomad_delete_data_on_start:
