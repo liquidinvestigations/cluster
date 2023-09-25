@@ -4,6 +4,7 @@
 Manage a Consul + Vault + Nomad cluster.
 """
 
+import platform
 import os
 import multiprocessing
 import logging
@@ -239,7 +240,8 @@ def install():
 
         for name in ['consul', 'vault', 'nomad']:
             version = OPTIONS.versions[name]
-            zip_path = tmp / f'{name}_{version}_{sysname}_amd64.zip'
+            _platform = 'arm64' if platform.machine() == 'aarch64' else 'amd64'
+            zip_path = tmp / f'{name}_{version}_{sysname}_{_platform}.zip'
             url = f'https://releases.hashicorp.com/{name}/{version}/{zip_path.name}'  # noqa: E501
             download(url, zip_path)
             unzip(zip_path, cwd=tmp)

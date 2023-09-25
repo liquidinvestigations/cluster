@@ -3,7 +3,7 @@ name: test-syntax
 
 steps:
 - name: flake8
-  image: alpine/flake8:3.7.7
+  image: alpine/flake8:6.0.0
   commands:
   - flake8
 
@@ -24,11 +24,15 @@ depends_on:
 
 steps:
 - name: docker push branch ${DRONE_COMMIT_BRANCH}
-  image: plugins/docker
+  image: liquidinvestigations/drone-docker-buildx:2023-09-25
+  privileged: true
   settings:
     force_tag: true
     repo: liquidinvestigations/cluster
     tags: ${DRONE_COMMIT_BRANCH}
+    platforms:
+      - linux/amd64
+      - linux/arm64
     username:
       from_secret: docker_username
     password:
@@ -41,11 +45,15 @@ steps:
     - clone
 
 - name: docker push autotag + latest
-  image: plugins/docker
+  image: liquidinvestigations/drone-docker-buildx:2023-09-25
+  privileged: true
   settings:
     force_tag: true
     repo: liquidinvestigations/cluster
     auto_tag: true
+    platforms:
+      - linux/amd64
+      - linux/arm64
     username:
       from_secret: docker_username
     password:

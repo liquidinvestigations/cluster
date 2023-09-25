@@ -13,6 +13,10 @@ RUN set -e \
    "deb [arch=amd64] https://download.docker.com/linux/debian \
    $(lsb_release -cs) \
    stable" \
+ && add-apt-repository \
+   "deb [arch=arm64] https://download.docker.com/linux/debian \
+   $(lsb_release -cs) \
+   stable" \
  && apt-get update -qq \
  && apt-get install -qq -y docker-ce-cli \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
