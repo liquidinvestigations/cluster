@@ -2,11 +2,17 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 
+# ==================
+#   USER CHECK
+# ==================
 if [ "$EUID" -eq 0 ]; then
   echo "ERROR: do NOT run script as the root user." >&2
   exit 1
 fi
 
+# ==================
+#   ARG PARSE
+# ==================
 rmdocker=''
 pulldocker=''
 nowait=''
@@ -27,6 +33,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ==================
+#   NOHANG CHECK
+# ==================
 if [ -z $no_nohang ]; then
   # check if nohang installed; if it's not, then prompt all commands
   if ! ( /usr/sbin/nohang --check --config /etc/nohang/nohang.conf &> /dev/null ); then
@@ -85,6 +94,22 @@ if [ -z $no_nohang ]; then
   fi
 fi
 
+# ==================
+#   ULIMIT CHECK
+# ==================
+MIN_USER_PROC_LIMIT=20000
+# check ulimit count for the machine
+if [ "$(ulimit -u)" -lt "$MIN_USER_PROC_LIMIT" ]; then
+  echo "ERORR: Kernel User Process Limit too small!"
+  echo "       ulimit -u   = $(ulimit -u)"
+  echo "       REQUIRED:      $MIN_USER_PROC_LIMIT"
+  exit 1
+fi
+
+
+# ===================
+#  PULL & RUN DOCKER
+# ===================
 if [ ! -z $pulldocker ]; then
   docker pull $image
 fi
