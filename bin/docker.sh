@@ -6,8 +6,19 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"/..
 #   USER CHECK
 # ==================
 if [ "$EUID" -eq 0 ]; then
-  echo "ERROR: do NOT run script as the root user." >&2
-  exit 1
+  # allow our CI to run as root, no one else
+  if ! [ "$__ALLOW_ROOT" ]; then
+    echo "ERROR: do NOT run script as the root user." >&2
+    exit 1
+  fi
+fi
+
+USERNAME="$(whoami)"
+if ! getent group docker | grep -q $(whoami); then
+  if ! [ "$__ALLOW_ROOT" ]; then
+    echo "The current user $USERNAME is not part of the docker group"
+    exit 1
+  fi
 fi
 
 # ==================
@@ -123,11 +134,6 @@ if [ ! -z $rmdocker ]; then (
   ) fi
 ) fi
 
-USERNAME="$(whoami)"
-if ! getent group docker | grep -q $(whoami); then
-  echo "The current user $USERNAME is not part of the docker group"
-  exit 1
-fi
 USERID="$(id -u $USERNAME)"
 GROUPID="$(id -g $USERNAME)"
 DOCKERGROUPID="$(getent group docker | cut -d: -f3)"

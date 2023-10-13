@@ -61,92 +61,48 @@ steps:
   depends_on:
     - clone
 
-      # ---
-      # kind: pipeline
-      # name: test-vms
-      # 
-      # depends_on:
-      # - publish to docker hub
-      # 
-      # concurrency:
-      #   limit: 1
-      # 
-      # steps:
-      # - name: test on host
-      #   image: vmck/vagrant-vmck:0.4.1
-      #   depends_on:
-      #   - clone
-      #   commands:
-      #   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
-      #   - export PROVISION=/opt/cluster/ci/test-host.sh
-      #   - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
-      #   - git clean -fdX
-      #   - ./ci/run-vagrant-test.sh
-      # 
-      # - name: test docker container
-      #   image: vmck/vagrant-vmck:0.4.1
-      #   depends_on:
-      #   - clone
-      #   commands:
-      #   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
-      #   - export PROVISION=/opt/cluster/ci/test-docker.sh
-      #   - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
-      #   - git clean -fdX
-      #   - ./ci/run-vagrant-test.sh
-      # 
-      # - name: cluster 3 containers
-      #   image: vmck/vagrant-vmck:0.4.1
-      #   depends_on:
-      #   - clone
-      #   commands:
-      #   - export VMCK_URL=http://$VMCK_IP:$VMCK_PORT
-      #   - export PROVISION=/opt/cluster/ci/test-triple.sh
-      #   - export VMCK_NAME="drone $DRONE_REPO:$DRONE_BRANCH#$DRONE_BUILD_NUMBER-$DRONE_STEP_NAME"
-      #   - export VMCK_MEMORY=6000
-      #   - git clean -fdX
-      #   - ./ci/run-vagrant-test.sh
+---
 
-    # ---
-    # kind: pipeline
-    # name: build qemu image
-    # 
-    # node:
-    #   liquid_volumes: /opt/volumes
-    # 
-    # steps:
-    # - name: build qemu image
-    #   image: vmck/vmck:0.5
-    #   privileged: true
-    #   volumes:
-    #   - name: vmck-images
-    #     path: /vmck-images
-    #   commands:
-    #   - BRANCH=$(echo $DRONE_COMMIT_BRANCH | tr -s '/' '_')
-    #   - tar czf /tmp/cluster.tar.gz .
-    #   - ./ci/build-image.py /tmp/cluster-$BRANCH.qcow2 --script /drone/src/ci/provision-vm.sh --copy-file /tmp/cluster.tar.gz:/opt/cluster.tar.gz
-    #   - tar czvf /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz -C /tmp cluster-$BRANCH.qcow2
-    #   - mv /vmck-images/cluster-$BRANCH-tmp.qcow2.tar.gz /vmck-images/cluster-$BRANCH.qcow2.tar.gz
-    # 
-    # depends_on:
-    # - publish to docker hub
-    # 
-    # concurrency:
-    #   limit: 1
-    # 
-    # trigger:
-    #   status:
-    #   - success
-    #   branch:
-    #   - master
-    #   - build-image/*
-    #   event:
-    #   - push
-    #   - cron
-    # 
-    # volumes:
-    # - name: vmck-images
-    #   host:
-    #       path: /opt/volumes/vmck-images
+kind: pipeline
+name: TEST - docker-compose
+concurrency:
+  limit: 1
+
+depends_on:
+- publish to docker hub
+
+trigger:
+  status:
+  - success
+  event:
+  - push
+  - cron
+
+steps:
+- name: test
+  image: docker/compose:1.29.2
+  volumes:
+  - name: docker_sock_temp
+    path: /var/run
+  commands:
+  - apk add bash
+  - until docker version; do sleep 1; done
+  - cp examples/cluster.ini .
+  - "__ALLOW_ROOT=TRUE bash ./bin/docker.sh --rm --no-nohang --image liquidinvestigations/cluster:${DRONE_COMMIT_BRANCH}"
+  - "docker logs -f cluster &"
+  - "docker exec cluster ./cluster.py wait"
+
+services:
+- name: docker
+  image: docker:dind
+  privileged: true
+  volumes:
+  - name: docker_sock_temp
+    path: /var/run
+
+volumes:
+- name: docker_sock_temp
+  temp: {}
 
 ---
 kind: secret
