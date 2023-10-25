@@ -142,12 +142,15 @@ docker run --detach \
   --env GROUPID=$GROUPID \
   --env DOCKERGROUPID=$DOCKERGROUPID \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume "$PWD:$PWD" \
+  --mount type=bind,src=/var/run/docker,dst=/var/run/docker,bind-propagation=shared \
+  --mount type=bind,src="$PWD",dst="$PWD",bind-propagation=rshared \
   --workdir "$PWD" \
   --privileged \
   --net host \
   --cap-add=NET_ADMIN --cap-add=NET_RAW \
   $image
+
+  # --volume "$PWD:$PWD" \
 
 if [ -z $nowait ]; then
   docker exec $name ./cluster.py wait

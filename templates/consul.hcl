@@ -31,3 +31,12 @@ limits {
   rpc_handshake_timeout = "25s"
   rpc_max_conns_per_client = 3000
 }
+
+ports {
+  grpc = 8502
+}
+
+connect {
+  enabled = true
+}
+

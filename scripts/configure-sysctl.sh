@@ -53,3 +53,8 @@ sysctl net.ipv4.tcp_fin_timeout=5
 
 # elasticsearch
 sysctl vm.max_map_count=262144
+
+# CNI PLUGINS
+echo 1 | tee /proc/sys/net/bridge/bridge-nf-call-arptables
+echo 1 | tee /proc/sys/net/bridge/bridge-nf-call-ip6tables
+echo 1 | tee /proc/sys/net/bridge/bridge-nf-call-iptables

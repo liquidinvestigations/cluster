@@ -22,6 +22,11 @@ RUN set -e \
  && apt-get clean && rm -rf /var/lib/apt/lists/* \
  && mkdir -p /app/var && mkdir -p /app/bin
 
+RUN curl -L -o cni-plugins.tgz "https://github.com/containernetworking/plugins/releases/download/v1.0.0/cni-plugins-linux-$( [ $(uname -m) = aarch64 ] && echo arm64 || echo amd64)"-v1.0.0.tgz \
+  &&  mkdir -p /opt/cni/bin \
+  && tar -C /opt/cni/bin -xzf cni-plugins.tgz \
+  && rm -f cni-plugins.tgz
+
 WORKDIR /app
 
 ADD Pipfile Pipfile.lock ./
@@ -34,5 +39,6 @@ RUN ./cluster.py install \
 
 ADD docker-entrypoint.sh  ./
 ENV DOCKER_BIN=/app/bin
+ENV PATH="/app/bin:${PATH}"
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 

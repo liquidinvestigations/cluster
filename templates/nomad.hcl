@@ -67,6 +67,7 @@ client {
 
   meta {
     {{OPTIONS.nomad_meta}}
+    # "connect.log_level" = "debug"
   }
 }
 
