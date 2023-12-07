@@ -11,6 +11,7 @@ datacenter = "dc1"
 server = true
 server_name = "{{OPTIONS.node_name}}"
 bootstrap_expect = {{OPTIONS.bootstrap_expect}}
+server_rejoin_age_max = "1440h" # 60 days
 {% else %}
 server = false
 {% endif %}
